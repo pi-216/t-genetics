@@ -21,22 +21,26 @@ Feature: Landing Page
 
   @DEV-0001
   Scenario: The landing page renders with the core message
+    When I read the page content
     Then I see the product name
     And I see an explanation of the evolution loop
+    And I see a "Start free" call to action
 
   @DEV-0002
-  Scenario: The page offers a sign-up call to action
-    Then I see a "Start free" call to action
-    And following it takes me to the sign-up page
+  Scenario: The call to action leads to sign-up
+    When I click the "Start free" call to action
+    Then I land on the sign-up page
 
   @DEV-0003
   Scenario: The page explains that the customer keeps their fitness function
+    When I read the trust section
     Then I see a statement that my fitness function stays mine
 
   @DEV-0004
   Scenario: The page shows a pricing posture teaser without promising paid features
+    When I read the pricing section
     Then I see a Free tier for the basic loop
-    And I do not see paid feature specifics yet implemented
+    And I see no paid feature specifics implemented
 
   @DEV-0005
   Scenario: The page is responsive on mobile
