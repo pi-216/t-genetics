@@ -4,7 +4,12 @@
 # owner-generated invite code (PRD-0002 / issue #17). The Given step seeds the
 # invite code through the domain model (the owner's generate-invite UI is
 # DEV-0006 and stays @wip); the When/Then steps drive the real public join
-# flow (Capybara / rack_test) and assert member-not-owner.
+# flow (Capybara / rack_test) and assert member-not-owner. The shared
+# "signed in as a member" step also serves DEV-0008 (issue #18) as a
+# Given — when no session exists, it establishes one through the real login
+# flow (member, not owner) before asserting the session. The step matches
+# any keyword, so a single definition covers both the join-then-assert Then
+# and the settings-page Given usage.
 
 Given(/^the owner of "([^"]+)" has generated invite code "([^"]+)"$/) do |org_name, code|
   organization = Identity::Organization.find_or_create_by!(name: org_name)
@@ -22,7 +27,19 @@ When(/^I join "([^"]+)" with the following details:$/) do |_org_name, table|
   click_button 'Join'
 end
 
-Then(/^I am signed in as a member of "([^"]+)"$/) do |org_name|
+Given(/^I am signed in as a member of "([^"]+)"$/) do |org_name|
+  if page.driver.request.session[:user_id].nil?
+    # DEV-0008 (Given usage): establish the member session through the real
+    # login flow, recording the email for the assertions below.
+    organization = Identity::Organization.find_or_create_by!(name: org_name)
+    user = FactoryBot.create(:user)
+    FactoryBot.create(:org_membership, user:, organization:, role: Identity::OrgMembership::MEMBER_ROLE)
+    @joined_email = user.email
+    visit login_path
+    fill_in 'Email', with: user.email
+    fill_in 'Password', with: user.password
+    click_button 'Sign in'
+  end
   user = Identity::User.find_by!(email: @joined_email)
   organization = Identity::Organization.find_by!(name: org_name)
   membership = Identity::OrgMembership.find_by!(user: user, organization: organization)
