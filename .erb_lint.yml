@@ -1,0 +1,10 @@
+# Exclude vendored/third-party trees from ERB linting.
+# CI installs the bundle inside the repo (vendor/bundle), so without these
+# excludes erb_lint scans gem templates (actionmailbox, actionpack, brakeman)
+# and fails on 60+ pre-existing offenses. Local bundles live outside the repo
+# tree, which is why bin/verify only broke on CI.
+exclude:
+  - 'vendor/**/*'
+  - 'node_modules/**/*'
+  - 'tmp/**/*'
+  - 'log/**/*'
