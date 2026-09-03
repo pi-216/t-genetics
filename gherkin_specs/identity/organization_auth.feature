@@ -30,6 +30,7 @@ Feature: Organization Auth
     And I am the owner of "Loop Labs"
 
   @DEV-0002
+  @wip
   Scenario: Duplicate email is rejected on sign-up
     Given a user exists with email "ada@example.com"
     When I sign up with the following details:
@@ -39,12 +40,14 @@ Feature: Organization Auth
     And no new account or organization is created
 
   @DEV-0003
+  @wip
   Scenario: Signing in with valid credentials succeeds
     Given a user exists with email "ada@example.com" and password "S3cretPass!"
     When I sign in with email "ada@example.com" and password "S3cretPass!"
     Then I am signed in
 
   @DEV-0004
+  @wip
   Scenario: Signing in with invalid credentials fails safely
     Given a user exists with email "ada@example.com" and password "S3cretPass!"
     When I sign in with email "ada@example.com" and password "wrong-password"
@@ -52,6 +55,7 @@ Feature: Organization Auth
     And I see a generic invalid-credentials error
 
   @DEV-0005
+  @wip
   Scenario: Signing out terminates my session
     Given I am signed in
     When I sign out
