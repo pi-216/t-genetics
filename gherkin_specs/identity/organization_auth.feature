@@ -90,7 +90,6 @@ Feature: Organization Auth
     And the chromosome is not disclosed
 
   @DEV-0010
-  @wip
   Scenario: The last owner cannot be removed or demoted
     Given "Loop Labs" has one owner "ada@example.com" and a member "bob@example.com"
     When "ada@example.com" attempts to remove her own owner role
