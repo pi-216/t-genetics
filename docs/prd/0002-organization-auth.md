@@ -47,12 +47,14 @@ ownership scoping of all domain records (`experiments.*_belongs_to :organization
 - **Existing data:** current rows lack orgs. Migration must backfill a
   "default" org (single-tenant legacy) before adding the constraint — founder
   approval of the backfill org's fate (archive vs. migrate to a real org) is
-  required in the migration change.
+  required in the migration change (dev data only today — low risk, still
+  review-flagged).
 - Roles are flat — no resource-scoped rights, no custom roles (founder ruling).
 - Owner removal: an org must never end up with zero owners (guard: last owner
   cannot be removed/demoted).
-- No real-person likeness; no external sends beyond invite emails (invites are
-  the one allowed email — explicit founder sign-off already given for invites).
+- No real-person likeness; **no external sends** — v1 invites are
+  owner-generated shareable codes (no outgoing email, keeps the red line).
+  Email-link invites deferred until mail infra + founder sign-off.
 - Member removal must revoke tokens too (see PRD-0005 interplay).
 
 ## Metrics / definition of done

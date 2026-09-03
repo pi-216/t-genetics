@@ -1,0 +1,19 @@
+# gherkin_lint configuration (config file is `.gherkin_lint.yml` — the tool
+# ignores `.gherkin-lintrc`). Rule names/keys mirror this gem's defaults, with
+# documented overrides below. Lineage tags (@PRD-XXXX feature, @DEV-XXXX per
+# scenario) are enforced by convention + Tier-1 review, not this linter.
+
+# Heuristic noise on standard declarative Then steps ("Mia's heat score
+# increases by 1"). Doesn't catch real spec defects; disabled.
+BeDeclarative:
+  Enabled: false
+
+# Conflicts with the MANDATED lineage scheme (one @PRD tag + a @DEV tag per
+# scenario), so >5 distinct tags per feature is inherent. Disabled.
+TooManyDifferentTags:
+  Enabled: false
+
+# Same rationale: lineage (@PRD + @DEV) plus a workflow tag (@wip) legitimately
+# yields 3 tags on a scenario. The default threshold rejects the mandated scheme.
+TooManyTags:
+  Enabled: false
