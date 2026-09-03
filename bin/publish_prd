@@ -1,0 +1,187 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# publish_prd — turn a PRD + its .feature file into GitHub Project tickets
+# (issues) on the t-genetics board (pi-216 org project 2).
+#
+# Usage:
+#   bin/publish_prd <PRD.md> <feature_file>
+#   bin/publish_prd docs/prd/0002-organization-auth.md gherkin_specs/identity/organization_auth.feature
+#
+# Behavior (idempotent):
+#   1. Ensures the pipeline labels exist in the repo.
+#   2. Creates ONE epic issue for the PRD and adds it to the Project.
+#   3. Creates ONE issue per Scenario in the .feature (self-contained body),
+#      adds each to the Project at Status=Todo, labelled `ticket`.
+#      NOTE: tickets are NOT labelled `approved` — the dev worker only works
+#      tickets a product owner has approved (add the `approved` label manually
+#      when you're ready to build).
+# Prints a summary of created/skipped issues.
+#
+# Uses `gh` CLI. Requires repo + project scopes (classic GH_PAT or full token).
+
+require "yaml"
+require "json"
+require "open3"
+
+ROOT = File.expand_path("..", __dir__)
+CONF = YAML.load_file(File.join(ROOT, "config/autonomous/pipeline.yml"))
+
+def sh(*args)
+  out, status = Open3.capture2e(*args)
+  abort("command failed: #{args.join(' ')}\n#{out}") unless status.success?
+  out.strip
+end
+
+def ensure_labels!
+  CONF["labels"].each do |name, desc|
+    existing = sh("gh", "label", "list", "--repo", "#{CONF['owner']}/#{CONF['repo']}", "--json", "name")
+    next if existing.include?(name)
+    sh("gh", "label", "create", name, "--repo", "#{CONF['owner']}/#{CONF['repo']}", "--color", "5319e7", "--description", desc)
+    puts "  + label #{name}"
+  end
+end
+
+def parse_prd(path)
+  body = File.read(path)
+  title = body[/^#\s+(.+)$/, 1]&.strip || File.basename(path, ".md")
+  prd_tag = title[/PRD(-?\d+)?/i] || title
+  [title, prd_tag]
+end
+
+def parse_scenarios(feature_path)
+  lines = File.readlines(feature_path)
+  scenarios = []
+  current = nil
+  pending_tags = []
+  lines.each do |ln|
+    if ln =~ /^\s*(@[\w:-]+)/
+      pending_tags.concat(ln.scan(/@[\w:-]+/))
+      next
+    end
+    if ln =~ /^\s*(?:Scenario|Scenario Outline):\s*(.+)$/
+      current = { name: Regexp.last_match(1).strip, steps: [], tags: pending_tags.dup }
+      scenarios << current
+      pending_tags = []
+      next
+    end
+    if current
+      stripped = ln.chomp
+      if stripped.strip.empty?
+        current[:steps] << ""
+      elsif stripped =~ /^\s*(Given|When|Then|And|But|Examples?):?\s*/
+        current[:steps] << stripped.strip
+      end
+    end
+  end
+  scenarios.reject { |s| s[:name] == "background" || s[:name].downcase.start_with?("background") }
+end
+
+def issue_exists?(title, repo)
+  out = sh("gh", "issue", "list", "--repo", repo, "--state", "open", "--json", "title", "--limit", "200")
+  out.include?(title)
+end
+
+def add_to_project(issue_url)
+  out = sh("gh", "project", "item-add", CONF["project_number"].to_s,
+           "--owner", CONF["owner"], "--url", issue_url, "--format", "json")
+  item_id = JSON.parse(out)["id"]
+  sh("gh", "project", "item-edit", CONF["project_number"].to_s, "--owner", CONF["owner"],
+     "--id", item_id.to_s, "--project-id", CONF["project_id"],
+     "--field-id", CONF["status_field_id"],
+     "--single-select-option-id", CONF["status_options"]["todo"])
+  item_id
+end
+
+def make_body(prd_title, prd_tag, ep, scenario)
+  lineage = ([prd_tag] + scenario[:tags]).map { |t| t.to_s.sub(/\A@/, "") }.uniq.reject { |t| t == "wip" }.join(" / ")
+  steps = scenario[:steps].join("\n")
+  <<~MD
+    ## Goal
+    Implement this behavior TDD-first (RED→GREEN→REFACTOR).
+
+    ## Source spec
+    - PRD: `#{prd_title}`
+    - Feature: `#{ep}`
+    - Scenario: **#{scenario[:name]}**
+    - Lineage: `#{lineage}`
+
+    ## Scenario (authoritative behavior)
+    ```gherkin
+    #{steps}
+    ```
+
+    ## Steps
+    1. Read `AGENTS.md` — pack boundaries, command pattern (side effects via `run_after_commit`), org scoping, factory truth.
+    2. Write step definitions under `gherkin_specs/**/step_definitions/` and implement the code TDD-first.
+    3. Remove this scenario's `@wip` tag once it passes.
+    4. Verify every factory you need in `spec/factories/` (never guess names/fields/associations).
+    5. Run `bin/verify` — all Tier-0 gates must pass (rubocop, brakeman, bundler-audit, packwerk, erb_lint, rspec, cucumber, gherkin_lint, rswag:verify).
+    6. Open a PR whose body is exactly `Closes ##{ENV['GH_ISSUE'] || '<this-issue-number>'}`. When CI is green, set this project item's Status to **Done** in #{CONF['repo']} and close the issue.
+
+    ## Success criteria
+    - [ ] Scenario passes under `bundle exec cucumber`
+    - [ ] `bin/verify` green
+    - [ ] PR opened linking this issue; CI green
+    - [ ] Project status set to **Done**
+
+    ## Red lines
+    - Respect Packwerk pack boundaries — `packwerk check` stays green.
+    - Org scoping: every cross-org request returns 403/404 — never leak another org's data.
+    - Side effects only after DB commit (`run_after_commit`); idempotency keys on external writes.
+    - Never run or evaluate anyone's fitness function — the only fitness input is the customer-reported number.
+    - Never commit secrets; keep master.key gitignored.
+  MD
+end
+
+def main
+  prd_path = ARGV[0] || abort("usage: bin/publish_prd <PRD.md> <feature_file>")
+  feature_path = ARGV[1] || abort("usage: bin/publish_prd <PRD.md> <feature_file>")
+  abort("PRD not found: #{prd_path}") unless File.exist?(prd_path)
+  abort("feature not found: #{feature_path}") unless File.exist?(feature_path)
+
+  repo = "#{CONF['owner']}/#{CONF['repo']}"
+  prd_title, prd_tag = parse_prd(prd_path)
+  scenarios = parse_scenarios(feature_path)
+  abort("no scenarios found in #{feature_path}") if scenarios.empty?
+
+  puts "=== ensure labels ==="
+  ensure_labels!
+
+  puts "\n=== epic: #{prd_title} ==="
+  epic_title = "[PRD] #{prd_title}"
+  unless issue_exists?(epic_title, repo)
+    url = sh("gh", "issue", "create", "--repo", repo, "--title", epic_title,
+             "--body", "Product epic for #{prd_title}. Generated tickets live in the **t-genetics** Project (Status=Todo).", "--label", "ticket")
+    id = url[/\d+\Z/].to_i
+    add_to_project(url)
+    puts "  + epic ##{id} #{url}"
+  else
+    puts "  ~ epic already exists (skipped)"
+  end
+
+  puts "\n=== scenario tickets ==="
+  feature_base = File.basename(feature_path, ".feature")
+  created = skipped = 0
+  scenarios.each do |sc|
+    title = "[#{prd_tag}] #{sc[:name]}"
+    if issue_exists?(title, repo)
+      puts "  ~ #{title} (exists — skipped)"
+      skipped += 1
+      next
+    end
+    body = make_body(prd_title, prd_tag, feature_path, sc)
+    url = sh("gh", "issue", "create", "--repo", repo, "--title", title,
+             "--body", body, "--label", "ticket")
+    num = url[/\d+\Z/].to_i
+    sh("gh", "issue", "edit", num.to_s, "--repo", repo, "--body", body.gsub("<this-issue-number>", num.to_s))
+    add_to_project(url)
+    puts "  + ##{num} #{title}"
+    created += 1
+  end
+
+  puts "\n=== summary: created=#{created}, skipped=#{skipped} (board #{CONF['project_number']}) ==="
+  puts "Open https://github.com/orgs/#{CONF['owner']}/projects/#{CONF['project_number']} to see the board."
+end
+
+main if __FILE__ == $0

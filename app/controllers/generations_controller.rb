@@ -17,9 +17,7 @@ class GenerationsController < ApplicationController
 
   # Bootstrap the first generation.
   def create
-    if @chromosome.generations.exists?
-      return render json: { errors: { generation: 'already exists for this chromosome; use procreate' } }, status: :conflict
-    end
+    return render json: { errors: { generation: 'already exists for this chromosome; use procreate' } }, status: :conflict if @chromosome.generations.exists?
 
     generation = @chromosome.generations.create!(iteration: 1)
     20.times { Organisms::Create.call(generation:) }

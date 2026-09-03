@@ -26,17 +26,21 @@ gem 'view_component'
 
 group :development, :test do
   gem 'brakeman'
+  gem 'bundler-audit'
+  gem 'cucumber', require: false
   gem 'debug', platforms: %i[mri mingw x64_mingw]
   gem 'dotenv-rails'
+  gem 'erb_lint', require: false
   gem 'factory_bot_rails'
+  gem 'gherkin_lint', require: false
+  gem 'packwerk'
   gem 'reek'
   gem 'timecop'
   gem 'webdrivers'
-  gem 'packwerk'
 
   gem 'rswag-api'
-  gem 'rswag-ui'
   gem 'rswag-specs'
+  gem 'rswag-ui'
 end
 
 group :development do

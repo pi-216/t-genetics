@@ -8,9 +8,7 @@ module Generations
 
     def call
       set_defaults
-      while offspring_generation.organisms.count < organism_count
-        children = Organisms::Procreate.call!(target_generation: offspring_generation, parents:).children
-      end
+      children = Organisms::Procreate.call!(target_generation: offspring_generation, parents:).children while offspring_generation.organisms.count < organism_count
     end
 
     private

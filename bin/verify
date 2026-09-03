@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# bin/verify — Pre-commit Tier-0 verification gate (t-genetics).
+#
+# Runs every mechanical, auto-blocking check. Exits non-zero on ANY failure
+# (fail-closed). Pair with an independent reviewer before committing as
+# "[verified] ...". Use `bin/verify --fix` to run RuboCop auto-fixes first.
+#
+# Gates (Tier 0):
+#   rubocop · brakeman -z · bundler-audit · packwerk · erb_lint · rspec ·
+#   cucumber · gherkin_lint (if .feature files exist) · rswag:verify
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+FIX=0; [[ "${1:-}" == "--fix" ]] && FIX=1
+
+if [ "$FIX" = "1" ]; then
+  echo "==> auto-fix (rubocop -a)"
+  bundle exec rubocop -a 2>&1 | tail -3 || true
+fi
+
+FAIL=0
+run_gate() {
+  local name="$1"; shift
+  echo "==> $name"
+  if ! "$@" >/tmp/verify_gate.log 2>&1; then
+    echo "    ✗ $name FAILED:"
+    grep -viE 'benchmark was loaded|already initialized|previous definition' /tmp/verify_gate.log | tail -25
+    FAIL=1
+  else
+    echo "    ✓ $name"
+  fi
+}
+
+# bundler-audit: prefer local advisory DB; fall back to --update on first run.
+if bundle exec bundler-audit check >/dev/null 2>&1; then
+  AUDIT="bundle exec bundler-audit check"
+else
+  AUDIT="bundle exec bundler-audit check --update"
+fi
+
+run_gate "rubocop"            bundle exec rubocop --format simple
+run_gate "brakeman"           bundle exec brakeman -z --no-pager
+run_gate "bundler-audit"      sh -c "$AUDIT"
+run_gate "packwerk"           bundle exec packwerk check
+run_gate "erb_lint"           bundle exec erb_lint --lint-all
+run_gate "rspec"              bundle exec rspec
+run_gate "cucumber"           bundle exec cucumber
+run_gate "rswag:verify"       bundle exec rake rswag:verify
+
+if compgen -G "gherkin_specs/**/*.feature" >/dev/null; then
+  run_gate "gherkin_lint"     bundle exec gherkin_lint $(ls gherkin_specs/**/*.feature)
+else
+  echo "==> gherkin_lint (skipped — no .feature files yet)"
+fi
+
+echo
+if [ "$FAIL" = "1" ]; then
+  echo "✗ bin/verify: GATES FAILED — do not commit. Fix, auto-fix ≤2 cycles, then re-verify with an independent reviewer before a [verified] commit."
+  exit 1
+fi
+echo "✓ bin/verify: all Tier-0 gates passed."
+exit 0

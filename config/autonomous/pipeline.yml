@@ -1,0 +1,30 @@
+# Autonomous feature pipeline config (t-genetics)
+# Consumed by bin/publish_prd and the dev-worker cron agent.
+owner: pi-216
+repo: t-genetics
+
+# GitHub Project (v2) board — ORG-owned project 2 (pi-216), "t-genetics".
+# Status maps onto the org board's default options:
+#   Todo        -> Backlog
+#   In Progress -> In progress
+#   Done        -> Done
+project_number: 2
+project_id: PVT_kwDOE00cLc4BiTN9
+status_field_id: PVTSSF_lADOE00cLc4BiTN9zhhLxrU
+status_options:
+  todo: f75ad846        # Backlog
+  in_progress: 47fc9ee4 # In progress
+  done: 98236657        # Done
+  ready: 61e4505c       # Ready (used by worker when claiming)
+
+# Ticket lifecycle labels (claims are made by flipping status + these labels,
+# so independent agents never double-claim)
+labels:
+  ticket: "Generated work ticket (autonomous agent)"
+  approved: "PRD spec approved by product owner — agent may implement"
+  agent_working: "Claimed by an autonomous agent (in progress)"
+  agent_blocked: "Blocked — agent may not work"
+  agent_needs_review: "Needs human review before done"
+
+# Where generated tickets point for repo conventions
+agents_md: AGENTS.md

@@ -18,9 +18,7 @@ module Chromosomes
 
     def create
       missing = missing_fields_for(typed_allele_params[:type])
-      unless missing.empty?
-        return render json: { errors: missing.index_with { 'is required' } }, status: :unprocessable_entity
-      end
+      return render json: { errors: missing.index_with { 'is required' } }, status: :unprocessable_entity unless missing.empty?
 
       allele = build_typed_allele
       @chromosome.alleles << allele
@@ -31,9 +29,7 @@ module Chromosomes
     end
 
     def update
-      if typed_allele_params.key?(:type) && typed_allele_params[:type] != @allele.type
-        return render json: { errors: { type: 'cannot be changed' } }, status: :unprocessable_entity
-      end
+      return render json: { errors: { type: 'cannot be changed' } }, status: :unprocessable_entity if typed_allele_params.key?(:type) && typed_allele_params[:type] != @allele.type
 
       @allele.update!(name: typed_allele_params[:name]) if typed_allele_params[:name]
       update_constraints!

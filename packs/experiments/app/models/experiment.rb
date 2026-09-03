@@ -54,9 +54,7 @@ class Experiment < ApplicationRecord
 
     if actual_population_size > 0 # Avoid division by zero
       percentage_with_feedback = num_organisms_with_feedback.to_f / actual_population_size
-      if percentage_with_feedback >= feedback_percentage_threshold && num_organisms_with_feedback >= min_organisms_with_feedback
-        return true
-      end
+      return true if percentage_with_feedback >= feedback_percentage_threshold && num_organisms_with_feedback >= min_organisms_with_feedback
     end
 
     # Condition B: Suggestion Volume

@@ -1,3 +1,5 @@
+inherit_from: .rubocop_todo.yml
+
 require:
   - rubocop-rails
   - rubocop-rspec
@@ -23,6 +25,8 @@ Metrics/BlockLength:
 RSpec/DescribeClass:
   Exclude:
     - 'spec/integration/**/*'
+    - 'spec/views/**/*'
+    - 'spec/requests/**/*'
 RSpec/EmptyExampleGroup:
   Exclude:
     - 'spec/integration/**/*'
