@@ -56,3 +56,22 @@ And(/^no new account or organization is created$/) do
   expect(Identity::OrgMembership.count).to eq(0)
   expect(page.driver.request.session[:user_id]).to be_nil
 end
+
+# --- DEV-0003 — signing in with valid credentials establishes a session. ---#
+Given(/^a user exists with email "([^"]+)" and password "([^"]+)"$/) do |email, password|
+  FactoryBot.create(:user, email:, password:)
+end
+
+When(/^I sign in with email "([^"]+)" and password "([^"]+)"$/) do |email, password|
+  @signed_in_email = email
+  visit login_path
+  fill_in 'Email', with: email
+  fill_in 'Password', with: password
+  click_button 'Sign in'
+end
+
+Then(/^I am signed in$/) do
+  user = Identity::User.find_by!(email: @signed_in_email)
+  expect(page.driver.request.session[:user_id]).to eq(user.id)
+  expect(page).to have_current_path(root_path)
+end
