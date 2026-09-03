@@ -45,7 +45,6 @@ Feature: Organization Auth
     Then I am signed in
 
   @DEV-0004
-  @wip
   Scenario: Signing in with invalid credentials fails safely
     Given a user exists with email "ada@example.com" and password "S3cretPass!"
     When I sign in with email "ada@example.com" and password "wrong-password"
