@@ -1,0 +1,7 @@
+# Provisional bounded context — Identity (orgs, users, auth, session).
+enforce_dependencies: true
+
+# Depends on the root ('.') package for shared platform classes
+# (ApplicationRecord, ApplicationController, GLCommand::Callable).
+dependencies:
+  - "."
