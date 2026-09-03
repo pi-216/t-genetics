@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -92,6 +92,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_150000) do
     t.datetime "created_at", null: false
     t.integer "data"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "invite_codes", force: :cascade do |t|
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.bigint "organization_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_invite_codes_on_code", unique: true
+    t.index ["organization_id"], name: "index_invite_codes_on_organization_id"
   end
 
   create_table "option_alleles", force: :cascade do |t|
@@ -177,6 +186,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_150000) do
   add_foreign_key "experiments", "chromosomes"
   add_foreign_key "experiments", "generations", column: "current_generation_id"
   add_foreign_key "generations", "chromosomes"
+  add_foreign_key "invite_codes", "organizations"
   add_foreign_key "org_memberships", "organizations"
   add_foreign_key "org_memberships", "users"
   add_foreign_key "organisms", "generations"
