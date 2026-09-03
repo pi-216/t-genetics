@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
-# Step definitions for PRD-0002 — org sign-up (DEV-0001).
-# Behavior-driven through the real web sign-up flow (Capybara / rack_test).
-# Factory truth: :user / :organization / :org_membership factories live in spec/factories/.
+# Step definitions for PRD-0002 — org sign-up (DEV-0001) and duplicate-email
+# rejection (DEV-0002). Behavior-driven through the real web sign-up flow
+# (Capybara / rack_test). Factory truth: :user / :organization /
+# :org_membership factories live in spec/factories/.
 
 Given(/^I am on the sign-up page$/) do
   visit register_path
@@ -36,4 +37,22 @@ And(/^I am the owner of "([^"]+)"$/) do |name|
   membership = Identity::OrgMembership.find_by!(user:, organization:)
 
   expect(membership.role).to eq(Identity::OrgMembership::OWNER_ROLE)
+end
+
+Given(/^a user exists with email "([^"]+)"$/) do |email|
+  FactoryBot.create(:user, email: email)
+end
+
+# DEV-0002 — a failed duplicate-email sign-up leaves no new records and
+# shows the real validation error rendered at the controller layer.
+Then(/^I see a validation error about the email being taken$/) do
+  expect(page).to have_css('#error_explanation')
+  expect(page).to have_content('Email has already been taken')
+end
+
+And(/^no new account or organization is created$/) do
+  expect(Identity::User.count).to eq(1) # only the pre-existing user
+  expect(Identity::Organization.count).to eq(0)
+  expect(Identity::OrgMembership.count).to eq(0)
+  expect(page.driver.request.session[:user_id]).to be_nil
 end
