@@ -52,7 +52,6 @@ Feature: Organization Auth
     And I see a generic invalid-credentials error
 
   @DEV-0005
-  @wip
   Scenario: Signing out terminates my session
     Given I am signed in
     When I sign out
