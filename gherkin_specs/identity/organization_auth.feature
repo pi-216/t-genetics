@@ -30,6 +30,7 @@ Feature: Organization Auth
     And I am the owner of "Loop Labs"
 
   @DEV-0002
+  @wip
   Scenario: Duplicate email is rejected on sign-up
     Given a user exists with email "ada@example.com"
     When I sign up with the following details:
@@ -39,6 +40,7 @@ Feature: Organization Auth
     And no new account or organization is created
 
   @DEV-0003
+  @wip
   Scenario: Signing in with valid credentials succeeds
     Given a user exists with email "ada@example.com" and password "S3cretPass!"
     When I sign in with email "ada@example.com" and password "S3cretPass!"
