@@ -36,6 +36,7 @@ class GenerationsController < ApplicationController
   private
 
   def set_chromosome
-    @chromosome = Chromosome.find(params[:chromosome_id])
+    @chromosome = find_org_chromosome
+    render_org_not_found unless @chromosome
   end
 end

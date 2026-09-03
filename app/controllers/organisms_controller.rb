@@ -17,7 +17,7 @@ class OrganismsController < ApplicationController
   end
 
   def update
-    organism = Organism.find(params[:id])
+    organism = @generation.organisms.find(params[:id])
     if organism.update(organism_params)
       render json: organism.to_hsh
     else
@@ -28,7 +28,8 @@ class OrganismsController < ApplicationController
   private
 
   def set_chromosome
-    @chromosome = Chromosome.find(params[:chromosome_id])
+    @chromosome = find_org_chromosome
+    render_org_not_found unless @chromosome
   end
 
   def set_generation

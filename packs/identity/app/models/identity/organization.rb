@@ -7,6 +7,7 @@ module Identity
   class Organization < ApplicationRecord
     has_many :org_memberships, dependent: :destroy
     has_many :users, through: :org_memberships
+    has_many :chromosomes, dependent: :destroy
 
     validates :name, presence: true, uniqueness: { case_sensitive: false }
   end
