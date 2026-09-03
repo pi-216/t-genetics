@@ -3,6 +3,9 @@
 FactoryBot.define do
   factory :chromosome do
     sequence(:name) { |n| "Chromosome #{n}" }
+    # Org-scoped domain (PRD-0002): every new chromosome belongs to an
+    # organization. Pass `organization: nil` explicitly to build legacy rows.
+    association :organization, factory: :organization
 
     factory :chromosome_with_alleles do
       transient do

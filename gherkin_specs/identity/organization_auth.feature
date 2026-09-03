@@ -83,7 +83,6 @@ Feature: Organization Auth
     And I do not see token management
 
   @DEV-0009
-  @wip
   Scenario: Org A's user cannot access Org B's chromosomes
     Given organization "Alpha" owns a chromosome named "Alpha-chrom"
     And organization "Beta" has a user with email "grace@example.com"

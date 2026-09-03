@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class Chromosome < ApplicationRecord
+  # Optional for legacy pre-org rows (issue #19); new rows are always assigned
+  # an organization by the controller/command layer.
+  belongs_to :organization, class_name: 'Identity::Organization', optional: true
+
   validates :name, presence: true
   has_many :alleles, dependent: :destroy
   has_many :generations, dependent: :destroy

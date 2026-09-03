@@ -4,7 +4,7 @@ class ChromosomesController < ApplicationController
   before_action :set_chromosome, only: %i[show edit update destroy]
 
   def index
-    @chromosomes = Chromosome.all
+    @chromosomes = Chromosome.where(organization_id: current_organization&.id)
     fresh_when(@chromosomes)
 
     respond_to do |format|
@@ -29,7 +29,7 @@ class ChromosomesController < ApplicationController
   def edit; end
 
   def create
-    @chromosome = Chromosome.new(chromosome_params)
+    @chromosome = Chromosome.new(chromosome_params.merge(organization: current_organization))
 
     respond_to do |format|
       if @chromosome.save
@@ -66,7 +66,8 @@ class ChromosomesController < ApplicationController
   private
 
   def set_chromosome
-    @chromosome = Chromosome.find(params[:id])
+    @chromosome = find_org_chromosome
+    render_org_not_found unless @chromosome
   end
 
   def chromosome_params
