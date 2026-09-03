@@ -75,3 +75,15 @@ Then(/^I am signed in$/) do
   expect(page.driver.request.session[:user_id]).to eq(user.id)
   expect(page).to have_current_path(root_path)
 end
+
+# --- DEV-0004 — signing in with invalid credentials fails safely. ---#
+Then(/^I am not signed in$/) do
+  expect(page.driver.request.session[:user_id]).to be_nil
+  expect(page).to have_current_path(login_path)
+  expect(page.status_code).to eq(422)
+end
+
+And(/^I see a generic invalid-credentials error$/) do
+  expect(page).to have_css('#error_explanation')
+  expect(page).to have_content('Invalid email or password')
+end
