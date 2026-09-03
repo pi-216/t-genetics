@@ -38,4 +38,18 @@ RSpec.describe 'Sessions', type: :request do
       end
     end
   end
+
+  describe 'POST /logout' do
+    context 'when signed in' do
+      it 'signs me out and redirects to the login page' do
+        post login_path, params: { identity_user: { email: 'ada@example.com', password: 'S3cretPass!' } }
+        expect(session[:user_id]).to eq(user.id)
+
+        post logout_path
+
+        expect(session[:user_id]).to be_nil
+        expect(response).to redirect_to(login_path)
+      end
+    end
+  end
 end

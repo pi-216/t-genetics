@@ -7,6 +7,7 @@ Rails.application.routes.draw do
 
   get "login" => "identity/sessions#new"
   post "login" => "identity/sessions#create"
+  post "logout" => "identity/sessions#destroy"
 
   if Rails.env.development? || Rails.env.test?
     mount Rswag::Ui::Engine => '/api-docs'

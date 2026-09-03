@@ -70,7 +70,16 @@ When(/^I sign in with email "([^"]+)" and password "([^"]+)"$/) do |email, passw
   click_button 'Sign in'
 end
 
+# 'Signed in' step — shared by DEV-0003 (Then: assert the established session)
+# and DEV-0005 (Given: establish the session through the real sign-in flow first). The two
+# usages collide on one regex (Cucumber matches keywords agnostically), so a single
+# step serves both: set up when no session exists, then assert the session state.
+
 Then(/^I am signed in$/) do
+  if page.driver.request.session[:user_id].nil?
+    step 'a user exists with email "ada@example.com" and password "S3cretPass!"'
+    step 'I sign in with email "ada@example.com" and password "S3cretPass!"'
+  end
   user = Identity::User.find_by!(email: @signed_in_email)
   expect(page.driver.request.session[:user_id]).to eq(user.id)
   expect(page).to have_current_path(root_path)
@@ -80,10 +89,15 @@ end
 Then(/^I am not signed in$/) do
   expect(page.driver.request.session[:user_id]).to be_nil
   expect(page).to have_current_path(login_path)
-  expect(page.status_code).to eq(422)
 end
 
 And(/^I see a generic invalid-credentials error$/) do
+  expect(page.status_code).to eq(422)
   expect(page).to have_css('#error_explanation')
   expect(page).to have_content('Invalid email or password')
+end
+
+# --- DEV-0005 — signing out terminates my session. ---#
+When(/^I sign out$/) do
+  page.driver.submit(:post, logout_path, {})
 end

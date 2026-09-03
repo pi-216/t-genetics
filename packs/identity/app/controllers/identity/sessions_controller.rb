@@ -4,7 +4,8 @@ module Identity
   # Session sign-in flow (PRD-0002, DEV-0003. Controllers parse input →
   # authenticate → sign in via the session concern; they never mutate models
   # directly (command pattern, AGENTS.md). Sign-up remains the mutation path —
-  # sign-in only establishes a session for an existing user.
+  # sign-in only establishes a session for an existing user. Sign-out (DEV-0005)
+  # ends the session via the same concern.
   class SessionsController < ApplicationController
     include Identity::Authentication
 
@@ -23,6 +24,11 @@ module Identity
         @user.errors.add(:base, 'Invalid email or password')
         render :new, status: :unprocessable_content
       end
+    end
+
+    def destroy
+      sign_out
+      redirect_to login_path
     end
 
     private
