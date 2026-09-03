@@ -1,0 +1,73 @@
+name: PR review re-queue
+
+# Automatic loop for the autonomous feature pipeline ({repo}): when a PR that
+# closes a ticket gets review feedback (a non-approved review or a new inline
+# review comment), reopen the ticket, clear the agent's claim, move it back to
+# Todo on the board, and copy the feedback into the issue body so the worker
+# sees it (the worker only reads issue bodies) and updates the SAME PR.
+#
+# NOTE: the board Status->Todo step needs a PAT with `project` scope in the
+# GH_PAT secret (GITHUB_TOKEN cannot use the Projects API). Without GH_PAT the
+# workflow still reopens/relabels the issue but the worker will NOT pick it up.
+
+on:
+  pull_request_review:
+    types: [submitted]
+  pull_request_review_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
+concurrency:
+  group: pr-requeue-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  requeue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Prepare feedback + skip decision
+        id: prep
+        env:
+          REVIEW_STATE: ${{ github.event.review.state }}
+          REVIEW_AUTHOR: ${{ github.event.review.user.login }}
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          REVIEW_BODY: ${{ github.event.review.body }}
+          COMMENT_PATH: ${{ github.event.comment.path }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "pull_request_review" ]; then
+            if [ "$REVIEW_STATE" = "approved" ] || [ "$REVIEW_AUTHOR" = "$PR_AUTHOR" ]; then
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            printf '**Review by %s (%s)**\n\n' "$REVIEW_AUTHOR" "$REVIEW_STATE" > /tmp/feedback.md
+            printf '%s\n' "$REVIEW_BODY" >> /tmp/feedback.md
+          else
+            if [ "$COMMENT_AUTHOR" = "$PR_AUTHOR" ]; then
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            printf '**Inline comment by %s — %s**\n\n' "$COMMENT_AUTHOR" "$COMMENT_PATH" > /tmp/feedback.md
+            printf '%s\n' "$COMMENT_BODY" >> /tmp/feedback.md
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Run re-queue
+        if: steps.prep.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          SNIPPET=""
+          if [ -s /tmp/feedback.md ]; then SNIPPET=/tmp/feedback.md; fi
+          bash .github/scripts/pr-requeue.sh "${{ github.event.pull_request.number }}" "${{ github.event.review.state }}" "$SNIPPET"

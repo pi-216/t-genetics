@@ -109,5 +109,18 @@ Dev DB migrated by the agent; test DB routinely lags behind.
 
 - PRDs: `docs/prd/` · Design sprint: `docs/design-sprint.md` · Venture
   orientation: `/home/tim/Documents/obsidian/04 - projects/ideas/gaas/HANDOFF.md`
+- Canonical harness: the `venture-agent-harness` Hermes skill (PM + dev-worker
+  pattern, monitor gate, requeue loop, merge-policy knob).
 - The t-chat pipeline this mirrors: see the `t-chat-development` Hermes skill
   (pi-216/t-chat) for the full autonomous-pipeline ops runbook.
+
+## Merge policy (auto — PO ruling 2026-09-03)
+
+- The main-branch ruleset requires ONLY CI (`lint`, `test`, `scan_js`,
+  `scan_ruby`); no human review is required or performed.
+- The worker opens a PR with body `Closes #N` and arms auto-merge
+  (`gh pr merge <n> --auto --squash`); green CI = merge. Nobody reviews PRs.
+- Requeue loop: non-approved review/inline feedback reopens the ticket,
+  returns the board item to Todo, strips claim labels, and copies the
+  feedback into the issue body (requires the `GH_PAT` secret, set).
+- The last human gate is `approved` on the ticket — that is the release switch.
