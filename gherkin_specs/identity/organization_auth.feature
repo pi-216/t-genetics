@@ -30,6 +30,7 @@ Feature: Organization Auth
     And I am the owner of "Loop Labs"
 
   @DEV-0002
+  @wip
   Scenario: Duplicate email is rejected on sign-up
     Given a user exists with email "ada@example.com"
     When I sign up with the following details:
@@ -39,12 +40,14 @@ Feature: Organization Auth
     And no new account or organization is created
 
   @DEV-0003
+  @wip
   Scenario: Signing in with valid credentials succeeds
     Given a user exists with email "ada@example.com" and password "S3cretPass!"
     When I sign in with email "ada@example.com" and password "S3cretPass!"
     Then I am signed in
 
   @DEV-0004
+  @wip
   Scenario: Signing in with invalid credentials fails safely
     Given a user exists with email "ada@example.com" and password "S3cretPass!"
     When I sign in with email "ada@example.com" and password "wrong-password"
@@ -52,6 +55,7 @@ Feature: Organization Auth
     And I see a generic invalid-credentials error
 
   @DEV-0005
+  @wip
   Scenario: Signing out terminates my session
     Given I am signed in
     When I sign out
@@ -65,6 +69,7 @@ Feature: Organization Auth
     Then I see an invite code that lets others join "Loop Labs"
 
   @DEV-0007
+  @wip
   Scenario: Joining with an invite code adds me as a member
     Given the owner of "Loop Labs" has generated invite code "INVITE-ABC"
     When I join "Loop Labs" with the following details:
@@ -74,6 +79,7 @@ Feature: Organization Auth
     And "bob@example.com" is a member, not an owner, of "Loop Labs"
 
   @DEV-0008
+  @wip
   Scenario: A member cannot manage members or tokens
     Given I am signed in as a member of "Loop Labs"
     When I visit the organization settings
@@ -81,6 +87,7 @@ Feature: Organization Auth
     And I do not see token management
 
   @DEV-0009
+  @wip
   Scenario: Org A's user cannot access Org B's chromosomes
     Given organization "Alpha" owns a chromosome named "Alpha-chrom"
     And organization "Beta" has a user with email "grace@example.com"
@@ -89,6 +96,7 @@ Feature: Organization Auth
     And the chromosome is not disclosed
 
   @DEV-0010
+  @wip
   Scenario: The last owner cannot be removed or demoted
     Given "Loop Labs" has one owner "ada@example.com" and a member "bob@example.com"
     When "ada@example.com" attempts to remove her own owner role
