@@ -1,0 +1,14 @@
+%h1{ class: "text-2xl font-bold" } Organization invite
+%p{ class: "mt-2 text-teal-200" }
+  Share this code with someone you want to join
+  %span{ class: "font-semibold" }= current_user.organization.name
+  as a member.
+
+- if @invite_code
+  .invite-code{ class: "mt-4 inline-block rounded border border-teal-700 bg-teal-800/50 p-4 text-2xl font-mono tracking-widest text-teal-100" }
+    = @invite_code.code
+- else
+  %p{ class: "mt-4 text-teal-300" } No invite code yet.
+
+= form_with url: organization_invite_code_path, class: "mt-6" do |form|
+  = form.submit "Generate invite code", class: "rounded bg-teal-600 px-4 py-2 font-semibold text-teal-950"

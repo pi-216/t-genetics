@@ -58,7 +58,6 @@ Feature: Organization Auth
     Then I am not signed in
 
   @DEV-0006
-  @wip
   Scenario: The owner can generate an invite code
     Given I am signed in as the owner of "Loop Labs"
     When I generate an invite code for my organization

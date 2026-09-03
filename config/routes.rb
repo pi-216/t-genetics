@@ -12,6 +12,9 @@ Rails.application.routes.draw do
   post "login" => "identity/sessions#create"
   post "logout" => "identity/sessions#destroy"
 
+  get "organization/invite_code" => "identity/invite_codes#show", as: :organization_invite_code
+  post "organization/invite_code" => "identity/invite_codes#create"
+
   # Org settings surface — member-management and token-management sections
   # render owner-only (PRD-0002 DEV-0008 / issue #18).
   get "settings" => "identity/settings#show", as: :settings

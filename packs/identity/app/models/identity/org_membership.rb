@@ -15,5 +15,9 @@ module Identity
 
     validates :role, presence: true, inclusion: { in: ROLES }
     validates :user_id, uniqueness: true # v1: one org per user
+
+    def owner?
+      role == OWNER_ROLE
+    end
   end
 end
