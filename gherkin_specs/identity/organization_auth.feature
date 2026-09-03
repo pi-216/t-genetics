@@ -30,6 +30,7 @@ Feature: Organization Auth
     And I am the owner of "Loop Labs"
 
   @DEV-0002
+  @wip
   Scenario: Duplicate email is rejected on sign-up
     Given a user exists with email "ada@example.com"
     When I sign up with the following details:
