@@ -8,6 +8,7 @@ RSpec.describe Identity::Organization do
   describe 'associations' do
     it { is_expected.to have_many(:org_memberships).dependent(:destroy) }
     it { is_expected.to have_many(:users).through(:org_memberships) }
+    it { is_expected.to have_one(:invite_code).dependent(:destroy) }
   end
 
   describe 'validations' do

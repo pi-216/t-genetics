@@ -23,4 +23,16 @@ RSpec.describe Identity::OrgMembership do
       expect(Identity::OrgMembership::ROLES).to contain_exactly('owner', 'member')
     end
   end
+
+  describe '#owner?' do
+    it 'is true when the role is owner' do
+      membership = FactoryBot.build(:org_membership, role: Identity::OrgMembership::OWNER_ROLE)
+      expect(membership).to be_owner
+    end
+
+    it 'is false when the role is member' do
+      membership = FactoryBot.build(:org_membership, role: Identity::OrgMembership::MEMBER_ROLE)
+      expect(membership).not_to be_owner
+    end
+  end
 end
