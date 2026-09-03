@@ -58,6 +58,7 @@ end
 group :test do
   gem 'capybara'
   gem 'capybara-screenshot'
+  gem 'cucumber-rails', require: false
   gem 'database_cleaner'
   gem 'database_cleaner-active_record'
   gem 'launchy'

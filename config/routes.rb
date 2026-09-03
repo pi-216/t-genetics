@@ -1,4 +1,10 @@
 Rails.application.routes.draw do
+  # Identity context — org sign-up (PRD-0002. Sign-up creates an organization
+  # with the user as its owner and signs them in.
+
+  get "register" => "identity/registrations#new"
+  post "register" => "identity/registrations#create"
+
   if Rails.env.development? || Rails.env.test?
     mount Rswag::Ui::Engine => '/api-docs'
     mount Rswag::Api::Engine => '/api-docs'

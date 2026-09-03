@@ -29,6 +29,21 @@ module TGenetics
     config.autoload_lib(ignore: %w(assets tasks))
     config.assets.css_compressor = nil
 
+    # Autoload bounded-context code from packs/<context>/app/* so Rails can load
+    # it (root = e.g. packs/identity/app/models → models/identity/user.rb
+    # → Identity::User) and Packwerk can attribute constants to their owning pack.
+
+
+    Dir[Rails.root.join("packs/*/app/*")].sort.each do |pack_app_dir|
+      config.autoload_paths << pack_app_dir
+      config.eager_load_paths << pack_app_dir
+    end
+
+    # Register pack view dirs so controllers in packs can render their views.
+    Dir[Rails.root.join("packs/*/app/views")].each do |pack_views_dir|
+      config.paths["app/views"].push(pack_views_dir)
+    end
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files
