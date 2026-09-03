@@ -1,0 +1,11 @@
+%h1{ class: "text-2xl font-bold" } Organization settings
+%p{ class: "mt-2 text-teal-200" }= current_user.organization.name
+
+- if current_user.org_membership.role == Identity::OrgMembership::OWNER_ROLE
+  %section{ class: "mt-8 rounded border border-teal-700 p-4" }
+    %h2{ class: "text-lg font-semibold" } Member management
+    %p{ class: "mt-1 text-sm text-teal-400" } Manage who belongs to this organization.
+
+  %section{ class: "mt-4 rounded border border-teal-700 p-4" }
+    %h2{ class: "text-lg font-semibold" } Token management
+    %p{ class: "mt-1 text-sm text-teal-400" } Manage this organization's access tokens.

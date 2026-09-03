@@ -74,7 +74,6 @@ Feature: Organization Auth
     And "bob@example.com" is a member, not an owner, of "Loop Labs"
 
   @DEV-0008
-  @wip
   Scenario: A member cannot manage members or tokens
     Given I am signed in as a member of "Loop Labs"
     When I visit the organization settings

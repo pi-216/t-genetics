@@ -12,6 +12,10 @@ Rails.application.routes.draw do
   post "login" => "identity/sessions#create"
   post "logout" => "identity/sessions#destroy"
 
+  # Org settings surface — member-management and token-management sections
+  # render owner-only (PRD-0002 DEV-0008 / issue #18).
+  get "settings" => "identity/settings#show", as: :settings
+
   if Rails.env.development? || Rails.env.test?
     mount Rswag::Ui::Engine => '/api-docs'
     mount Rswag::Api::Engine => '/api-docs'
