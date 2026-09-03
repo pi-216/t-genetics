@@ -5,6 +5,9 @@ Rails.application.routes.draw do
   get "register" => "identity/registrations#new"
   post "register" => "identity/registrations#create"
 
+  get "join" => "identity/invitations#new"
+  post "join" => "identity/invitations#create"
+
   get "login" => "identity/sessions#new"
   post "login" => "identity/sessions#create"
   post "logout" => "identity/sessions#destroy"

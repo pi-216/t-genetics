@@ -65,7 +65,6 @@ Feature: Organization Auth
     Then I see an invite code that lets others join "Loop Labs"
 
   @DEV-0007
-  @wip
   Scenario: Joining with an invite code adds me as a member
     Given the owner of "Loop Labs" has generated invite code "INVITE-ABC"
     When I join "Loop Labs" with the following details:
