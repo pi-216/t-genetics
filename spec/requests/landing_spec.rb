@@ -54,5 +54,16 @@ RSpec.describe 'Landing page', type: :request do
       expect(response.body).not_to include('time-to-result')
       expect(response.body).not_to include('insights')
     end
+
+    # PRD-0001, DEV-0006 — the footer carries placeholder links for future
+    # privacy and terms pages (the pages themselves are non-goals; the
+    # links are the scope). Rendered via the shared application layout, so
+    # every page inherits them.
+    it 'renders privacy and terms placeholder links in the footer' do
+      get root_path
+
+      expect(response.body).to include('>Privacy<')
+      expect(response.body).to include('>Terms<')
+    end
   end
 end

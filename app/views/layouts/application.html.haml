@@ -13,3 +13,7 @@
   %body.h-full.font-mono.antialiased.bg-teal-900.text-teal-300
     %main.container.mx-auto.mt-28.px-5.flex
       = yield
+    %footer.mt-16.border-t.border-teal-700.py-6.px-5
+      %nav.flex.space-x-6.text-sm.text-teal-500
+        = link_to 'Privacy', '#', class: 'hover:text-teal-300'
+        = link_to 'Terms', '#', class: 'hover:text-teal-300'
