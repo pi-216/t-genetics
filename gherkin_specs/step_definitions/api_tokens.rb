@@ -173,3 +173,38 @@ Then(/^"([^"]+)" appears in the API chromosome list$/) do |chromosome_name|
   expect(page.status_code).to eq(200)
   expect(page.body).to include(chromosome_name)
 end
+
+# DEV-0007 (issue #42) — machines create experiments with a token. Mirrors the
+# DEV-0006 create flow: mint a token for the feature-background org when none
+# is in hand, POST the experiment at the machine API naming an org chromosome
+# by id, and re-list with the same token so "appears in the API experiment
+# list" proves org-scoped persistence (Experiments::Setup mints the initial
+# generation + population under the hood).
+When(/^I create an experiment on "([^"]+)" via the API$/) do |chromosome_name|
+  organization = @api_test_org or raise 'no feature-background organization in play'
+  chromosome = organization.chromosomes.find_by!(name: chromosome_name)
+  @plain_api_token ||= begin
+    token = Identity::ApiToken.generate_plaintext
+    Identity::ApiToken.create!(
+      organization: organization,
+      name: 'ci-runner',
+      token_digest: Identity::ApiToken.digest(token)
+    )
+    token
+  end
+
+  page.driver.header('Authorization', "Bearer #{@plain_api_token}")
+  page.driver.post('/api/v1/experiments', experiment: { chromosome_id: chromosome.id })
+
+  expect(page.status_code).to eq(201)
+  @created_experiment = JSON.parse(page.body)
+end
+
+Then(/^the experiment appears in the API experiment list$/) do
+  page.driver.header('Authorization', "Bearer #{@plain_api_token}")
+  page.driver.get('/api/v1/experiments')
+
+  expect(page.status_code).to eq(200)
+  listed_ids = JSON.parse(page.body).filter_map { |experiment| experiment['id'] }
+  expect(listed_ids).to include(@created_experiment['id'])
+end

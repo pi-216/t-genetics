@@ -2,8 +2,7 @@
 
 module Experiments
   class RecordOutcome < GLCommand::Callable
-    requires performance_log: PerformanceLog # GLCommand will find by ID if an integer is passed
-    requires :fitness_input_value, type: Float
+    requires performance_log: PerformanceLog, fitness_input_value: Float
     allows :outcome_metrics # Hash, will be stored as JSONB
 
     # Store original values for rollback
