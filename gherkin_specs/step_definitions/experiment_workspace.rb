@@ -11,6 +11,10 @@
 
 Given(/^I am signed in as an owner of "([^"]+)"$/) do |org_name|
   organization = Identity::Organization.find_or_create_by!(name: org_name)
+  # Marks the WEB feature context for the shared Given in api_tokens.rb
+  # ("a suggestion has been requested for the experiment") — a browser session
+  # exists here, so the web loop flow runs, not the token flow.
+  @signed_in_org = organization
   email = "owner-#{organization.name.parameterize}@example.com"
   password = 'S3cretPass!'
   user = Identity::User.find_or_create_by!(email:) do |u|
@@ -83,4 +87,25 @@ And(/^a performance log entry records the suggestion$/) do
   expect(logs.size).to eq(1)
   expect(logs.first.organism.generation).to eq(experiment.current_generation)
   expect(logs.first.suggested_at).to be_present
+end
+
+# DEV-0004 (issue #71) — a member reports the ONE fitness number for the
+# latest suggestion (the show page's report form runs the engine's
+# Experiments::RecordOutcome). The Given for this scenario ("a suggestion has
+# been requested for the experiment") is shared with the token-API feature and
+# lives in api_tokens.rb — it branches on feature context and delegates here
+# via `step` for the web flow.
+
+When(/^I report fitness ([\d.]+) for that suggestion$/) do |fitness|
+  fill_in 'Fitness', with: fitness
+  click_button 'Report fitness'
+end
+
+Then(/^the fitness ([\d.]+) is recorded against that suggestion$/) do |fitness|
+  experiment = Experiment.find_by!(name: 'Donation amounts')
+  log = PerformanceLog.where(experiment_id: experiment.id).order(:id).last
+  expect(log.fitness_input_value).to eq(fitness.to_f)
+  expect(log.outcome_recorded_at).to be_present
+  expect(page).to have_css('.recorded-fitness')
+  expect(page).to have_content("Recorded fitness: #{fitness}")
 end

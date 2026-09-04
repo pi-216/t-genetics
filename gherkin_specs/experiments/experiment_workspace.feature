@@ -6,10 +6,10 @@
 #   (open question A2 resolved to yes).
 # - Population size + ripe thresholds are set at creation (open question A3
 #   resolved to yes — they already exist on the model).
-# - DEV-0001 (issue #68) and DEV-0003 (issue #70) implemented; DEV-0002,
-#   DEV-0004..DEV-0008 still @wip (each gets its own ticket). No paid-tier
-#   surface (exploitation/greed, generation-progress insights) — those are red
-#   lines until a payer.
+# - DEV-0001 (issue #68), DEV-0003 (issue #70), DEV-0004 (issue #71)
+#   implemented; DEV-0002, DEV-0005..DEV-0008 still @wip (each gets its own
+#   ticket). No paid-tier surface (exploitation/greed, generation-progress
+#   insights) — those are red lines until a payer.
 
 @PRD-0003
 Feature: Experiment Workspace
@@ -41,7 +41,6 @@ Feature: Experiment Workspace
     And a performance log entry records the suggestion
 
   @DEV-0004
-  @wip
   Scenario: Reporting an outcome records exactly one fitness number
     Given a suggestion has been requested for the experiment
     When I report fitness 0.81 for that suggestion

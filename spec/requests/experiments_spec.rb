@@ -133,6 +133,107 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
     end
   end
 
+  describe 'POST /experiments/:id/report' do
+    let!(:experiment) do
+      result = Experiments::Setup.call(chromosome:, external_entity: chromosome,
+                                       name: 'Donation amounts',
+                                       experiment_configuration: { population_size: 20 })
+      raise "Setup failed: #{result.errors.inspect}" unless result.success?
+
+      result.experiment
+    end
+
+    # A suggestion must exist before anything can be reported — drives the real
+    # loop action like the UI does.
+    def request_suggestion
+      post suggestion_experiment_url(experiment)
+      expect(response).to have_http_status(:ok)
+    end
+
+    it 'requires sign-in (anonymous is redirected to the login page)' do
+      post report_experiment_url(experiment), params: { fitness_input_value: '0.81' }
+
+      expect(response).to redirect_to(login_path)
+    end
+
+    it 'records exactly one fitness number on the latest suggestion log and shows it' do
+      sign_in_as(organization: org)
+      request_suggestion
+      log = PerformanceLog.order(:id).last
+
+      expect do
+        post report_experiment_url(experiment), params: { fitness_input_value: '0.81' }
+      end.to change { log.reload.fitness_input_value }.from(nil).to(0.81)
+
+      expect(response).to have_http_status(:ok)
+      expect(log.reload.outcome_recorded_at).to be_present
+      expect(response.body).to include('0.81')
+      expect(response.body).to match(/recorded fitness/i)
+    end
+
+    it 'answers 404 for another organization\'s experiment and records nothing' do
+      sign_in_as(organization: org)
+      secret = Experiments::Setup.call(chromosome: other_chromosome, external_entity: other_chromosome).experiment
+      secret_log_count = PerformanceLog.where(experiment_id: secret.id).count
+
+      expect do
+        post report_experiment_url(secret), params: { fitness_input_value: '0.81' }
+      end.not_to change(PerformanceLog.where(experiment_id: secret.id), :count)
+      expect(PerformanceLog.where(experiment_id: secret.id).count).to eq(secret_log_count)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'answers 404 for an unknown experiment id' do
+      sign_in_as(organization: org)
+
+      expect do
+        post report_experiment_url(9_999_999), params: { fitness_input_value: '0.81' }
+      end.not_to change(PerformanceLog, :count)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'answers 422 when no suggestion has been requested yet' do
+      sign_in_as(organization: org)
+
+      expect do
+        post report_experiment_url(experiment), params: { fitness_input_value: '0.81' }
+      end.not_to change(PerformanceLog, :count)
+      expect(PerformanceLog.where(experiment_id: experiment.id).count).to eq(0)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to match(/no suggestion/i)
+    end
+
+    it 'rejects a non-numeric fitness value with 422 and no change' do
+      sign_in_as(organization: org)
+      request_suggestion
+      log = PerformanceLog.order(:id).last
+
+      expect do
+        post report_experiment_url(experiment), params: { fitness_input_value: 'high' }
+      end.not_to(change { log.reload.fitness_input_value })
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to match(/number/i)
+    end
+
+    it 're-reporting updates the same suggestion log (drift A2 — audit trail on the log)' do
+      sign_in_as(organization: org)
+      request_suggestion
+      log = PerformanceLog.order(:id).last
+
+      post report_experiment_url(experiment), params: { fitness_input_value: '0.81' }
+      expect(log.reload.fitness_input_value).to eq(0.81)
+
+      post report_experiment_url(experiment), params: { fitness_input_value: '0.90' }
+
+      expect(log.reload.fitness_input_value).to eq(0.90)
+      expect(PerformanceLog.where(experiment_id: experiment.id).count).to eq(1)
+    end
+  end
+
   describe 'POST /experiments/:id/suggestion' do
     let!(:experiment) do
       result = Experiments::Setup.call(chromosome:, external_entity: chromosome,

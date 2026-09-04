@@ -13,17 +13,29 @@
 
 <%= button_to 'Request suggestion', suggestion_experiment_path(@experiment), method: :post %>
 
-<% if @suggested_organism %>
+<% if @suggestion_log %>
   <section class="suggested-organism">
     <h2>Suggested organism</h2>
-    <p>Organism #<%= @suggested_organism.id %> from generation
-      <%= @suggested_organism.generation.iteration %></p>
+    <p>Organism #<%= @suggestion_log.organism.id %> from generation
+      <%= @suggestion_log.organism.generation.iteration %></p>
     <ul>
-      <% @suggested_organism.values.includes(:allele).sort_by(&:name).each do |value| %>
+      <% @suggestion_log.organism.values.includes(:allele).sort_by(&:name).each do |value| %>
         <li><strong><%= value.allele.name %>:</strong> <%= value.data %></li>
       <% end %>
     </ul>
     <p><small>Suggested at <%= @suggestion_log.suggested_at %></small></p>
+
+    <% if @suggestion_log.outcome_recorded_at.present? %>
+      <p class="recorded-fitness">Recorded fitness: <%= @suggestion_log.fitness_input_value %></p>
+    <% end %>
+
+    <div class="report-fitness">
+      <%= form_with url: report_experiment_path(@experiment), method: :post do |f| %>
+        <%= f.label :fitness_input_value, 'Fitness' %>
+        <%= f.number_field :fitness_input_value, step: 'any', required: true, placeholder: 'e.g. 0.81' %>
+        <%= f.submit 'Report fitness' %>
+      <% end %>
+    </div>
   </section>
 <% end %>
 
