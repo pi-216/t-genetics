@@ -65,6 +65,7 @@ Rails.application.routes.draw do
   resources :experiments, only: %i[index new create show] do
     member do
       post :suggestion
+      post :report
     end
   end
 
