@@ -52,7 +52,6 @@ Feature: Chromosome Designer
     When I visit the chromosome "Alpha-chrom"
     Then I receive a not-found or forbidden response
 
-  @wip
   @DEV-0005
   Scenario: I can open an organism and see its typed values
     Given the generation browser shows an organism
