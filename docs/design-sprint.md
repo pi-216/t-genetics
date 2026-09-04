@@ -1,10 +1,14 @@
 # Design Sprint — UI/brand concept → UX concept (workstream spec)
 
-> **Status: proposed — founder rules on the concept, then locks.** Not a PRD in
-> the worker pipeline: design output is *judgment the founder must rule on*,
-> per Founders-Harness (taste rails lock early; only the founder encodes them).
-> Runs as a discrete design agent workstream in parallel with backend build
-> (PRDs 0001–0005 can proceed on functional styling until the brand lands).
+> **Status: Phase 1 draft produced 2026-09-04 — founder ruling pending.**
+> Phase 1 artifacts live in `docs/design-sprint/ph1/` (`moodboard.html`
+> deck + `skeleton-frames.html` + `DESIGN.md` token set, lint-clean).
+> Founder rules on direction A/B/C, then the token set locks and Phase 2
+> (UX concept) kicks off. Not a PRD in the worker pipeline: design output
+> is *judgment the founder must rule on*, per Founders-Harness (taste rails
+> lock early; only the founder encodes them). Runs as a discrete design
+> agent workstream in parallel with backend build (PRDs 0001–0005 proceed
+> on functional styling until the brand lands).
 
 ## Why
 The founder named a proper design agent for a **UI/brand concept**, then a
