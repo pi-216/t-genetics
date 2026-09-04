@@ -70,3 +70,23 @@ Then(/^I see no paid feature specifics implemented$/) do
   expect(page).to have_no_content('time-to-result')
   expect(page).to have_no_content('insights')
 end
+
+# DEV-0006 — the footer carries placeholder links for future privacy and
+# terms pages (the pages themselves are PRD-0001 non-goals; the links are
+# the scope). The footer lives in the shared application layout, so the
+# guard covers every page, not just the landing page.
+When(/^I inspect the page footer$/) do
+  expect(page).to have_css('footer')
+end
+
+Then(/^I see a privacy link$/) do
+  within('footer') do
+    expect(page).to have_link('Privacy', href: '#')
+  end
+end
+
+Then(/^I see a terms link$/) do
+  within('footer') do
+    expect(page).to have_link('Terms', href: '#')
+  end
+end

@@ -54,7 +54,6 @@ Feature: Landing Page
     Then the page declares a responsive viewport
     And there is no horizontal scrolling
 
-  @wip
   @DEV-0006
   Scenario: The footer has privacy and terms placeholders
     When I inspect the page footer
