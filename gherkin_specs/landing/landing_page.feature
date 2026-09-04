@@ -35,7 +35,6 @@ Feature: Landing Page
     When I read the trust section
     Then I see a statement that my fitness function stays mine
 
-  @wip
   @DEV-0004
   Scenario: The page shows a pricing posture teaser without promising paid features
     When I read the pricing section

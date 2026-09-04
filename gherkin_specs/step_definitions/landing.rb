@@ -49,3 +49,24 @@ end
 Then(/^I see a statement that my fitness function stays mine$/) do
   expect(page).to have_content('Your fitness function stays yours')
 end
+
+# DEV-0004 — the pricing section shows the posture (a Free tier for the
+# basic loop; a paid tier comes later) WITHOUT promising or describing
+# paid-tier specifics. Paid-tier features (exploitation/greed control,
+# time-to-result optimization, generation insights) are a red line until
+# the first paying customer exists — the page must not name or offer them.
+When(/^I read the pricing section$/) do
+  expect(page).to have_css('#pricing')
+end
+
+Then(/^I see a Free tier for the basic loop$/) do
+  expect(page).to have_content('Free tier')
+  expect(page).to have_content('basic loop')
+end
+
+Then(/^I see no paid feature specifics implemented$/) do
+  expect(page).to have_no_content('exploitation')
+  expect(page).to have_no_content('greed')
+  expect(page).to have_no_content('time-to-result')
+  expect(page).to have_no_content('insights')
+end
