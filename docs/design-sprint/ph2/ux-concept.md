@@ -40,7 +40,7 @@ org onboarding → invite members → create chromosome → create experiment
 5. **API tokens** (PRD-0005) — owner-only; machine access path mirrors the
    same loop via `Authorization: Bearer`.
 
-## UX decisions (proposed, founder can overrule)
+## UX decisions (founder-ruled 2026-09-04)
 
 - **The ONE number is a first-class object.** Report screens show a single
   prominent numeric input + submit; no multi-metric forms (red line:
@@ -53,17 +53,35 @@ org onboarding → invite members → create chromosome → create experiment
 - **Machine-first and human-first share the loop.** Token API (PRD-0005) and
   the UI both hit the same commands; UI hides token plumbing.
 - **No paid-tier affordances on surfaces** until first payer (red line).
+- **The loop is decoupled, not auto-stepped.** Request a suggestion → show it →
+  report the outcome WHEN it returns (minutes, hours, or a high-volume day
+  later). There is NO auto-suggest of the next organism after a report; the
+  customer pulls the next suggestion when they want it. (Founder, Q2.)
+  Canonical use case: **tip-amount suggestions on a payment form** — a
+  payment processor shows many forms to many customers all day; each form can
+  request a suggestion and present it, and the outcome (converted /
+  no-converted) is reported back later, decoupled and batched. The UI/API
+  treats a suggestion as a long-lived object with its own lifecycle
+  (suggested → shown → outcome), not a transient "next step."
+- **Generation history is a table** for now (mono data, parent columns);
+  lineage/tree view deferrable until analytics demand it. (Founder, Q1.)
+- **Onboarding is a one-page flat invite flow** — single form (email + role),
+  no wizard; flat roles make multi-step unwarranted. (Founder, Q3.)
 
 ## Open UX questions (founder)
 
-- **Q1 Timeline viz:** generation history as a lineage/tree view (direction C
-  showed cards), or a table? Direction A default: table with parent columns,
-  tree later if analytics demand it.
-- **Q2 Suggestion moment:** after "report outcome," does the UI auto-suggest
-  the next organism, or return to the generation view with a banner?
-  (Recommend: auto-suggest next — keeps the loop moving.)
-- **Q3 Onboarding depth:** one-page invite flow (email + role) vs multi-step?
-  (Recommend: one page — flat roles make it a single form.)
+**All founder-ruled 2026-09-04 (Q1 table, Q2 decoupled two-step, Q3 flat).
+Remaining open for later:**
+
+- **Q4 Suggestion lifecycle in the API:** explicit status transitions
+  (suggested → shown → outcome) so a long-lived suggestion can be queried
+  and re-presented across sessions without losing state? (Recommend: yes —
+  supports the payment-form use case; the token API already returns one
+  suggestion, add a lightweight "current suggestion" read.)
+- **Q5 Outcome batching:** high-volume customers report outcomes in batches
+  (a day's worth at once). Should the report endpoint accept a list, or is
+  one-at-a-time with a batch client loop fine? (Recommend: keep
+  one-at-a-time — the API loop is trivial; adds no protocol surface.)
 
 ## Part B — usability walkthrough (queued)
 
