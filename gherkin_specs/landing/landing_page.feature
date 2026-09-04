@@ -25,7 +25,6 @@ Feature: Landing Page
     And I see an explanation of the evolution loop
     And I see a "Start free" call to action
 
-  @wip
   @DEV-0002
   Scenario: The call to action leads to sign-up
     When I click the "Start free" call to action
