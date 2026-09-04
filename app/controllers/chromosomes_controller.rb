@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class ChromosomesController < ApplicationController
+  before_action :require_signed_in
   before_action :set_chromosome, only: %i[show edit update destroy]
 
   def index

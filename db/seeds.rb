@@ -1,4 +1,8 @@
-chromosome = Chromosome.create(name: 'Tip Recommendations')
+# Org-scoped since finding #56 (2026-09-04): a chromosome without an org is
+# invisible to every session and would resurrect the legacy org-less rows the
+# migration rake task cleans up (bin/rake tgenetics:migrate_legacy_org_rows).
+demo_org = Identity::Organization.find_or_create_by!(name: 'Demo Org')
+chromosome = Chromosome.create(name: 'Tip Recommendations', organization: demo_org)
 
 @allele_names = [:button1, :button2, :button3]
 @allele_names.each do |name|

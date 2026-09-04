@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class OrganismsController < ApplicationController
+  before_action :require_signed_in
   before_action :set_chromosome
   before_action :set_generation
   before_action :set_organism, only: %i[show update]
