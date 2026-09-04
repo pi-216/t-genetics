@@ -88,3 +88,28 @@ Then(/^I receive a 200 response listing "([^"]+)"$/) do |chromosome_name|
   expect(page.status_code).to eq(200)
   expect(page.body).to include(chromosome_name)
 end
+
+# DEV-0004 (issue #39) — an invalid, missing, or revoked token is rejected.
+# The org's revoked token is created up front so the request proves a revoked
+# row cannot authenticate anything; the presented token is a plain wrong
+# value and the machine API must answer 401 (the auth concern looks up only
+# active digests). Missing-token and revoked-token 401 paths are pinned by
+# the request spec (spec/requests/api/v1/token_chromosomes_spec.rb).
+Given(/^"([^"]+)" has a revoked API token$/) do |org_name|
+  organization = Identity::Organization.find_by!(name: org_name)
+  Identity::ApiToken.create!(
+    organization: organization,
+    name: 'revoked-ci-runner',
+    token_digest: Identity::ApiToken.digest(Identity::ApiToken.generate_plaintext),
+    revoked_at: Time.current
+  )
+end
+
+When(/^I GET \/api\/v1\/chromosomes with an invalid token$/) do
+  page.driver.header('Authorization', 'Bearer invalid-not-a-real-token')
+  page.driver.get('/api/v1/chromosomes')
+end
+
+Then(/^I receive a (\d+) response$/) do |status|
+  expect(page.status_code).to eq(status.to_i)
+end
