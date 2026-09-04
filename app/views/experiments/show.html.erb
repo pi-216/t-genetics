@@ -13,6 +13,8 @@
 
 <%= button_to 'Request suggestion', suggestion_experiment_path(@experiment), method: :post %>
 
+<p><%= link_to 'Generation history', history_experiment_path(@experiment) %></p>
+
 <% if @suggestion_log %>
   <section class="suggested-organism">
     <h2>Suggested organism</h2>

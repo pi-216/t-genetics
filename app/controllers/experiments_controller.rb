@@ -9,7 +9,7 @@
 # in the controller.
 class ExperimentsController < ApplicationController
   before_action :require_signed_in
-  before_action :set_experiment, only: %i[show suggestion report]
+  before_action :set_experiment, only: %i[show suggestion report history]
 
   def index
     @experiments = Experiment.joins(:chromosome)
@@ -20,6 +20,18 @@ class ExperimentsController < ApplicationController
 
   def show
     load_latest_suggestion
+  end
+
+  # PRD-0003 DEV-0007 (issue #74) — generation history: every generation of
+  # the experiment's chromosome (iteration, organism count, and each organism
+  # with its typed values and recorded fitness). Read-only; org-scoped by
+  # set_experiment, so a cross-org/unknown experiment answers 404 before this
+  # action runs. Generations belong to the chromosome (not the experiment),
+  # so the history is scoped through the experiment's own chromosome.
+  def history
+    @generations = Generation.where(chromosome: @experiment.chromosome)
+                             .order(:iteration)
+                             .includes(organisms: { values: :allele })
   end
 
   def new

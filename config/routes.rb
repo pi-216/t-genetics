@@ -66,6 +66,7 @@ Rails.application.routes.draw do
     member do
       post :suggestion
       post :report
+      get :history
     end
   end
 

@@ -234,6 +234,85 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
     end
   end
 
+  describe 'GET /experiments/:id/history (PRD-0003 DEV-0007 / issue #74)' do
+    let!(:experiment) do
+      result = Experiments::Setup.call(chromosome:, external_entity: chromosome,
+                                       name: 'Donation amounts',
+                                       experiment_configuration: { population_size: 20 })
+      raise "Setup failed: #{result.errors.inspect}" unless result.success?
+
+      result.experiment
+    end
+
+    # Drives the real loop (suggest → report → auto-evolve) twice, so the
+    # experiment ends with generations 0, 1, 2 — exactly the "evolved more
+    # than once" state the BDD Given for this scenario produces.
+    def evolve_twice(experiment)
+      experiment.start!
+      2.times do
+        until experiment.reload.ripe_for_evolution?
+          suggestion = Experiments::RequestSuggestion.call(experiment:)
+          raise "RequestSuggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+
+          outcome = Experiments::RecordOutcome.call(performance_log: suggestion.performance_log,
+                                                    fitness_input_value: 0.81)
+          raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
+        end
+        next_suggestion = Experiments::RequestSuggestion.call(experiment:)
+        raise "RequestSuggestion failed: #{next_suggestion.errors.inspect}" unless next_suggestion.success?
+      end
+    end
+
+    it 'requires sign-in (anonymous is redirected to the login page)' do
+      get history_experiment_url(experiment)
+
+      expect(response).to redirect_to(login_path)
+    end
+
+    it 'lists each generation with its organisms and recorded fitness' do
+      sign_in_as(organization: org)
+      evolve_twice(experiment)
+
+      get history_experiment_url(experiment)
+
+      expect(response).to have_http_status(:ok)
+      # Three generations exist: 0 (Setup) plus the two evolutions.
+      expect(experiment.reload.current_generation.iteration).to eq(2)
+      expect_history_lists_every_generation(response.body)
+      # Evolved generations carry the recorded (customer-reported) fitness.
+      expect(response.body).to include('Recorded fitness:')
+      expect(response.body).to include('0.81')
+    end
+
+    # Each generation row shows its iteration, organism count, and every
+    # organism id — the browse surface of the generation history.
+    def expect_history_lists_every_generation(body)
+      Generation.where(chromosome: experiment.chromosome).order(:iteration).each do |generation|
+        expect(body).to include("Generation #{generation.iteration}")
+        expect(body).to include("#{generation.organisms.size} organisms")
+        generation.organisms.each { |organism| expect(body).to include("Organism ##{organism.id}") }
+      end
+    end
+
+    it 'answers 404 for another organization\'s experiment and keeps it secret' do
+      sign_in_as(organization: org)
+      secret = Experiments::Setup.call(chromosome: other_chromosome, external_entity: other_chromosome).experiment
+
+      get history_experiment_url(secret)
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.body).not_to include(secret.name)
+    end
+
+    it 'answers 404 for an unknown experiment id' do
+      sign_in_as(organization: org)
+
+      get history_experiment_url(9_999_999)
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe 'POST /experiments/:id/suggestion' do
     let!(:experiment) do
       result = Experiments::Setup.call(chromosome:, external_entity: chromosome,
