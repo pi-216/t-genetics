@@ -78,4 +78,27 @@ RSpec.describe Experiments::RequestSuggestion do
       expect(Generation.where(chromosome: experiment.chromosome).count).to eq(1)
     end
   end
+
+  describe 'double-fire protection (PRD-0003 DEV-0006, issue #73)' do
+    before { make_ripe }
+
+    it 'does not create a second generation when a racing loop action fires on the same ripe state' do
+      # A second loop action (double-click, web+API race, retry) observed the
+      # SAME pre-evolution ripe state: its experiment view caches generation 0
+      # before the first action's evolution commits.
+      racing_view = Experiment.find(experiment.id)
+      racing_view.current_generation
+
+      first = described_class.call(experiment:)
+      expect(first).to be_success
+
+      second = described_class.call(experiment: racing_view)
+      expect(second).to be_success
+
+      # Setup births generation 0; exactly ONE offspring (iteration 1) may
+      # exist — a double-fire leaves two siblings.
+      expect(Generation.where(chromosome: experiment.chromosome).count).to eq(2)
+      expect(Generation.where(chromosome: experiment.chromosome, iteration: 1).count).to eq(1)
+    end
+  end
 end

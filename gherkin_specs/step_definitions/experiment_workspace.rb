@@ -145,6 +145,53 @@ And(/^it replaces the current generation$/) do
   expect(page).to have_content('from generation 1')
 end
 
+# DEV-0006 (issue #73) — evolution does not double-fire. The double-fire
+# hazard: two loop actions (a double-click, web + machine API racing, or a
+# client retry) can BOTH pass the ripe check before either commits, and each
+# then runs EvaluateAndEvolve against the same pre-evolution state — creating
+# TWO sibling generations from one parent. The scenario drives the real loop
+# commands twice against the same ripe (pre-evolution) experiment view, and
+# asserts exactly one offspring generation exists afterwards (regression:
+# the engine must serialize evolution on the experiment row and adopt the
+# concurrent winner instead of breeding a duplicate).
+Given(/^the experiment is ripe$/) do
+  experiment = experiment_named('Donation amounts')
+  experiment.start! # pending → running; ripeness requires a running experiment
+  until experiment.reload.ripe_for_evolution?
+    suggestion = Experiments::RequestSuggestion.call(experiment:)
+    raise "RequestSuggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+
+    outcome = Experiments::RecordOutcome.call(performance_log: suggestion.performance_log,
+                                              fitness_input_value: 0.81)
+    raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
+  end
+
+  expect(experiment.ripe_for_evolution?).to be true
+end
+
+When(/^the next loop action runs twice$/) do
+  experiment = experiment_named('Donation amounts')
+  # Both loop actions observe the SAME pre-evolution ripe state (the race
+  # window): the second view is loaded before the first action's evolution
+  # commits, exactly like two concurrent requests would.
+  racing_view = Experiment.find(experiment.id)
+  racing_view.current_generation # cache the pre-evolution generation on this view
+
+  2.times do |i|
+    view = i.zero? ? experiment : racing_view
+    suggestion = Experiments::RequestSuggestion.call(experiment: view)
+    raise "RequestSuggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+  end
+end
+
+Then(/^exactly one new generation is created$/) do
+  experiment = Experiment.find_by!(name: 'Donation amounts')
+  # Setup births generation 0; one successful evolution creates iteration 1.
+  # A double-fire would leave TWO offspring generations (both iteration 1).
+  expect(Generation.where(chromosome: experiment.chromosome).count).to eq(2)
+  expect(Generation.where(chromosome: experiment.chromosome, iteration: 1).count).to eq(1)
+end
+
 # DEV-0002 (issue #69) — another organization cannot see my experiment. The
 # scenario re-signs-in as a different org after the Background, so the sign-in
 # step above accepts both phrasings ("owner of X" and "owner of organization
