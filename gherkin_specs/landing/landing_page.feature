@@ -7,6 +7,12 @@
 #   basic loop; paid time-to-result optimization later".
 # - Domain TBD (gaas.pi216.ai vs bought) — tests assert the sign-up path, not
 #   an absolute URL.
+# - DEV-0005 (responsive on mobile) carries @javascript: "no horizontal
+#   scrolling" is a live-layout measurement rack_test cannot perform, so it
+#   runs under headless Chrome (Capybara.javascript_driver, see
+#   gherkin_specs/support/capybara_javascript.rb). The viewport meta it
+#   asserts lives in the shared application layout, so the guard covers every
+#   page, not just the landing page.
 # - Unimplemented scenarios stay @wip (cucumber --strict skips them).
 
 @PRD-0001
@@ -41,8 +47,8 @@ Feature: Landing Page
     Then I see a Free tier for the basic loop
     And I see no paid feature specifics implemented
 
-  @wip
   @DEV-0005
+  @javascript
   Scenario: The page is responsive on mobile
     When I view the page at a 480 pixel viewport
     Then the page declares a responsive viewport
