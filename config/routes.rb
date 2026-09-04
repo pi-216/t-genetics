@@ -29,6 +29,11 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :chromosomes, only: %i[index create]
       resources :experiments, only: %i[index create]
+      resources :performance_logs, only: [] do
+        member do
+          post :outcome
+        end
+      end
     end
   end
 

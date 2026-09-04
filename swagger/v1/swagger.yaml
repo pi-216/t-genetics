@@ -33,6 +33,65 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Errors"
+  "/api/v1/performance_logs/{id}/outcome":
+    post:
+      summary: Report a fitness outcome (token auth)
+      tags:
+      - Performance Logs
+      security:
+      - bearerAuth: []
+      description: |
+        Reports the single fitness number a customer measured for the suggested
+        organism (the PerformanceLog the suggestion request created). This is
+        the only fitness-bearing input in the product — we never evaluate
+        anyone's fitness function.
+
+        Authenticate with an org-scoped API token
+        (`Authorization: Bearer PLAINTEXT`). A missing, invalid, or revoked
+        token receives 401; a log outside the token's organization answers 404;
+        a missing or non-numeric `fitness_input_value` answers 422 with error
+        keys. Reporting again overwrites the previously recorded value.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: outcome recorded
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PerformanceLog"
+        '404':
+          description: performance log not found (or outside the token org)
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Errors"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Errors"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - performance_log
+              properties:
+                performance_log:
+                  type: object
+                  required:
+                  - fitness_input_value
+                  properties:
+                    fitness_input_value:
+                      type: number
+                      description: The customer-reported fitness number (e.g. 0.81)
   "/chromosomes":
     get:
       summary: List chromosomes
@@ -662,6 +721,33 @@ components:
         - type: number
         - type: boolean
         - type: 'null'
+    PerformanceLog:
+      type: object
+      required:
+      - id
+      - experiment_id
+      - organism_id
+      - suggested_at
+      properties:
+        id:
+          type: integer
+        experiment_id:
+          type: integer
+        organism_id:
+          type: integer
+        suggested_at:
+          type: string
+          format: date-time
+        fitness_input_value:
+          type: number
+          nullable: true
+        outcome_metrics:
+          type: object
+          nullable: true
+        outcome_recorded_at:
+          type: string
+          format: date-time
+          nullable: true
     Errors:
       type: object
       properties:

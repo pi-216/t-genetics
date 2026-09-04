@@ -72,6 +72,19 @@ RSpec.configure do |config|
               ]
             }
           },
+          PerformanceLog: {
+            type: :object,
+            required: %i[id experiment_id organism_id suggested_at],
+            properties: {
+              id: { type: :integer },
+              experiment_id: { type: :integer },
+              organism_id: { type: :integer },
+              suggested_at: { type: :string, format: :'date-time' },
+              fitness_input_value: { type: :number, nullable: true },
+              outcome_metrics: { type: :object, nullable: true },
+              outcome_recorded_at: { type: :string, format: :'date-time', nullable: true }
+            }
+          },
           Errors: {
             type: :object,
             properties: {
