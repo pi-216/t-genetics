@@ -244,6 +244,21 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
       result.experiment
     end
 
+    # Drives the real loop commands (suggest → report) until the experiment's
+    # own ripe_for_evolution? turns true — the same setup the BDD Given uses
+    # (shared by the ripe-evolution example below).
+    def make_ripe(experiment)
+      experiment.start!
+      until experiment.reload.ripe_for_evolution?
+        suggestion = Experiments::RequestSuggestion.call(experiment:)
+        raise "RequestSuggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+
+        outcome = Experiments::RecordOutcome.call(performance_log: suggestion.performance_log,
+                                                  fitness_input_value: 0.81)
+        raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
+      end
+    end
+
     it 'requires sign-in (anonymous is redirected to the login page)' do
       post suggestion_experiment_url(experiment)
 
@@ -266,6 +281,24 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
       log = PerformanceLog.order(:id).last
       expect(log.organism.generation).to eq(experiment.current_generation)
       expect(log.suggested_at).to be_present
+    end
+
+    # PRD-0003 DEV-0005 (issue #72) — the next loop action on a ripe
+    # experiment evolves it first: a new generation replaces the current one
+    # and the suggested organism comes from the new generation.
+    it 'evolves a ripe experiment: new generation replaces current and the suggestion comes from it' do
+      sign_in_as(organization: org)
+      make_ripe(experiment)
+      previous_generation = experiment.current_generation
+
+      post suggestion_experiment_url(experiment)
+
+      expect(response).to have_http_status(:ok)
+      expect(experiment.reload.current_generation).not_to eq(previous_generation)
+      expect(experiment.current_generation.iteration).to eq(previous_generation.iteration + 1)
+      log = PerformanceLog.order(:id).last
+      expect(log.organism.generation).to eq(experiment.current_generation)
+      expect(log.organism.generation.iteration).to eq(1)
     end
 
     it 'answers 404 for another organization\'s experiment and records nothing' do

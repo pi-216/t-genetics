@@ -7,9 +7,10 @@
 # - Population size + ripe thresholds are set at creation (open question A3
 #   resolved to yes — they already exist on the model).
 # - DEV-0001 (issue #68), DEV-0002 (issue #69), DEV-0003 (issue #70),
-#   DEV-0004 (issue #71) implemented; DEV-0005..DEV-0008 still @wip (each
-#   gets its own ticket). No paid-tier surface (exploitation/greed,
-#   generation-progress insights) — those are red lines until a payer.
+#   DEV-0004 (issue #71), DEV-0005 (issue #72) implemented; DEV-0006..DEV-0008
+#   still @wip (each gets its own ticket). No paid-tier surface
+#   (exploitation/greed, generation-progress insights) — those are red lines
+#   until a payer.
 
 @PRD-0003
 Feature: Experiment Workspace
@@ -46,7 +47,6 @@ Feature: Experiment Workspace
     Then the fitness 0.81 is recorded against that suggestion
 
   @DEV-0005
-  @wip
   Scenario: A ripe experiment evolves to a new generation on the next loop action
     Given the experiment has enough reported outcomes to be ripe
     When I request the next suggestion
