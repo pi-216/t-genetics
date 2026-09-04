@@ -8,8 +8,8 @@
 # - DEV-0001 implemented (issue #36); DEV-0002 implemented (issue #37);
 #   DEV-0003 implemented (issue #38); DEV-0004 implemented (issue #39);
 #   DEV-0005 implemented (issue #40); DEV-0006 implemented (issue #41);
-#   DEV-0007 implemented (issue #42); DEV-0010 implemented (issue #45);
-#   DEV-0009 implemented (issue #44). DEV-0008 remains @wip.
+#   DEV-0007 implemented (issue #42); DEV-0008 implemented (issue #43);
+#   DEV-0009 implemented (issue #44); DEV-0010 implemented (issue #45).
 
 @PRD-0005
 Feature: Token API
@@ -59,7 +59,7 @@ Feature: Token API
     When I create an experiment on "Alpha-chrom" via the API
     Then the experiment appears in the API experiment list
 
-  @DEV-0008 @wip
+  @DEV-0008
   Scenario: Machines can request a suggestion with a token
     When I request a suggestion for the experiment via the API
     Then I receive an organism with values

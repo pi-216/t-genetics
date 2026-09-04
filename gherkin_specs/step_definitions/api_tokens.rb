@@ -237,6 +237,37 @@ Then(/^I receive a 422 response with error keys$/) do
   expect(body).to have_key('errors')
 end
 
+# DEV-0008 (issue #43) — machines request a suggestion with a token. The
+# experiment must carry a populated generation for the loop to suggest from;
+# the feature background chromosome is bare, so the step first gives it an
+# allele (the value space), creates the experiment via the machine API
+# (Experiments::Setup mints the generation + population from those alleles),
+# then POSTs the suggestion request with the same Bearer token. "An organism
+# with values" means the response carries the organism id plus a value per
+# allele (Organism#to_hsh).
+When(/^I request a suggestion for the experiment via the API$/) do
+  organization = @api_test_org or raise 'no feature-background organization in play'
+  chromosome = organization.chromosomes.find_by!(name: 'Alpha-chrom')
+  if chromosome.alleles.empty?
+    Allele.new_with_float(name: 'height', minimum: 0.0, maximum: 2.0).tap do |allele|
+      allele.chromosome = chromosome
+      allele.save!
+    end
+  end
+
+  step 'I create an experiment on "Alpha-chrom" via the API'
+
+  page.driver.header('Authorization', "Bearer #{@plain_api_token}")
+  page.driver.post("/api/v1/experiments/#{@created_experiment['id']}/suggestion")
+end
+
+Then(/^I receive an organism with values$/) do
+  expect(page.status_code).to eq(200)
+  organism = JSON.parse(page.body)
+  expect(organism).to include('id')
+  expect(organism).to have_key('height')
+end
+
 # DEV-0009 (issue #44) — machines report a fitness outcome with a token. The
 # Given mints the suggestion through the engine's RequestSuggestion command
 # (the machine-API suggestion endpoint is DEV-0008 / issue #43), the When

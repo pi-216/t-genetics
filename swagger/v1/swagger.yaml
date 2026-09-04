@@ -33,6 +33,61 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Errors"
+  "/api/v1/experiments/{id}/suggestion":
+    post:
+      summary: Request a suggestion (token auth)
+      tags:
+      - Experiments
+      security:
+      - bearerAuth: []
+      description: |
+        Requests the next organism to test from the token organization's
+        experiment. The engine suggests the least-tested organism of the
+        current generation and records the suggestion as a PerformanceLog; the
+        customer then tests the organism on their own infrastructure and
+        reports the single fitness number via the outcome endpoint.
+
+        Authenticate with an org-scoped API token
+        (`Authorization: Bearer <token>`). A missing, invalid, or revoked
+        token receives 401; an experiment outside the token's organization —
+        or an unknown id — answers 404 with error keys; an experiment without
+        a current generation answers 422 with error keys.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: Authorization
+        in: header
+        description: Bearer token (org-scoped machine API token)
+        schema:
+          type: string
+      responses:
+        '200':
+          description: suggestion returned (organism with values)
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Organism"
+        '404':
+          description: experiment not found (or outside the token org)
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Errors"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Errors"
+        '422':
+          description: experiment has no current generation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Errors"
   "/api/v1/performance_logs/{id}/outcome":
     post:
       summary: Report a fitness outcome (token auth)
