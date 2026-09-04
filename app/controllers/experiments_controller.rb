@@ -9,7 +9,7 @@
 # in the controller.
 class ExperimentsController < ApplicationController
   before_action :require_signed_in
-  before_action :set_experiment, only: :show
+  before_action :set_experiment, only: %i[show suggestion]
 
   def index
     @experiments = Experiment.joins(:chromosome)
@@ -45,6 +45,25 @@ class ExperimentsController < ApplicationController
       @population_size = experiment_params[:population_size]
       @command_errors = result.errors.full_messages
       render :new, status: :unprocessable_content
+    end
+  end
+
+  # PRD-0003 DEV-0003 (issue #70) — a member requests a suggestion from the
+  # experiment show page. Runs the engine's Experiments::RequestSuggestion
+  # command, which picks the least-tested organism of the current generation
+  # and records the suggestion's PerformanceLog. Success re-renders the show
+  # page with the suggested organism's typed values; a command failure (no
+  # current generation / empty generation) re-renders with its errors.
+  def suggestion
+    result = Experiments::RequestSuggestion.call(experiment: @experiment)
+
+    if result.success?
+      @suggested_organism = result.organism
+      @suggestion_log = result.performance_log
+      render :show
+    else
+      @command_errors = result.errors.full_messages
+      render :show, status: :unprocessable_content
     end
   end
 

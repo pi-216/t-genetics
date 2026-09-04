@@ -10,3 +10,25 @@
     not yet ripe
   <% end %>
 </p>
+
+<%= button_to 'Request suggestion', suggestion_experiment_path(@experiment), method: :post %>
+
+<% if @suggested_organism %>
+  <section class="suggested-organism">
+    <h2>Suggested organism</h2>
+    <p>Organism #<%= @suggested_organism.id %> from generation
+      <%= @suggested_organism.generation.iteration %></p>
+    <ul>
+      <% @suggested_organism.values.includes(:allele).sort_by(&:name).each do |value| %>
+        <li><strong><%= value.allele.name %>:</strong> <%= value.data %></li>
+      <% end %>
+    </ul>
+    <p><small>Suggested at <%= @suggestion_log.suggested_at %></small></p>
+  </section>
+<% end %>
+
+<% if @command_errors.present? %>
+  <div class="command-errors">
+    <p><%= @command_errors.join(', ') %></p>
+  </div>
+<% end %>
