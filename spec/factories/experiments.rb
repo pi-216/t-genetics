@@ -2,6 +2,7 @@
 
 FactoryBot.define do
   factory :experiment do
+    sequence(:name) { |n| "Experiment #{n}" } # PRD-0003: experiments are named (issue #68)
     association :chromosome, factory: :chromosome_with_alleles # Default to a chromosome with alleles
     association :external_entity, factory: :chromosome # Using chromosome as a dummy polymorphic association
     status { 'pending' } # Default status from AASM

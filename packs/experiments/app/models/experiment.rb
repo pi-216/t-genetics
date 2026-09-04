@@ -8,6 +8,10 @@ class Experiment < ApplicationRecord
   validates :chromosome_id, presence: true
   validates :external_entity_id, presence: true
   validates :external_entity_type, presence: true
+  # PRD-0003 (issue #68): experiments have a display name ("Donation amounts"),
+  # distinct from the chromosome name. The Setup command always sets it (or
+  # falls back to the chromosome name), so no create path can leave it blank.
+  validates :name, presence: true
   # AASM handles status validation based on defined states
 
   aasm :status, column: :status do # Explicitly mention column name, though it's default

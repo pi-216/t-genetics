@@ -3,13 +3,23 @@
 module Experiments
   class Setup < GLCommand::Callable
     requires :external_entity, chromosome: Chromosome # Polymorphic entity + persisted chromosome
-    allows :experiment_configuration # Hash, for Experiment.configuration. Defaults to {}.
-                                     # Can include :population_size (defaults to 10).
+    allows :experiment_configuration, :name # Hash, for Experiment.configuration. Defaults to {}.
+                                              # Can include :population_size (defaults to 10).
+                                              # :name is the experiment's display name (PRD-0003);
+                                              # falls back to the chromosome name when omitted.
     returns :experiment # The created Experiment record
 
     def call
       context.experiment_configuration ||= {}
-      population_size = context.experiment_configuration.fetch(:population_size, 10) # Default population size
+      population_size = context.experiment_configuration.fetch(:population_size, 10).to_i # Default population size
+
+      # A generation must be born with organisms — the empty-generation state is
+      # an explicit loop edge case, never a creation outcome. Enforced at the
+      # command boundary so every create path (web + machine API) is covered.
+      unless population_size.positive?
+        fail_command!(errors: { population_size: ['must be a positive integer'] })
+        return
+      end
 
       # Instance variables to hold created records for potential access in rollback
       @generation = nil
@@ -45,7 +55,10 @@ module Experiments
           external_entity: context.external_entity,
           chromosome: context.chromosome,
           current_generation: @generation,
-          configuration: context.experiment_configuration
+          configuration: context.experiment_configuration,
+          # PRD-0003: experiments are named; fall back to the chromosome name so
+          # API-created experiments (PRD-0005) stay named too (issue #68).
+          name: context.name.presence || context.chromosome.name
           # Status will be set to 'pending' by AASM's initial state
         )
         unless @experiment.save

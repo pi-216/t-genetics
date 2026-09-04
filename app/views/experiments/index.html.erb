@@ -1,0 +1,13 @@
+<h1>Experiments</h1>
+
+<p><%= link_to 'New experiment', new_experiment_path %></p>
+
+<% @experiments.each do |experiment| %>
+  <div>
+    <p>
+      <%= link_to experiment.name, experiment %>
+      — <%= experiment.chromosome.name %>
+      (<%= experiment.status %>)
+    </p>
+  </div>
+<% end %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_04_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_04_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -64,6 +64,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_04_000000) do
     t.string "external_entity_type"
     t.float "feedback_percentage_threshold", default: 0.75, null: false
     t.integer "min_organisms_with_feedback", default: 2, null: false
+    t.string "name"
     t.string "status"
     t.float "suggestion_count_threshold_multiplier", default: 3.0, null: false
     t.datetime "updated_at", null: false
