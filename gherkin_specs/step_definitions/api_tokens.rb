@@ -60,3 +60,31 @@ Then(/^I receive a forbidden response and no token is created$/) do
   expect(page.status_code).to eq(403)
   expect(Identity::ApiToken.count).to eq(0)
 end
+
+# DEV-0003 (issue #38) — a valid token authenticates chromosome reads over the
+# machine API. The token is created directly with a known plaintext (the web
+# create flow shows it once, but the API steps need it in hand to build the
+# Bearer header). The request goes through rack_test's driver with an
+# Authorization header so the full routing + controller stack is exercised.
+Given(/^"([^"]+)" has a valid API token$/) do |org_name|
+  organization = Identity::Organization.find_by!(name: org_name)
+  @plain_api_token = Identity::ApiToken.generate_plaintext
+  Identity::ApiToken.create!(
+    organization: organization,
+    name: 'ci-runner',
+    token_digest: Identity::ApiToken.digest(@plain_api_token)
+  )
+end
+
+When(/^I GET \/api\/v1\/chromosomes with that token$/) do
+  # rack_test driver: `header` normalizes to HTTP_AUTHORIZATION; a raw hash
+  # passed to get() is taken as env verbatim and the case-sensitive
+  # 'Authorization' key is not picked up by ActionDispatch.
+  page.driver.header('Authorization', "Bearer #{@plain_api_token}")
+  page.driver.get('/api/v1/chromosomes')
+end
+
+Then(/^I receive a 200 response listing "([^"]+)"$/) do |chromosome_name|
+  expect(page.status_code).to eq(200)
+  expect(page.body).to include(chromosome_name)
+end

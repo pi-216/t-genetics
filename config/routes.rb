@@ -23,6 +23,14 @@ Rails.application.routes.draw do
   # lives on the settings page; the plaintext is shown once in the flash.
   post "organization/api_tokens" => "identity/api_tokens#create", as: :api_tokens
 
+  # Machine API (PRD-0005) — every endpoint authenticates via a Bearer token
+  # scoped to an organization; see Api::V1::BaseController.
+  namespace :api do
+    namespace :v1 do
+      resources :chromosomes, only: :index
+    end
+  end
+
   if Rails.env.development? || Rails.env.test?
     mount Rswag::Ui::Engine => '/api-docs'
     mount Rswag::Api::Engine => '/api-docs'

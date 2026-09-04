@@ -4,6 +4,35 @@ info:
   title: TGenetics API
   version: v1
 paths:
+  "/api/v1/chromosomes":
+    get:
+      summary: List chromosomes (token auth)
+      tags:
+      - Chromosomes
+      security:
+      - bearerAuth: []
+      description: |
+        Lists the chromosomes of the token's organization.
+
+        Authenticate with an org-scoped API token. Send
+        `Authorization: Bearer PLAINTEXT` where PLAINTEXT is the token value
+        shown once at creation. A missing, invalid, or revoked token receives
+        401; chromosomes of other organizations are never visible.
+      responses:
+        '200':
+          description: chromosomes listed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Chromosome"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Errors"
   "/chromosomes":
     get:
       summary: List chromosomes
@@ -567,6 +596,11 @@ paths:
                     fitness:
                       type: number
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: string
   schemas:
     Chromosome:
       type: object
