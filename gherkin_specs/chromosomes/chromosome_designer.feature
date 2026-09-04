@@ -1,13 +1,20 @@
 # PRD-0004 — Graphical chromosome designer & generation browser
 # Drift flags vs PRD-0004:
 # - Single-page designer form (open question A1 resolved to single surface).
-# - Fitness trend = self-hosted pure-CSS/SVG line, no charting gem (A2 resolved;
+# - Fitness trend = self-hosted pure-CSS/SVG bars, no charting gem (A2 resolved;
 #   no external charting CDN — dependency + network red line).
 # - The designer replaces the current chromosome CRUD views (A3 resolved to
 #   replace — one surface, no split).
-# - DEV-0006 (issue #82, fitness trend line) and DEV-0007 (issue #83, empty
-#   state) implemented; the remaining scenarios stay @wip until implemented.
-#   No paid-tier visualization depth.
+# - DEV-0004 (issue #80) implemented: cross-org chromosome access answers
+#   404; DEV-0006 (issue #82, fitness trend line) and DEV-0007 (issue #83,
+#   explicit empty state) implemented. The remaining scenarios stay @wip
+#   until implemented.
+# - DEV-0004 drift: the published scenario references "Alpha-chrom" without
+#   creating it — the implicit prerequisite "organization Alpha owns a
+#   chromosome named Alpha-chrom" is injected (reuses the PRD-0002 DEV-0009
+#   step in org_scoping.rb) so the 404 proves cross-org blocking, not mere
+#   absence of the chromosome.
+# - No paid-tier visualization depth.
 
 @PRD-0004
 Feature: Chromosome Designer
@@ -40,14 +47,13 @@ Feature: Chromosome Designer
     When I leave the choice list empty
     Then I see an inline validation error
 
-  @wip
   @DEV-0004
   Scenario: Another organization cannot access my chromosome
-    Given I am signed in as an owner of organization "Beta"
+    Given organization "Alpha" owns a chromosome named "Alpha-chrom"
+    And I am signed in as an owner of organization "Beta"
     When I visit the chromosome "Alpha-chrom"
     Then I receive a not-found or forbidden response
 
-  @wip
   @DEV-0005
   Scenario: I can open an organism and see its typed values
     Given the generation browser shows an organism

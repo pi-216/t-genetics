@@ -9,7 +9,7 @@
 
     <% generation.organisms.sort_by(&:id).each do |organism| %>
       <div class="history-organism">
-        <h3>Organism #<%= organism.id %></h3>
+        <h3><%= link_to "Organism ##{organism.id}", chromosome_generation_organism_path(organism.chromosome, generation, organism) %></h3>
         <ul>
           <% organism.values.sort_by(&:name).each do |value| %>
             <li><strong><%= value.allele.name %>:</strong> <%= value.data %></li>
