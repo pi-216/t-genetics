@@ -3,130 +3,189 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GAaaS — UI/Brand Concept · Phase 1 Moodboard</title>
+<title>GAaaS — UI/Brand Concept · Phase 1 Moodboard v2</title>
 <style>
-  :root{
-    --canvas:#0A0D12; --paper:#F7F5F1; --ink:#1A1A18;
-    --a-bg:#0B0F14; --a-surface:#11161D; --a-raised:#1A212B; --a-line:#232C38;
-    --a-amber:#F5B64A; --a-green:#4ADE80; --a-ink:#E6EDF3; --a-muted:#8A97A8;
-    --b-bg:#FAFAF8; --b-surface:#FFFFFF; --b-line:#E4E2DC; --b-ink:#1A1A18;
-    --b-accent:#0F7A56; --b-muted:#6B6B64; --b-callout:#C2410C;
-    --c-bg:#14100E; --c-surface:#1C1714; --c-raised:#262019; --c-line:#362C24;
-    --c-rose:#FF6B57; --c-gold:#F5C26B; --c-ink:#F4EDE6; --c-muted:#A99C8C;
-  }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:var(--canvas);color:var(--paper);
+  html,body{height:100%}
+  body{background:#0A0D12;color:#F7F5F1;
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif}
   .stage{position:fixed;inset:0;display:grid;place-items:center;overflow:hidden}
   .deck{position:relative;width:1920px;height:1080px;transform-origin:center center;
-    transform:scale(var(--s,1));background:var(--canvas)}
-  .slide{position:absolute;inset:0;padding:72px 84px;opacity:0;pointer-events:none;
+    transform:scale(var(--s,1))}
+  .slide{position:absolute;inset:0;padding:64px 80px;opacity:0;pointer-events:none;
     transition:opacity .28s ease;display:flex;flex-direction:column}
   .slide.on{opacity:1;pointer-events:auto}
-  /* ---------- shared chrome ---------- */
-  .kicker{font-size:15px;letter-spacing:.22em;text-transform:uppercase;color:var(--paper);opacity:.55;
-    font-family:ui-monospace,'SFMono-Regular','Cascadia Mono',Menlo,Consolas,monospace}
-  .slide h1{font-size:64px;line-height:1.04;letter-spacing:-.02em;font-weight:700;margin:18px 0 10px}
-  .slide h2{font-size:30px;line-height:1.2;letter-spacing:-.01em;font-weight:600}
-  .slide .lead{font-size:22px;line-height:1.45;color:var(--paper);opacity:.72;max-width:60ch}
-  .corners{position:absolute;inset:28px 40px;pointer-events:none;display:flex;justify-content:space-between;
-    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:var(--paper);opacity:.4}
-  .count{position:absolute;bottom:34px;right:44px;font-family:ui-monospace,Menlo,Consolas,monospace;
-    font-size:15px;color:var(--paper);opacity:.55}
-  .hint{position:absolute;bottom:34px;left:44px;font-size:14px;color:var(--paper);opacity:.45;
+  .corners{position:absolute;inset:26px 40px;pointer-events:none;display:flex;justify-content:space-between;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;opacity:.5}
+  .count{position:absolute;bottom:30px;right:44px;font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:14px;opacity:.55}
+  .hint{position:absolute;bottom:30px;left:44px;font-size:13px;opacity:.45;font-family:ui-monospace,Menlo,Consolas,monospace}
+
+  /* ============ DIRECTION A · LAB INSTRUMENT (dark, mono, hairline) ============ */
+  .A{color:#E6EDF3;background:#0B0F14}
+  .A .kicker{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;letter-spacing:.22em;
+    text-transform:uppercase;color:#F5B64A}
+  .A h1{font-size:64px;line-height:1.04;letter-spacing:-.02em;font-weight:700;margin:16px 0 10px;
+    font-family:'Inter',system-ui,sans-serif}
+  .A .lead{font-size:21px;line-height:1.5;color:#8A97A8;max-width:56ch}
+  .A .d-wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;flex:1;min-height:0;margin-top:24px}
+  .A .thesis{border-left:3px solid #F5B64A;padding:4px 0 4px 20px;font-size:22px;line-height:1.4;
+    font-weight:500;color:#F5B64A}
+  .A .contract{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .A .ct{background:#11161D;border:1px solid #232C38;border-radius:6px;padding:13px 15px}
+  .A .ct b{display:block;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;color:#F5B64A;
     font-family:ui-monospace,Menlo,Consolas,monospace}
-  /* ---------- direction slides ---------- */
-  .d-wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;flex:1;min-height:0;margin-top:26px}
-  .d-left{display:flex;flex-direction:column;gap:22px}
-  .d-right{display:flex;flex-direction:column;gap:18px;min-width:0}
-  .thesis{border-left:3px solid currentColor;padding:6px 0 6px 22px;font-size:23px;line-height:1.4;font-weight:500}
-  .contract{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  .ct{background:var(--srf);border:1px solid var(--ln);border-radius:10px;padding:14px 16px}
-  .ct b{display:block;font-size:16px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px}
-  .ct span{font-size:14.5px;opacity:.65;line-height:1.35}
-  .mood{font-size:15px;opacity:.6;letter-spacing:.06em;text-transform:uppercase;font-family:ui-monospace,Menlo,Consolas,monospace}
-  .swatch-row{display:flex;gap:14px;align-items:stretch}
-  .sw{display:flex;flex-direction:column;gap:6px;width:120px}
-  .chip{height:64px;border-radius:10px;border:1px solid var(--ln)}
-  .sw span{font-size:12.5px;font-family:ui-monospace,Menlo,Consolas,monospace;opacity:.7;text-align:center}
-  .type-row{display:flex;gap:26px;font-size:15px}
-  .type-row .fam{opacity:.55;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.08em;
-    text-transform:uppercase;margin-bottom:6px}
-  /* labelled preview region */
-  .pv-title{font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.48;
+  .A .ct span{font-size:13.5px;color:#8A97A8;line-height:1.35}
+  .A .mood{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;letter-spacing:.14em;
+    text-transform:uppercase;color:#8A97A8}
+  .A .swatch-row{display:flex;gap:14px}
+  .A .chip{height:56px;border-radius:6px;border:1px solid #232C38;width:96px}
+  .A .sw span{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:#8A97A8;text-align:center}
+  .A .type-row{display:flex;gap:28px;font-size:14px;color:#8A97A8}
+  .A .fam{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    margin-bottom:6px}
+  .A .pv-title{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8A97A8;
     font-family:ui-monospace,Menlo,Consolas,monospace;margin-bottom:10px}
-  .pv{flex:1;border:1px solid var(--ln);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
-  .pv-bar{height:44px;border-bottom:1px solid var(--ln);display:flex;align-items:center;padding:0 18px;font-size:13px;opacity:.7}
-  .pv-body{flex:1;padding:22px;display:flex;flex-direction:column;gap:16px;min-height:0}
-  .pv-readout{display:flex;align-items:baseline;gap:14px}
-  .pv-num{font-size:44px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-  .pv-tag{font-size:13px;opacity:.6}
-  .pv-row{display:grid;grid-template-columns:2.2fr 1.4fr 1fr;gap:10px;padding:10px 12px;border:1px solid var(--ln);
-    border-radius:8px;font-size:13.5px;font-variant-numeric:tabular-nums}
-  .pv-row.hot{border-width:2px}
-  .pv-row .m{opacity:.55}
-  .pv-btn{display:inline-flex;align-items:center;justify-content:center;width:fit-content;padding:11px 20px;
-    border-radius:8px;font-size:15px;font-weight:600;margin-top:auto}
-  .pv-grid3{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-  .pv-card{border:1px solid var(--ln);border-radius:10px;padding:14px 16px}
-  .pv-card .k{font-size:12px;text-transform:uppercase;letter-spacing:.14em;opacity:.5;margin-bottom:8px;
+  .A .pv{flex:1;border:1px solid #232C38;border-radius:8px;background:#0B0F14;overflow:hidden;
+    display:flex;flex-direction:column;min-height:0}
+  .A .pv-bar{height:42px;border-bottom:1px solid #232C38;display:flex;align-items:center;padding:0 16px;
+    font-size:12.5px;color:#8A97A8}
+  .A .pv-body{flex:1;padding:20px;display:flex;flex-direction:column;gap:14px}
+  .A .pv-readout{display:flex;align-items:baseline;gap:14px}
+  .A .pv-num{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:46px;font-weight:700;
+    font-variant-numeric:tabular-nums;color:#F5B64A;letter-spacing:-.01em}
+  .A .pv-num.vg{color:#4ADE80}
+  .A .pv-tag{font-size:12px;color:#8A97A8}
+  .A .pv-row{display:grid;grid-template-columns:2.2fr 1.3fr 1.2fr;gap:8px;padding:9px 11px;
+    border:1px solid #232C38;border-radius:6px;font-size:13px;font-variant-numeric:tabular-nums;color:#E6EDF3}
+  .A .pv-row.hot{border-color:#F5B64A;background:rgba(245,182,74,.06)}
+  .A .pv-row .m{color:#8A97A8}
+  .A .pv-btn{display:inline-flex;align-items:center;justify-content:center;width:fit-content;padding:11px 20px;
+    border-radius:6px;background:#F5B64A;color:#1A1205;font-weight:700;font-size:14px;margin-top:auto;
     font-family:ui-monospace,Menlo,Consolas,monospace}
-  .pv-card .v{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
-  .pv-card .d{font-size:13px;opacity:.6;margin-top:4px}
-  /* ---------- A: lab instrument ---------- */
-  .A{color:var(--a-ink);--srf:var(--a-surface);--ln:var(--a-line)}
-  .A .slidebg{background:var(--a-bg);position:absolute;inset:0;z-index:-1}
-  .A h2.pv-num{color:var(--a-amber)}
-  .A .pv-num.vg{color:var(--a-green)}
-  .A .thesis{color:var(--a-amber);border-color:var(--a-amber)}
-  .A .pv-row.hot{border-color:var(--a-amber)}
-  .A .pv-row.hot .m{color:var(--a-amber)}
-  .A .pv-btn{background:var(--a-amber);color:#1A1205}
-  /* ---------- B: clean utility ---------- */
-  .B{color:var(--b-ink);--srf:var(--b-surface);--ln:var(--b-line)}
-  .B .slidebg{background:var(--b-bg);position:absolute;inset:0;z-index:-1}
-  .B .kicker,.B .corners{color:var(--b-ink)}
-  .B .lead{color:var(--b-ink);opacity:.68}
-  .B .thesis{color:var(--b-accent);border-color:var(--b-accent)}
-  .B .ct{background:var(--b-surface)}
-  .B .pv-bar{background:var(--b-surface)}
-  .B .pv-num{color:var(--b-ink)}
-  .B .pv-row.hot{border-color:var(--b-accent)}
-  .B .pv-row.hot .m{color:var(--b-accent)}
-  .B .pv-btn{background:var(--b-ink);color:var(--b-bg)}
-  .B .pv-readout .pv-tag{color:var(--b-muted)}
-  /* ---------- C: warm signal ---------- */
-  .C{color:var(--c-ink);--srf:var(--c-surface);--ln:var(--c-line)}
-  .C .slidebg{background:var(--c-bg);position:absolute;inset:0;z-index:-1}
-  .C .thesis{color:var(--c-rose);border-color:var(--c-rose)}
-  .C .ct{background:var(--c-surface)}
-  .C .pv-bar{background:var(--c-surface)}
-  .C .pv-num{color:var(--c-rose)}
-  .C .pv-row.hot{border-color:var(--c-rose)}
-  .C .pv-row.hot .m{color:var(--c-gold)}
-  .C .pv-btn{background:var(--c-rose);color:#1F0D08}
-  /* ---------- cover & rec ---------- */
-  .cover-center{flex:1;display:flex;flex-direction:column;justify-content:center;gap:26px;max-width:1500px}
+  .A .sw{display:flex;flex-direction:column;gap:5px}
+
+  /* ============ DIRECTION B · CLEAN UTILITY (light, airy, one accent) ============ */
+  .B{color:#1A1A18;background:#FAFAF8}
+  .B .kicker{font-family:'Inter',system-ui,sans-serif;font-size:14px;letter-spacing:.2em;text-transform:uppercase;
+    color:#0F7A56;font-weight:600}
+  .B h1{font-size:64px;line-height:1.04;letter-spacing:-.03em;font-weight:700;margin:16px 0 10px;color:#1A1A18}
+  .B .lead{font-size:21px;line-height:1.5;color:#6B6B64;max-width:56ch}
+  .B .d-wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;flex:1;min-height:0;margin-top:24px}
+  .B .thesis{border-left:3px solid #0F7A56;padding:4px 0 4px 20px;font-size:22px;line-height:1.4;
+    font-weight:500;color:#1A1A18}
+  .B .contract{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .B .ct{background:#FFFFFF;border:1px solid #E4E2DC;border-radius:10px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .B .ct b{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;color:#0F7A56}
+  .B .ct span{font-size:13.5px;color:#6B6B64;line-height:1.35}
+  .B .mood{font-family:'Inter',system-ui,sans-serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+    color:#6B6B64;font-weight:500}
+  .B .swatch-row{display:flex;gap:14px}
+  .B .chip{height:56px;border-radius:10px;width:96px;border:1px solid #E4E2DC}
+  .B .sw span{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:#6B6B64;text-align:center}
+  .B .type-row{display:flex;gap:28px;font-size:14px;color:#6B6B64}
+  .B .fam{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    margin-bottom:6px;color:#9C9C94}
+  .B .pv-title{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#6B6B64;
+    font-family:ui-monospace,Menlo,Consolas,monospace;margin-bottom:10px}
+  .B .pv{flex:1;border:1px solid #E4E2DC;border-radius:12px;background:#FFFFFF;overflow:hidden;
+    display:flex;flex-direction:column;min-height:0;box-shadow:0 10px 30px -18px rgba(0,0,0,.12)}
+  .B .pv-bar{height:42px;border-bottom:1px solid #E4E2DC;display:flex;align-items:center;padding:0 16px;
+    font-size:12.5px;color:#6B6B64;background:#FFFFFF}
+  .B .pv-body{flex:1;padding:20px;display:flex;flex-direction:column;gap:14px}
+  .B .pv-readout{display:flex;align-items:baseline;gap:14px}
+  .B .pv-num{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:46px;font-weight:700;
+    font-variant-numeric:tabular-nums;color:#1A1A18;letter-spacing:-.01em}
+  .B .pv-num.vg{color:#0F7A56}
+  .B .pv-tag{font-size:12px;color:#6B6B64}
+  .B .pv-row{display:grid;grid-template-columns:2.2fr 1.3fr 1.2fr;gap:8px;padding:9px 11px;
+    border:1px solid #E4E2DC;border-radius:8px;font-size:13px;font-variant-numeric:tabular-nums;color:#1A1A18}
+  .B .pv-row.hot{border-color:#0F7A56;background:rgba(15,122,86,.05)}
+  .B .pv-row .m{color:#6B6B64}
+  .B .pv-btn{display:inline-flex;align-items:center;justify-content:center;width:fit-content;padding:11px 20px;
+    border-radius:8px;background:#1A1A18;color:#FAFAF8;font-weight:600;font-size:14px;margin-top:auto}
+  .B .sw{display:flex;flex-direction:column;gap:5px}
+  .B .corners{color:#1A1A18}
+
+  /* ============ DIRECTION C · WARM SIGNAL (warm dark, serif, rounded, lineage) ============ */
+  .C{color:#F4EDE6;background:#14100E}
+  .C .kicker{font-family:Georgia,'Source Serif 4','Iowan Old Style',serif;font-size:16px;letter-spacing:.16em;
+    text-transform:uppercase;color:#F5C26B}
+  .C h1{font-size:64px;line-height:1.04;letter-spacing:-.01em;font-weight:600;margin:12px 0 10px;
+    font-family:Georgia,'Source Serif 4',serif;color:#F4EDE6}
+  .C .lead{font-size:21px;line-height:1.5;color:#A99C8C;max-width:56ch}
+  .C .d-wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;flex:1;min-height:0;margin-top:24px}
+  .C .thesis{border-left:3px solid #FF6B57;padding:4px 0 4px 20px;font-size:22px;line-height:1.4;
+    font-weight:500;color:#F5C26B}
+  .C .contract{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .C .ct{background:#1C1714;border:1px solid #362C24;border-radius:16px;padding:15px 17px}
+  .C .ct b{display:block;font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;color:#FF6B57}
+  .C .ct span{font-size:13.5px;color:#A99C8C;line-height:1.35}
+  .C .mood{font-family:Georgia,serif;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:#F5C26B;
+    font-style:italic;opacity:.9}
+  .C .swatch-row{display:flex;gap:14px}
+  .C .chip{height:56px;border-radius:16px;width:96px;border:1px solid #362C24}
+  .C .sw span{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:#A99C8C;text-align:center}
+  .C .type-row{display:flex;gap:28px;font-size:14px;color:#A99C8C}
+  .C .fam{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    margin-bottom:6px;color:#8A7A6A}
+  .C .pv-title{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#F5C26B;
+    font-family:Georgia,serif;margin-bottom:10px}
+  .C .pv{flex:1;border:1px solid #362C24;border-radius:20px;background:#1C1714;overflow:hidden;
+    display:flex;flex-direction:column;min-height:0}
+  .C .pv-bar{height:42px;border-bottom:1px solid #362C24;display:flex;align-items:center;padding:0 18px;
+    font-size:12.5px;color:#A99C8C}
+  .C .pv-body{flex:1;padding:22px;display:flex;flex-direction:column;gap:14px}
+  .C .pv-readout{display:flex;align-items:baseline;gap:14px}
+  .C .pv-num{font-family:Georgia,serif;font-size:50px;font-weight:600;color:#FF6B57;letter-spacing:-.01em}
+  .C .pv-num.vg{color:#F5C26B}
+  .C .pv-tag{font-size:12px;color:#A99C8C}
+  .C .pv-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .C .pv-card{border:1px solid #362C24;border-radius:16px;padding:13px 15px;background:#14100E}
+  .C .pv-card .k{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#F5C26B;margin-bottom:6px;
+    font-family:Georgia,serif}
+  .C .pv-card .v{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:19px;font-weight:600;
+    font-variant-numeric:tabular-nums;color:#F4EDE6}
+  .C .pv-card .d{font-size:12.5px;color:#A99C8C;margin-top:3px}
+  .C .pv-card.hot{border-color:#FF6B57}
+  .C .pv-btn{display:inline-flex;align-items:center;justify-content:center;width:fit-content;padding:11px 22px;
+    border-radius:999px;background:#FF6B57;color:#1F0D08;font-weight:600;font-size:14px;margin-top:auto}
+
+  /* ============ COVER & REC ============ */
+  .cover{color:#E6EDF3;background:#0B0F14}
+  .cover .kicker{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;letter-spacing:.22em;
+    text-transform:uppercase;color:#F5B64A}
+  .cover h1{font-size:64px;line-height:1.04;letter-spacing:-.02em;font-weight:700;margin:16px 0 10px}
+  .cover .lead{font-size:21px;line-height:1.5;color:#8A97A8;max-width:60ch}
+  .cover-center{flex:1;display:flex;flex-direction:column;justify-content:center;gap:24px;max-width:1500px}
   .cover-loop{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:980px}
-  .cl{background:#141A22;border:1px solid #232C38;border-radius:12px;padding:16px 18px;text-align:center}
-  .cl b{display:block;font-size:17px;margin-bottom:4px}
-  .cl span{font-size:13.5px;color:#8A97A8}
-  .cl .arr{color:#F5B64A;font-size:20px}
+  .cl{background:#11161D;border:1px solid #232C38;border-radius:10px;padding:15px 17px;text-align:center}
+  .cl b{display:block;font-size:16px;margin-bottom:4px;color:#E6EDF3}
+  .cl span{font-size:13px;color:#8A97A8}
+  .cl .arr{color:#F5B64A;font-size:18px}
   .chips{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
-  .chip-dir{border:1px solid #2A3546;border-radius:99px;padding:12px 26px;font-size:18px;color:#E6EDF3;background:#11161D}
+  .chip-dir{border:1px solid #2A3546;border-radius:99px;padding:11px 24px;font-size:17px;color:#E6EDF3;
+    background:#11161D}
   .chip-dir b{color:#F5B64A}
-  .rec{display:grid;grid-template-columns:1fr 1.3fr;gap:52px;flex:1;min-height:0;margin-top:22px}
-  .rec-left{display:flex;flex-direction:column;gap:18px;justify-content:center}
-  .rec-right{border:1px solid #2A3546;border-radius:16px;background:#11161D;padding:40px 44px;display:flex;
-    flex-direction:column;gap:20px;justify-content:center}
-  .verdict{font-size:52px;font-weight:700;letter-spacing:-.02em;color:#F5B64A}
-  .reason{display:flex;gap:16px;align-items:flex-start;font-size:19px;line-height:1.45}
-  .reason .n{font-family:ui-monospace,Menlo,Consolas,monospace;color:#F5B64A;font-size:15px;padding-top:4px}
-  .rule{display:flex;gap:12px;align-items:center;margin-top:8px;background:#0B0F14;border:1px solid #2A3546;
-    border-radius:12px;padding:16px 22px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:17px}
-  .rule b{color:#F5B64A}
-  @media print{.stage{position:static}.deck{transform:none!important;width:1920px;height:1080px}
-    .slide{position:absolute;opacity:1;page-break-after:always}}
+  .rec{color:#E6EDF3;background:#0B0F14}
+  .rec .kicker{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;letter-spacing:.22em;
+    text-transform:uppercase;color:#F5B64A}
+  .rec .verdict{font-size:50px;font-weight:700;letter-spacing:-.02em;color:#F5B64A}
+  .rec .mood{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;letter-spacing:.12em;color:#8A97A8}
+  .rec .reason{display:flex;gap:16px;align-items:flex-start;font-size:18px;line-height:1.45;color:#E6EDF3}
+  .rec .reason .n{font-family:ui-monospace,Menlo,Consolas,monospace;color:#F5B64A;font-size:14px;padding-top:4px}
+  .rec-right{border:1px solid #2A3546;border-radius:14px;background:#11161D;padding:36px 40px;display:flex;
+    flex-direction:column;gap:18px;justify-content:center}
+  .rec-right .lbl{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:#8A97A8;
+    font-family:ui-monospace,Menlo,Consolas,monospace}
+  .rec-right .b{font-size:20px;line-height:1.5;color:#E6EDF3}
+  .rec-right .dim{font-size:20px;line-height:1.5;color:#8A97A8}
+  .rec .rule{display:flex;gap:12px;align-items:center;margin-top:6px;background:#0B0F14;border:1px solid #2A3546;
+    border-radius:10px;padding:14px 20px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:16px}
+  .rec .rule b{color:#F5B64A}
+  .rec-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:50px;flex:1;min-height:0;margin-top:20px}
+  .rec-left{display:flex;flex-direction:column;gap:16px;justify-content:center}
+  @media print{.stage{position:static}.deck{transform:none!important}.slide{position:absolute;opacity:1;page-break-after:always}}
 </style>
 </head>
 <body>
@@ -153,25 +212,23 @@
         <div class="chip-dir"><b>A</b> Lab Instrument</div>
         <div class="chip-dir"><b>B</b> Clean Utility</div>
         <div class="chip-dir"><b>C</b> Warm Signal</div>
-        <div class="chip-dir" style="opacity:.65">→ keyboard ← / click · 5 slides · recommendation on last</div>
+        <div class="chip-dir" style="opacity:.65">← / → navigate · 5 slides · rec on last</div>
       </div>
     </div>
     <div class="count">1 / 5</div>
-    <div class="hint">← / → or click to navigate</div>
   </section>
 
   <!-- 2 · A — LAB INSTRUMENT -->
   <section class="slide A" data-id="a">
-    <div class="slidebg"></div>
-    <div class="corners"><span>A / 3</span><span>recommended</span></div>
+    <div class="corners"><span>A / 3 · dark instrument</span><span>recommended</span></div>
     <div class="kicker">Direction A — dark instrument</div>
     <h1>Lab Instrument</h1>
     <div class="d-wrap">
-      <div class="d-left">
+      <div class="d-left" style="display:flex;flex-direction:column;gap:20px">
         <div class="thesis">Your customer’s fitness function is a black box. The interface is the calibrated instrument they read it with — precise, quiet, trustworthy.</div>
         <div class="contract">
-          <div class="ct"><b>Precision</b><span>mono numerals, hairline grids, measurement ticks; the ONE number is the hero datum</span></div>
-          <div class="ct"><b>Trust</b><span>equipment-object aesthetic: opaque, sturdy, nothing to hide</span></div>
+          <div class="ct"><b>Precision</b><span>mono numerals · hairline grids · measurement ticks · ONE number is the hero datum</span></div>
+          <div class="ct"><b>Trust</b><span>equipment-object · opaque · sturdy · nothing to hide</span></div>
           <div class="ct"><b>“Yours stays yours”</b><span>we read the dial, we don’t touch the machine</span></div>
         </div>
         <div class="mood">mood · calibrated · exact · quiet · phosphor</div>
@@ -183,12 +240,12 @@
           <div class="sw"><div class="chip" style="background:#E6EDF3"></div><span>#E6EDF3 ink</span></div>
         </div>
         <div class="type-row">
-          <div><div class="fam">Display · numerals</div><div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:26px;font-weight:700">0123456789</div></div>
-          <div><div class="fam">UI · Inter / system</div><div style="font-size:24px;font-weight:500">Suggest · Evolve · Archive</div></div>
-          <div><div class="fam">radius 4–6px · 1px hairlines</div><div style="font-size:24px;opacity:.7">▢▣▤▦▥</div></div>
+          <div><div class="fam">Display · numerals</div><div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:26px;font-weight:700;color:#E6EDF3">0123456789</div></div>
+          <div><div class="fam">UI · Inter / system</div><div style="font-size:24px;font-weight:500;color:#E6EDF3">Suggest · Evolve · Archive</div></div>
+          <div><div class="fam">radius 4–6px · hairlines</div><div style="font-size:24px;opacity:.7;color:#E6EDF3">▢▣▤▦▥</div></div>
         </div>
       </div>
-      <div class="d-right">
+      <div class="d-right" style="display:flex;flex-direction:column;min-width:0">
         <div class="pv-title">preview sketch — experiment workspace</div>
         <div class="pv">
           <div class="pv-bar">GAaaS · experiment “donation-v5” <span style="margin-left:auto">gen 8 · 41 organisms</span></div>
@@ -205,18 +262,17 @@
     <div class="count">2 / 5</div>
   </section>
 
-  <!-- 3 · B — CLEAN UTILITY -->
+  <!-- 3 · B — CLEAN UTILITY (LIGHT) -->
   <section class="slide B" data-id="b">
-    <div class="slidebg"></div>
-    <div class="corners"><span>B / 3</span></div>
+    <div class="corners"><span>B / 3 · light workbench</span></div>
     <div class="kicker">Direction B — light workbench</div>
     <h1>Clean Utility</h1>
     <div class="d-wrap">
-      <div class="d-left">
+      <div class="d-left" style="display:flex;flex-direction:column;gap:20px">
         <div class="thesis">No theater. A bright workbench with one deep accent — the tool gets out of the way so the engineering speaks.</div>
         <div class="contract">
-          <div class="ct"><b>Speed</b><span>light, airy, instantly scannable; enterprise-calm</span></div>
-          <div class="ct"><b>Clarity</b><span>near-monochrome; one accent carries all interaction</span></div>
+          <div class="ct"><b>Speed</b><span>light · airy · instantly scannable · enterprise-calm</span></div>
+          <div class="ct"><b>Clarity</b><span>near-monochrome · one accent carries all interaction</span></div>
           <div class="ct"><b>Enterprise trust</b><span>the default for serious B2B dev tooling</span></div>
         </div>
         <div class="mood">mood · airy · crisp · neutral · linear</div>
@@ -228,17 +284,17 @@
           <div class="sw"><div class="chip" style="background:#C2410C"></div><span>#C2410C action</span></div>
         </div>
         <div class="type-row">
-          <div><div class="fam">UI · Inter tight</div><div style="font-size:24px;font-weight:600">Suggest · Evolve · Archive</div></div>
-          <div><div class="fam">Data · tabular nums</div><div style="font-size:24px;font-weight:600;font-variant-numeric:tabular-nums">0.412 0.388 0.351</div></div>
-          <div><div class="fam">radius 8–10px · 1px borders</div><div style="font-size:24px;opacity:.7">▢▣▤▦▥</div></div>
+          <div><div class="fam">UI · Inter tight</div><div style="font-size:24px;font-weight:600;color:#1A1A18">Suggest · Evolve · Archive</div></div>
+          <div><div class="fam">Data · tabular nums</div><div style="font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;color:#1A1A18">0.412 0.388 0.351</div></div>
+          <div><div class="fam">radius 8–10px · 1px borders</div><div style="font-size:24px;opacity:.7;color:#1A1A18">▢▣▤▦▥</div></div>
         </div>
       </div>
-      <div class="d-right">
+      <div class="d-right" style="display:flex;flex-direction:column;min-width:0">
         <div class="pv-title">preview sketch — experiment workspace</div>
         <div class="pv">
           <div class="pv-bar">GAaaS · experiment “donation-v5” <span style="margin-left:auto">gen 8 · 41 organisms</span></div>
           <div class="pv-body">
-            <div class="pv-readout"><span class="pv-num" style="font-family:ui-monospace,Menlo,Consolas,monospace">0.412</span><span class="pv-tag">last reported fitness · organism 161</span></div>
+            <div class="pv-readout"><span class="pv-num vg" style="font-family:ui-monospace,Menlo,Consolas,monospace">0.412</span><span class="pv-tag">last reported fitness · organism 161</span></div>
             <div class="pv-row hot"><span><b>o161</b> <span class="m">donation-v5</span></span><span class="m">fitness 0.412</span><span class="m">suggested · awaiting test</span></div>
             <div class="pv-row"><span><b>o158</b> <span class="m">donation-v5</span></span><span class="m">0.388</span><span class="m">tested</span></div>
             <div class="pv-row"><span><b>o149</b> <span class="m">donation-v5</span></span><span class="m">0.351</span><span class="m">tested</span></div>
@@ -250,17 +306,16 @@
     <div class="count">3 / 5</div>
   </section>
 
-  <!-- 4 · C — WARM SIGNAL -->
+  <!-- 4 · C — WARM SIGNAL (LINEAGE CARDS) -->
   <section class="slide C" data-id="c">
-    <div class="slidebg"></div>
-    <div class="corners"><span>C / 3</span></div>
+    <div class="corners"><span>C / 3 · dark & alive</span></div>
     <div class="kicker">Direction C — dark & alive</div>
     <h1>Warm Signal</h1>
     <div class="d-wrap">
-      <div class="d-left">
+      <div class="d-left" style="display:flex;flex-direction:column;gap:20px">
         <div class="thesis">The generations are alive — organisms, breeding, lineage. The interface should feel like tending a thing that grows.</div>
         <div class="contract">
-          <div class="ct"><b>Care</b><span>warm dark surfaces, humanist serif display, soft radii</span></div>
+          <div class="ct"><b>Care</b><span>warm dark surfaces · humanist serif display · soft radii</span></div>
           <div class="ct"><b>Continuity</b><span>generation chains read as lineage, not tables</span></div>
           <div class="ct"><b>Human-in-loop</b><span>the breeder is a person; so is the customer</span></div>
         </div>
@@ -273,23 +328,24 @@
           <div class="sw"><div class="chip" style="background:#F4EDE6"></div><span>#F4EDE6 ink</span></div>
         </div>
         <div class="type-row">
-          <div><div class="fam">Display · serif humanist</div><div style="font-family:Georgia,'Source Serif 4',serif;font-size:26px;font-weight:600">Suggest·Evolve·Archive</div></div>
-          <div><div class="fam">UI · sans</div><div style="font-size:24px;font-weight:500">Donation-v5 · Generation 8</div></div>
-          <div><div class="fam">radius 12–16px · soft glow</div><div style="font-size:24px;opacity:.7">▢▣▤▦▥</div></div>
+          <div><div class="fam">Display · serif humanist</div><div style="font-family:Georgia,'Source Serif 4',serif;font-size:26px;font-weight:600;color:#F4EDE6">Suggest · Evolve · Archive</div></div>
+          <div><div class="fam">UI · sans</div><div style="font-size:24px;font-weight:500;color:#F4EDE6">Donation-v5 · Generation 8</div></div>
+          <div><div class="fam">radius 12–16px · soft glow</div><div style="font-size:24px;opacity:.7;color:#F4EDE6">▢▣▤▦▥</div></div>
         </div>
       </div>
-      <div class="d-right">
+      <div class="d-right" style="display:flex;flex-direction:column;min-width:0">
         <div class="pv-title">preview sketch — generation lineage</div>
         <div class="pv">
           <div class="pv-bar">GAaaS · experiment “donation-v5” <span style="margin-left:auto">gen 8 · 41 organisms</span></div>
           <div class="pv-body">
-            <div class="pv-readout"><span class="pv-num" style="font-family:ui-monospace,Menlo,Consolas,monospace">0.412</span><span class="pv-tag">last reported fitness · organism 161</span></div>
-            <div class="pv-grid3">
-              <div class="pv-card"><div class="k">o161 · suggested</div><div class="v">0.412</div><div class="d">donation-v5 · parents o128 × o119</div></div>
-              <div class="pv-card"><div class="k">o158 · tested</div><div class="v">0.388</div><div class="d">donation-v5 · parents o121 × o104</div></div>
-              <div class="pv-card"><div class="k">o149 · tested</div><div class="v">0.351</div><div class="d">donation-v5 · parents o117 × o102</div></div>
-              <div class="pv-card" style="border-color:#FF6B57"><div class="k">gen 8 → 9</div><div class="v" style="color:#F5C26B">breed now</div><div class="d">roulette · crossover · mutation</div></div>
+            <div class="pv-readout"><span class="pv-num vg" style="font-family:Georgia,serif">0.412</span><span class="pv-tag">last reported fitness · organism 161</span></div>
+            <div class="pv-grid">
+              <div class="pv-card hot"><div class="k">o161 · suggested</div><div class="v">0.412</div><div class="d">parents o128 × o119</div></div>
+              <div class="pv-card"><div class="k">o158 · tested</div><div class="v">0.388</div><div class="d">parents o121 × o104</div></div>
+              <div class="pv-card"><div class="k">o149 · tested</div><div class="v">0.351</div><div class="d">parents o117 × o102</div></div>
+              <div class="pv-card hot"><div class="k">gen 8 → 9</div><div class="v" style="color:#F5C26B">breed now</div><div class="d">roulette · crossover · mutation</div></div>
             </div>
+            <div class="pv-btn">Breed next generation</div>
           </div>
         </div>
       </div>
@@ -298,22 +354,21 @@
   </section>
 
   <!-- 5 · RECOMMENDATION -->
-  <section class="slide" data-id="rec" style="color:#E6EDF3">
-    <div class="slidebg" style="position:absolute;inset:0;z-index:-1;background:#0B0F14"></div>
+  <section class="slide rec" data-id="rec">
     <div class="corners"><span>recommendation</span><span>gate → your ruling</span></div>
-    <div class="kicker" style="color:#F5B64A">The founder rules. No brand is implemented before this.</div>
-    <div class="rec">
+    <div class="kicker">The founder rules. No brand is implemented before this.</div>
+    <div class="rec-grid">
       <div class="rec-left">
         <div class="verdict">Go with A —<br>Lab Instrument</div>
-        <div class="mood" style="color:#8A97A8">with the warm-amber signal thread from C</div>
+        <div class="mood">with the warm-amber signal thread from C</div>
         <div class="reason"><span class="n">01</span><span><b>Precision is the product contract.</b> The customer reports ONE number; the interface promises calibrated measurement of exactly that. Instrument language is the honest visual metaphor.</span></div>
         <div class="reason"><span class="n">02</span><span><b>Ownable.</b> Every dev-tool competitor is light-minimal (direction B). A dark instrument, executed to Blush Neon’s quality bar, is a distinctive identity — not a template of the sea.</span></div>
         <div class="reason"><span class="n">03</span><span><b>Trust = “fitness stays yours.”</b> The equipment object says: we read the dial, we never touch your machine. The amber signal keeps the breeding loop feeling alive, not cold.</span></div>
       </div>
       <div class="rec-right">
-        <div style="font-size:17px;letter-spacing:.06em;text-transform:uppercase;color:#8A97A8;font-family:ui-monospace,Menlo,Consolas,monospace">If you rule A</div>
-        <div style="font-size:22px;line-height:1.5;color:#E6EDF3">I lock the <b style="color:#F5B64A">DESIGN.md token set</b> (palette · type · spacing · components, WCAG-checked), produce <b>desktop + mobile skeleton frames</b> for landing + experiment workspace, then the apply-pass rewires theme.css mechanically.</div>
-        <div style="font-size:22px;line-height:1.5;color:#8A97A8">If you want edits — “deeper ink”, “less phosphor”, “brighter amber”, “more rounded” — I revise the direction, not the pipeline.</div>
+        <div class="lbl">If you rule A</div>
+        <div class="b">I lock the <b style="color:#F5B64A">DESIGN.md token set</b> (palette · type · spacing · components, WCAG-checked), produce <b>desktop + mobile skeleton frames</b> for landing + experiment workspace, then the apply-pass rewires theme.css mechanically.</div>
+        <div class="dim">If you want edits — “deeper ink” · “less phosphor” · “brighter amber” · “more rounded” — I revise the direction, not the pipeline.</div>
         <div class="rule"><span>reply:</span><b>“A”</b><span>·</span><b>“A but …”</b><span>·</span><b>“B”</b><span>·</span><b>“C”</b></div>
       </div>
     </div>
@@ -342,11 +397,11 @@
   const saved = parseInt(localStorage.getItem('gaas-mood-slide')||'0',10);
   show(Number.isFinite(saved) && saved < slides.length ? saved : 0);
   window.addEventListener('keydown', e => {
-    if(e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(i+1); }
-    if(e.key === 'ArrowLeft') { e.preventDefault(); show(i-1); }
+    if(e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show((i+1)%slides.length); }
+    if(e.key === 'ArrowLeft') { e.preventDefault(); show((i-1+slides.length)%slides.length); }
     if(e.key === 'Home') show(0); if(e.key === 'End') show(slides.length-1);
   });
-  slides.forEach((s,k)=> s.addEventListener('click', ()=> show(k+1 < slides.length ? k+1 : 0)));
+  slides.forEach((s,k)=> s.addEventListener('click', ()=> show((k+1)%slides.length)));
 })();
 </script>
 </body>
