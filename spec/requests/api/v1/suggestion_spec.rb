@@ -31,6 +31,21 @@ RSpec.describe 'POST /api/v1/experiments/:id/suggestion (token auth)', type: :re
                                   token_digest: Identity::ApiToken.digest(plaintext_token))
   end
 
+  # Drives the real loop commands (suggest → report) until the experiment's
+  # own ripe_for_evolution? turns true — same setup as the BDD Given and the
+  # web request spec (shared by the ripe-evolution example below).
+  def make_ripe(experiment)
+    experiment.start!
+    until experiment.reload.ripe_for_evolution?
+      suggestion = Experiments::RequestSuggestion.call(experiment:)
+      raise "RequestSuggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+
+      outcome = Experiments::RecordOutcome.call(performance_log: suggestion.performance_log,
+                                                fitness_input_value: 0.81)
+      raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
+    end
+  end
+
   describe 'with a valid token' do
     it 'returns an organism with its allele values and records a performance log' do
       expect do
@@ -57,6 +72,24 @@ RSpec.describe 'POST /api/v1/experiments/:id/suggestion (token auth)', type: :re
       # of identical organisms means the second call may pick the same row,
       # but each call must produce a valid organism with values.
       expect(first_id).to be_present
+    end
+
+    # PRD-0003 DEV-0005 (issue #72) — the machine-API sibling of the web loop
+    # action. RequestSuggestion is shared, so a token-authenticated suggestion
+    # on a ripe experiment evolves it first (new generation replaces current,
+    # suggestion served from the new generation).
+    it 'evolves a ripe experiment before suggesting (machine API sibling)' do
+      make_ripe(experiment)
+      previous_generation = experiment.current_generation
+
+      post "/api/v1/experiments/#{experiment.id}/suggestion", headers: auth_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(experiment.reload.current_generation).not_to eq(previous_generation)
+      expect(experiment.current_generation.iteration).to eq(previous_generation.iteration + 1)
+      organism = response.parsed_body
+      expect(organism['id']).to be_present
+      expect(PerformanceLog.order(:id).last.organism.generation).to eq(experiment.current_generation)
     end
   end
 

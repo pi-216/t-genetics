@@ -100,6 +100,51 @@ Then(/^the fitness ([\d.]+) is recorded against that suggestion$/) do |fitness|
   expect(page).to have_content("Recorded fitness: #{fitness}")
 end
 
+# DEV-0005 (issue #72) — a ripe experiment evolves on the next loop action.
+# The Given drives the real loop commands (suggest → report) against the
+# experiment created by `experiment_named` until the product's own
+# `ripe_for_evolution?` turns true — nothing hand-built. The experiment is
+# transitioned to `running` first (ripe_for_evolution? only considers running
+# experiments — the AASM event the engine's own commands use). The When reuses
+# the shared request-suggestion step: the next loop action must trigger
+# Experiments::EvaluateAndEvolve before suggesting, per PRD-0003.
+Given(/^the experiment has enough reported outcomes to be ripe$/) do
+  experiment = experiment_named('Donation amounts')
+  experiment.start! # pending → running; ripeness requires a running experiment
+
+  until experiment.reload.ripe_for_evolution?
+    suggestion = Experiments::RequestSuggestion.call(experiment:)
+    raise "RequestSuggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+
+    outcome = Experiments::RecordOutcome.call(performance_log: suggestion.performance_log,
+                                              fitness_input_value: 0.81)
+    raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
+  end
+
+  expect(experiment.ripe_for_evolution?).to be true
+end
+
+When(/^I request the next suggestion$/) do
+  step 'I request a suggestion for the experiment'
+end
+
+Then(/^a new generation is created$/) do
+  experiment = Experiment.find_by!(name: 'Donation amounts')
+  # Setup births generation 0; a successful evolution creates iteration 1.
+  expect(experiment.reload.current_generation.iteration).to eq(1)
+  expect(Generation.where(chromosome: experiment.chromosome).count).to eq(2)
+end
+
+And(/^it replaces the current generation$/) do
+  experiment = Experiment.find_by!(name: 'Donation amounts')
+  log = PerformanceLog.where(experiment_id: experiment.id).order(:id).last
+  # The suggestion served after evolution comes from the NEW generation, and
+  # the show page reflects it (the suggested-organism section renders the
+  # generation iteration).
+  expect(log.organism.generation.iteration).to eq(1)
+  expect(page).to have_content('from generation 1')
+end
+
 # DEV-0002 (issue #69) — another organization cannot see my experiment. The
 # scenario re-signs-in as a different org after the Background, so the sign-in
 # step above accepts both phrasings ("owner of X" and "owner of organization

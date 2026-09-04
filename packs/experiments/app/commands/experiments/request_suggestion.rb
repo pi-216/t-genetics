@@ -6,6 +6,17 @@ module Experiments
     returns :organism, :performance_log
 
     def call
+      # PRD-0003 DEV-0005 (issue #72): the next loop action on a ripe
+      # experiment triggers the evolution before suggesting. RequestSuggestion
+      # is the shared loop action for the web UI and the machine API
+      # (PRD-0005), so the auto-evolve lives here — a suggestion is always
+      # served from the newest generation after a ripe evolution. Also
+      # self-activates a pending experiment (pending → running, mirroring
+      # EvaluateAndEvolve), otherwise a created experiment could never become
+      # ripe and the loop would stall in production.
+      context.experiment.start! if context.experiment.may_start?
+      evolve_if_ripe!
+
       current_generation = context.experiment.current_generation
       unless current_generation
         fail_command!(errors: { experiment: ['does not have a current generation'] })
@@ -70,6 +81,23 @@ module Experiments
       # Also clear from context if it was set
       context.performance_log = nil if @performance_log&.destroyed?
       context.organism = nil if @performance_log&.destroyed? # Organism wasn't created by this command
+    end
+
+    private
+
+    # PRD-0003 DEV-0005 (issue #72): when the experiment is ripe
+    # (ripe_for_evolution?), the next loop action runs EvaluateAndEvolve first,
+    # so the suggestion is served from the NEW generation. A failed evolution
+    # fails the suggestion (never silently suggest stale organisms); the
+    # evolution itself is transaction-protected and its rollback handles the
+    # chain case.
+    def evolve_if_ripe!
+      return unless context.experiment.ripe_for_evolution?
+
+      evolve_result = EvaluateAndEvolve.call(experiment: context.experiment)
+      return if evolve_result.success?
+
+      fail_command!(errors: evolve_result.errors)
     end
   end
 end
