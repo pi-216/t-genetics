@@ -1,0 +1,20 @@
+-# PRD-0001 — public landing page. Brand-neutral first pass (drift flag: the
+-# design-sprint brand tokens land later as a restyle). No paid-tier promises,
+-# no external network calls, no real-person likeness. The loop explanation is
+-# ≤5 bullets, and the CTA points at the PRD-0002 sign-up route.
+
+%section.landing-hero
+  %h1 TGenetics
+  %p.landing-tagline Genetic algorithms as a service — an evolution loop you run against your own fitness function.
+
+%section#how-it-works
+  %h2 How it works
+  %ol.landing-steps
+    %li We suggest an organism to test — least-tested, highest-information first.
+    %li You test it on your infrastructure, against your fitness.
+    %li You report one number: the fitness you measured.
+    %li We breed offspring — crossover and mutation — from the outcomes.
+    %li Repeat: every generation gets more informative.
+
+%section.landing-cta
+  = link_to 'Start free', register_path, class: 'landing-cta-link'
