@@ -6,7 +6,8 @@
 # - Endpoints under /api/v1, Bearer auth; exact payloads reconciled with the
 #   existing rswag artifact during implementation.
 # - DEV-0001 implemented (issue #36); DEV-0002 implemented (issue #37);
-#   DEV-0003 implemented (issue #38). DEV-0004..DEV-0010 remain @wip.
+#   DEV-0003 implemented (issue #38); DEV-0004 implemented (issue #39).
+#   DEV-0005..DEV-0010 remain @wip.
 
 @PRD-0005
 Feature: Token API
@@ -34,7 +35,7 @@ Feature: Token API
     When I GET /api/v1/chromosomes with that token
     Then I receive a 200 response listing "Alpha-chrom"
 
-  @DEV-0004 @wip
+  @DEV-0004
   Scenario: An invalid, missing, or revoked token is rejected
     Given "Loop Labs" has a revoked API token
     When I GET /api/v1/chromosomes with an invalid token
