@@ -36,7 +36,6 @@ group :development, :test do
   gem 'packwerk'
   gem 'reek'
   gem 'timecop'
-  gem 'webdrivers'
 
   gem 'rswag-api'
   gem 'rswag-specs'
