@@ -30,7 +30,6 @@ Feature: Landing Page
     When I click the "Start free" call to action
     Then I land on the sign-up page
 
-  @wip
   @DEV-0003
   Scenario: The page explains that the customer keeps their fitness function
     When I read the trust section

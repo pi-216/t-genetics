@@ -26,5 +26,13 @@ RSpec.describe 'Landing page', type: :request do
 
       expect(response.body).to include('Start free')
     end
+
+    # PRD-0001, DEV-0003 — the trust block states that the customer keeps
+    # their fitness function: we never run or evaluate it for them.
+    it 'states that the customer keeps their fitness function' do
+      get root_path
+
+      expect(response.body).to include('Your fitness function stays yours')
+    end
   end
 end
