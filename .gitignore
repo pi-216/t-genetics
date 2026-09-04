@@ -39,7 +39,10 @@ spec/support/database.yml
 # Used by RuboCop. Remote config files pulled in from inherit_from directive.
 # .rubocop-https?--*
 
-# Ignore master key for decrypting credentials and more.
+# Credential tooling is intentionally unused (issue #58 ruling): secrets come
+# from the environment (SECRET_KEY_BASE). There is no master key to decrypt
+# encrypted credential files, so they must never be tracked.
+/config/credentials.yml.enc
 /config/master.key
 
 /app/assets/builds/*
