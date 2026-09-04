@@ -2,8 +2,7 @@
 
 module Experiments
   class Setup < GLCommand::Callable
-    requires :external_entity # Polymorphic ActiveRecord object
-    requires chromosome: Chromosome # Existing, persisted Chromosome record
+    requires :external_entity, chromosome: Chromosome # Polymorphic entity + persisted chromosome
     allows :experiment_configuration # Hash, for Experiment.configuration. Defaults to {}.
                                      # Can include :population_size (defaults to 10).
     returns :experiment # The created Experiment record

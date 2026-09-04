@@ -7,8 +7,8 @@
 #   existing rswag artifact during implementation.
 # - DEV-0001 implemented (issue #36); DEV-0002 implemented (issue #37);
 #   DEV-0003 implemented (issue #38); DEV-0004 implemented (issue #39);
-#   DEV-0005 implemented (issue #40); DEV-0006 implemented (issue #41).
-#   DEV-0007..DEV-0010 remain @wip.
+#   DEV-0005 implemented (issue #40); DEV-0006 implemented (issue #41);
+#   DEV-0007 implemented (issue #42). DEV-0008..DEV-0010 remain @wip.
 
 @PRD-0005
 Feature: Token API
@@ -53,7 +53,7 @@ Feature: Token API
     When I create a chromosome named "Gamma-chrom" via the API
     Then "Gamma-chrom" appears in the API chromosome list
 
-  @DEV-0007 @wip
+  @DEV-0007
   Scenario: Machines can create an experiment with a token
     When I create an experiment on "Alpha-chrom" via the API
     Then the experiment appears in the API experiment list
