@@ -9,6 +9,9 @@
 
 Given(/^organization "([^"]+)" owns chromosome "([^"]+)"$/) do |org_name, chromosome_name|
   organization = Identity::Organization.find_or_create_by!(name: org_name)
+  # Remembered so later steps without an explicit org name (DEV-0006 create)
+  # can target the feature background's organization.
+  @api_test_org = organization
   organization.chromosomes.find_or_create_by!(name: chromosome_name)
 end
 
@@ -140,4 +143,33 @@ end
 Then(/^I do not see "([^"]+)"$/) do |chromosome_name|
   expect(page.status_code).to eq(200)
   expect(page.body).not_to include(chromosome_name)
+end
+
+# DEV-0006 (issue #41) — machines create chromosomes with a token. The create
+# mints a valid token for the feature background org when none is in hand
+# (mirroring the DEV-0003 setup), POSTs the chromosome at the machine API with
+# a Bearer header, and the follow-up Then re-lists with the same token so
+# "appears in the API chromosome list" proves org-scoped persistence.
+When(/^I create a chromosome named "([^"]+)" via the API$/) do |chromosome_name|
+  organization = @api_test_org or raise 'no feature-background organization in play'
+  @plain_api_token ||= begin
+    token = Identity::ApiToken.generate_plaintext
+    Identity::ApiToken.create!(
+      organization: organization,
+      name: 'ci-runner',
+      token_digest: Identity::ApiToken.digest(token)
+    )
+    token
+  end
+
+  page.driver.header('Authorization', "Bearer #{@plain_api_token}")
+  page.driver.post('/api/v1/chromosomes', chromosome: { name: chromosome_name })
+end
+
+Then(/^"([^"]+)" appears in the API chromosome list$/) do |chromosome_name|
+  page.driver.header('Authorization', "Bearer #{@plain_api_token}")
+  page.driver.get('/api/v1/chromosomes')
+
+  expect(page.status_code).to eq(200)
+  expect(page.body).to include(chromosome_name)
 end

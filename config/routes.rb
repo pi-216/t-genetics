@@ -27,7 +27,7 @@ Rails.application.routes.draw do
   # scoped to an organization; see Api::V1::BaseController.
   namespace :api do
     namespace :v1 do
-      resources :chromosomes, only: :index
+      resources :chromosomes, only: %i[index create]
     end
   end
 
