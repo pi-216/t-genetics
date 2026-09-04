@@ -8,7 +8,8 @@
 # - DEV-0001 implemented (issue #36); DEV-0002 implemented (issue #37);
 #   DEV-0003 implemented (issue #38); DEV-0004 implemented (issue #39);
 #   DEV-0005 implemented (issue #40); DEV-0006 implemented (issue #41);
-#   DEV-0007 implemented (issue #42). DEV-0008..DEV-0010 remain @wip.
+#   DEV-0007 implemented (issue #42); DEV-0010 implemented (issue #45).
+#   DEV-0008..DEV-0009 remain @wip.
 
 @PRD-0005
 Feature: Token API
@@ -69,7 +70,7 @@ Feature: Token API
     When I report fitness 0.81 for that suggestion via the API
     Then the outcome is recorded on the performance log
 
-  @DEV-0010 @wip
+  @DEV-0010
   Scenario: Malformed payloads return validation errors
     When I send a malformed chromosome payload via the API
     Then I receive a 422 response with error keys
