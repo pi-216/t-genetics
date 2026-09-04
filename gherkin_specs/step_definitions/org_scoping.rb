@@ -26,6 +26,15 @@ When(/^the user "([^"]+)" visits the chromosome "([^"]+)"$/) do |email, chromoso
   visit chromosome_path(chromosome)
 end
 
+# DEV-0004 (issue #80) — the current session (already signed in via a Given
+# such as "I am signed in as an owner of organization ...") visits a named
+# chromosome directly. Cross-org access must answer 404 via the controller's
+# org-scoped lookup — never disclose another org's row.
+When(/^I visit the chromosome "([^"]+)"$/) do |chromosome_name|
+  chromosome = Chromosome.find_by!(name: chromosome_name)
+  visit chromosome_path(chromosome)
+end
+
 Then(/^I receive a not-found or forbidden response$/) do
   expect(page.status_code).to eq(404)
 end
