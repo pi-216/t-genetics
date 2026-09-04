@@ -1,0 +1,28 @@
+<h1>Generation history — <%= @experiment.name %></h1>
+
+<p>Chromosome: <%= @experiment.chromosome.name %></p>
+
+<% @generations.each do |generation| %>
+  <section class="generation-history">
+    <h2>Generation <%= generation.iteration %></h2>
+    <p><%= generation.organisms.size %> organisms</p>
+
+    <% generation.organisms.sort_by(&:id).each do |organism| %>
+      <div class="history-organism">
+        <h3>Organism #<%= organism.id %></h3>
+        <ul>
+          <% organism.values.sort_by(&:name).each do |value| %>
+            <li><strong><%= value.allele.name %>:</strong> <%= value.data %></li>
+          <% end %>
+        </ul>
+        <% if organism.fitness.present? %>
+          <p class="recorded-fitness">Recorded fitness: <%= organism.fitness %></p>
+        <% else %>
+          <p>No fitness recorded yet</p>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+<% end %>
+
+<p><%= link_to 'Back to experiment', experiment_path(@experiment) %></p>

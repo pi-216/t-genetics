@@ -155,6 +155,53 @@ When(/^I visit the experiment "([^"]+)"$/) do |experiment_name|
   visit experiment_path(experiment_named(experiment_name))
 end
 
+# DEV-0007 (issue #74) — a member can browse the experiment's generation
+# history. The Given drives the real loop (suggest → report → auto-evolve)
+# twice, exactly like the DEV-0005 Given but repeated, so generations 0, 1, 2
+# exist; the When opens the org-scoped history page; the Then asserts every
+# generation is listed with its organisms and the recorded fitness.
+Given(/^the experiment has evolved more than once$/) do
+  experiment = experiment_named('Donation amounts')
+  experiment.start!
+
+  2.times do
+    until experiment.reload.ripe_for_evolution?
+      suggestion = Experiments::RequestSuggestion.call(experiment:)
+      raise "RequestSuggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+
+      outcome = Experiments::RecordOutcome.call(performance_log: suggestion.performance_log,
+                                                fitness_input_value: 0.81)
+      raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
+    end
+
+    next_suggestion = Experiments::RequestSuggestion.call(experiment:)
+    raise "RequestSuggestion failed: #{next_suggestion.errors.inspect}" unless next_suggestion.success?
+  end
+
+  expect(experiment.reload.current_generation.iteration).to eq(2)
+end
+
+When(/^I open the generation history$/) do
+  visit history_experiment_path(experiment_named('Donation amounts'))
+end
+
+Then(/^I see each generation with its organisms and recorded fitness$/) do
+  experiment = Experiment.find_by!(name: 'Donation amounts')
+  generations = Generation.where(chromosome: experiment.chromosome).order(:iteration)
+  expect(generations.size).to be >= 3
+
+  generations.each do |generation|
+    expect(page).to have_content("Generation #{generation.iteration}")
+    expect(page).to have_content("#{generation.organisms.count} organisms")
+    generation.organisms.each do |organism|
+      expect(page).to have_content("Organism ##{organism.id}")
+    end
+  end
+
+  expect(page).to have_content('Recorded fitness:')
+  expect(page).to have_content('0.81')
+end
+
 # The named experiment is an implicit prerequisite for several scenarios —
 # created through the same Experiments::Setup command the UI create flow runs
 # (never a factory where the real command exists). Shared by the suggestion
