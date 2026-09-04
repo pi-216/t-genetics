@@ -38,3 +38,14 @@ Then(/^I land on the sign-up page$/) do
   expect(page).to have_current_path(register_path)
   expect(page).to have_content('Create your account')
 end
+
+# DEV-0003 — the landing page carries a trust block that states the core
+# product contract: the customer keeps their fitness function. We never
+# run or evaluate it for them (HANDOFF red line); the page just says so.
+When(/^I read the trust section$/) do
+  expect(page).to have_css('#trust')
+end
+
+Then(/^I see a statement that my fitness function stays mine$/) do
+  expect(page).to have_content('Your fitness function stays yours')
+end
