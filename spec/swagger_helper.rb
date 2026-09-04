@@ -23,6 +23,13 @@ RSpec.configure do |config|
       },
       paths: {},
       components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: :http,
+            scheme: :bearer,
+            bearerFormat: 'string'
+          }
+        },
         schemas: {
           Chromosome: {
             type: :object,

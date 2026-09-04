@@ -5,8 +5,8 @@
 # - Flat tokens: no scopes/rate-limiting/OAuth in v1 (founder ruling).
 # - Endpoints under /api/v1, Bearer auth; exact payloads reconciled with the
 #   existing rswag artifact during implementation.
-# - DEV-0001 implemented (issue #36); DEV-0002 implemented (issue #37).
-#   DEV-0003..DEV-0010 remain @wip.
+# - DEV-0001 implemented (issue #36); DEV-0002 implemented (issue #37);
+#   DEV-0003 implemented (issue #38). DEV-0004..DEV-0010 remain @wip.
 
 @PRD-0005
 Feature: Token API
@@ -28,7 +28,7 @@ Feature: Token API
     When I try to create an API token
     Then I receive a forbidden response and no token is created
 
-  @DEV-0003 @wip
+  @DEV-0003
   Scenario: A valid token authenticates chromosome reads
     Given "Loop Labs" has a valid API token
     When I GET /api/v1/chromosomes with that token
