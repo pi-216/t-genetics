@@ -7,9 +7,9 @@
 # - Population size + ripe thresholds are set at creation (open question A3
 #   resolved to yes — they already exist on the model).
 # - DEV-0001 (issue #68), DEV-0002 (issue #69), DEV-0003 (issue #70),
-#   DEV-0004 (issue #71), DEV-0005 (issue #72), DEV-0007 (issue #74)
-#   implemented; DEV-0006 (double-fire, issue #73) and DEV-0008 (empty state,
-#   issue #75) still @wip (each gets its own ticket). No paid-tier surface
+#   DEV-0004 (issue #71), DEV-0005 (issue #72), DEV-0006 (issue #73),
+#   DEV-0007 (issue #74) implemented; DEV-0008 (empty state, issue #75)
+#   still @wip (each gets its own ticket). No paid-tier surface
 #   (exploitation/greed, generation-progress insights) — those are red lines
 #   until a payer.
 
@@ -55,7 +55,6 @@ Feature: Experiment Workspace
     And it replaces the current generation
 
   @DEV-0006
-  @wip
   Scenario: Evolution does not double-fire
     Given the experiment is ripe
     When the next loop action runs twice
