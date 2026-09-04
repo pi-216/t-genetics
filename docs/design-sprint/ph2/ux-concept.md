@@ -74,13 +74,24 @@ org onboarding → invite members → create chromosome → create experiment
   produce a predictable / always-the-same organism. The customer cannot
   game the loop by re-requesting until they get a desired organism, and no
   organism is starved of exposure by a deterministic queue.
-- **Equal opportunity to be tested.** Every organism in the pool should have
-  an equal opportunity to *survive* — with fitness determined only by the
-  fitness function, never by luck of which organism got suggested when.
-  (Current `RequestSuggestion` picks least-logged-first with random
-  tiebreak — that still biases exposure toward the untested; the ruling is
-  fair/random sampling across the pool so exposure luck and
-  seasonal/time-of-day effects don't masquerade as fitness.)
+- **Randomize among the UNTESTED pool.** The suggestion pool is the
+  organisms in the current generation that do NOT yet have a reported
+  fitness value. Every suggestion is a uniform random draw from that pool.
+  An organism that has already been reported (has a fitness value) is
+  never suggested again within the generation — when every organism has a
+  reported fitness, the generation is ripe for evolution and a fresh
+  untested pool is born. (This replaces the v1 "least-logged-first"
+  behavior, which biased exposure toward the untested in queue order.)
+- **Already-suggested-but-unreported = still in the pool.** An organism
+  that was suggested but whose outcome hasn't come back yet has no fitness
+  value, so it stays suggestable (drawing it again just samples it more —
+  fine for the payment-form use case, where many customers each get a
+  presentation). A customer cannot game this: the draw is random, and
+  re-requesting never returns a *known-fitness* organism to exploit.
+- **Equal opportunity to be tested.** Because every organism without a
+  fitness value has an equal chance to be the next suggestion, survival is
+  determined only by the fitness function, never by luck of exposure
+  (seasonal / time-of-day effects don't masquerade as fitness).
 - **Exploit mode = PAID TIER, deferred.** An opt-in knob where the customer
   says "X% of the time give me the strongest known organism" (to smooth
   seasonal/time-of-day bias) is exactly the exploitation/greed control that
