@@ -6,9 +6,10 @@
 #   (open question A2 resolved to yes).
 # - Population size + ripe thresholds are set at creation (open question A3
 #   resolved to yes — they already exist on the model).
-# - DEV-0001 implemented (issue #68); DEV-0002..DEV-0008 still @wip (each gets
-#   its own ticket). No paid-tier surface (exploitation/greed,
-#   generation-progress insights) — those are red lines until a payer.
+# - DEV-0001 (issue #68) and DEV-0003 (issue #70) implemented; DEV-0002,
+#   DEV-0004..DEV-0008 still @wip (each gets its own ticket). No paid-tier
+#   surface (exploitation/greed, generation-progress insights) — those are red
+#   lines until a payer.
 
 @PRD-0003
 Feature: Experiment Workspace
@@ -34,7 +35,6 @@ Feature: Experiment Workspace
     Then I receive a not-found or forbidden response
 
   @DEV-0003
-  @wip
   Scenario: A member can request a suggestion
     When I request a suggestion for the experiment
     Then I receive an organism with values from the current generation

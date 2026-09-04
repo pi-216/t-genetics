@@ -11,8 +11,8 @@ require 'rails_helper'
 RSpec.describe 'Experiments workspace (web)', type: :request do
   let!(:org) { FactoryBot.create(:organization, name: 'Loop Labs') }
   let!(:other_org) { FactoryBot.create(:organization, name: 'Beta') }
-  let!(:chromosome) { FactoryBot.create(:chromosome, name: 'Alpha-chrom', organization: org) }
-  let!(:other_chromosome) { FactoryBot.create(:chromosome, name: 'Beta-chrom', organization: other_org) }
+  let!(:chromosome) { FactoryBot.create(:chromosome_with_alleles, name: 'Alpha-chrom', organization: org) }
+  let!(:other_chromosome) { FactoryBot.create(:chromosome_with_alleles, name: 'Beta-chrom', organization: other_org) }
 
   describe 'GET /experiments' do
     it 'requires sign-in (anonymous is redirected to the login page)' do
@@ -130,6 +130,62 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
 
       expect(response).to have_http_status(:not_found)
       expect(response.body).not_to include('Beta secret')
+    end
+  end
+
+  describe 'POST /experiments/:id/suggestion' do
+    let!(:experiment) do
+      result = Experiments::Setup.call(chromosome:, external_entity: chromosome,
+                                       name: 'Donation amounts',
+                                       experiment_configuration: { population_size: 20 })
+      raise "Setup failed: #{result.errors.inspect}" unless result.success?
+
+      result.experiment
+    end
+
+    it 'requires sign-in (anonymous is redirected to the login page)' do
+      post suggestion_experiment_url(experiment)
+
+      expect(response).to redirect_to(login_path)
+    end
+
+    it 'returns an organism with typed values from the current generation' do
+      sign_in_as(organization: org)
+      post suggestion_experiment_url(experiment)
+
+      expect(response).to have_http_status(:ok)
+      chromosome.alleles.each { |a| expect(response.body).to include(a.name) }
+    end
+
+    it 'records a performance log for the suggestion' do
+      sign_in_as(organization: org)
+      expect { post suggestion_experiment_url(experiment) }
+        .to change(PerformanceLog, :count).by(1)
+
+      log = PerformanceLog.order(:id).last
+      expect(log.organism.generation).to eq(experiment.current_generation)
+      expect(log.suggested_at).to be_present
+    end
+
+    it 'answers 404 for another organization\'s experiment and records nothing' do
+      sign_in_as(organization: org)
+      secret = Experiments::Setup.call(chromosome: other_chromosome, external_entity: other_chromosome).experiment
+
+      expect do
+        post suggestion_experiment_url(secret)
+      end.not_to change(PerformanceLog, :count)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'answers 404 for an unknown experiment id' do
+      sign_in_as(organization: org)
+
+      expect do
+        post suggestion_experiment_url(9_999_999)
+      end.not_to change(PerformanceLog, :count)
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 end
