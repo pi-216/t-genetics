@@ -1,0 +1,12 @@
+<h1><%= @experiment.name %></h1>
+
+<p>Chromosome: <%= @experiment.chromosome.name %></p>
+<p>Population size: <%= @experiment.configuration.fetch('population_size', '—') %></p>
+<p>Status: <%= @experiment.status %></p>
+<p>Evolution:
+  <% if @experiment.ripe_for_evolution? %>
+    ready to evolve
+  <% else %>
+    not yet ripe
+  <% end %>
+</p>
