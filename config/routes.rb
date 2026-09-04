@@ -19,6 +19,10 @@ Rails.application.routes.draw do
   # render owner-only (PRD-0002 DEV-0008 / issue #18).
   get "settings" => "identity/settings#show", as: :settings
 
+  # Owner-only API-token creation (PRD-0005 DEV-0001 / issue #36). The form
+  # lives on the settings page; the plaintext is shown once in the flash.
+  post "organization/api_tokens" => "identity/api_tokens#create", as: :api_tokens
+
   if Rails.env.development? || Rails.env.test?
     mount Rswag::Ui::Engine => '/api-docs'
     mount Rswag::Api::Engine => '/api-docs'
