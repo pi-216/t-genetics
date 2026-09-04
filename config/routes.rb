@@ -57,5 +57,7 @@ Rails.application.routes.draw do
     end
   end
 
-  root 'chromosomes#index'
+  # Public landing page (PRD-0001) — the product's front door. The workspace
+  # stays reachable at /chromosomes via the resources routes below.
+  root 'landing#show'
 end
