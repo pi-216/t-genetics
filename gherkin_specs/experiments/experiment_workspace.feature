@@ -6,10 +6,10 @@
 #   (open question A2 resolved to yes).
 # - Population size + ripe thresholds are set at creation (open question A3
 #   resolved to yes — they already exist on the model).
-# - DEV-0001 (issue #68), DEV-0003 (issue #70), DEV-0004 (issue #71)
-#   implemented; DEV-0002, DEV-0005..DEV-0008 still @wip (each gets its own
-#   ticket). No paid-tier surface (exploitation/greed, generation-progress
-#   insights) — those are red lines until a payer.
+# - DEV-0001 (issue #68), DEV-0002 (issue #69), DEV-0003 (issue #70),
+#   DEV-0004 (issue #71) implemented; DEV-0005..DEV-0008 still @wip (each
+#   gets its own ticket). No paid-tier surface (exploitation/greed,
+#   generation-progress insights) — those are red lines until a payer.
 
 @PRD-0003
 Feature: Experiment Workspace
@@ -28,7 +28,6 @@ Feature: Experiment Workspace
     And evolution is not yet ripe
 
   @DEV-0002
-  @wip
   Scenario: Another organization cannot see my experiment
     Given I am signed in as an owner of organization "Beta"
     When I visit the experiment "Donation amounts"

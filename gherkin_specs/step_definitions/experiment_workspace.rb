@@ -9,7 +9,7 @@
 # PRD-0005 feature (gherkin_specs/step_definitions/api_tokens.rb) — reuse, do
 # not redefine.
 
-Given(/^I am signed in as an owner of "([^"]+)"$/) do |org_name|
+Given(/^I am signed in as an owner of(?: organization)? "([^"]+)"$/) do |org_name|
   organization = Identity::Organization.find_or_create_by!(name: org_name)
   # Marks the WEB feature context for the shared Given in api_tokens.rb
   # ("a suggestion has been requested for the experiment") — a browser session
@@ -57,17 +57,7 @@ end
 # the real UI (POST to the show page's request button). Factory truth:
 # :experiment/:chromosome factories in spec/factories/.
 When(/^I request a suggestion for the experiment$/) do
-  chromosome = Chromosome.find_by!(name: 'Alpha-chrom')
-  experiment = Experiment.find_by(name: 'Donation amounts', chromosome:)
-  unless experiment
-    result = Experiments::Setup.call(chromosome:,
-                                     external_entity: chromosome,
-                                     name: 'Donation amounts',
-                                     experiment_configuration: { population_size: 20 })
-    raise "Setup failed: #{result.errors.inspect}" unless result.success?
-
-    experiment = result.experiment
-  end
+  experiment = experiment_named('Donation amounts')
 
   visit experiment_path(experiment)
   click_button 'Request suggestion'
@@ -108,4 +98,32 @@ Then(/^the fitness ([\d.]+) is recorded against that suggestion$/) do |fitness|
   expect(log.outcome_recorded_at).to be_present
   expect(page).to have_css('.recorded-fitness')
   expect(page).to have_content("Recorded fitness: #{fitness}")
+end
+
+# DEV-0002 (issue #69) — another organization cannot see my experiment. The
+# scenario re-signs-in as a different org after the Background, so the sign-in
+# step above accepts both phrasings ("owner of X" and "owner of organization
+# X" — the latter also used by the PRD-0004 designer feature). Visiting the
+# named experiment's direct URL must answer 404 for the foreign org — the
+# controller's org-scoped lookup never discloses it (PRD-0003 red line).
+When(/^I visit the experiment "([^"]+)"$/) do |experiment_name|
+  visit experiment_path(experiment_named(experiment_name))
+end
+
+# The named experiment is an implicit prerequisite for several scenarios —
+# created through the same Experiments::Setup command the UI create flow runs
+# (never a factory where the real command exists). Shared by the suggestion
+# and the visit steps above.
+def experiment_named(experiment_name)
+  chromosome = Chromosome.find_by!(name: 'Alpha-chrom')
+  experiment = Experiment.find_by(name: experiment_name, chromosome:)
+  return experiment if experiment
+
+  result = Experiments::Setup.call(chromosome:,
+                                   external_entity: chromosome,
+                                   name: experiment_name,
+                                   experiment_configuration: { population_size: 20 })
+  raise "Setup failed: #{result.errors.inspect}" unless result.success?
+
+  result.experiment
 end
