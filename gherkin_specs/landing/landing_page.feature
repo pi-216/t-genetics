@@ -61,7 +61,6 @@ Feature: Landing Page
     Then I see a privacy link
     And I see a terms link
 
-  @wip
   @DEV-0007
   Scenario: The page makes no external network calls
     When I inspect the page resources
