@@ -6,8 +6,8 @@
 # - Endpoints under /api/v1, Bearer auth; exact payloads reconciled with the
 #   existing rswag artifact during implementation.
 # - DEV-0001 implemented (issue #36); DEV-0002 implemented (issue #37);
-#   DEV-0003 implemented (issue #38); DEV-0004 implemented (issue #39).
-#   DEV-0005..DEV-0010 remain @wip.
+#   DEV-0003 implemented (issue #38); DEV-0004 implemented (issue #39);
+#   DEV-0005 implemented (issue #40). DEV-0006..DEV-0010 remain @wip.
 
 @PRD-0005
 Feature: Token API
@@ -41,7 +41,7 @@ Feature: Token API
     When I GET /api/v1/chromosomes with an invalid token
     Then I receive a 401 response
 
-  @DEV-0005 @wip
+  @DEV-0005
   Scenario: Tokens are org-scoped
     Given organization "Beta" owns no chromosomes
     When I GET /api/v1/chromosomes of "Loop Labs" using "Beta"'s token

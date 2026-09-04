@@ -113,3 +113,31 @@ end
 Then(/^I receive a (\d+) response$/) do |status|
   expect(page.status_code).to eq(status.to_i)
 end
+
+# DEV-0005 (issue #40) — tokens are org-scoped. A token authenticates ONLY as
+# its own organization: listing chromosomes with Beta's token must never
+# disclose Loop Labs' chromosome, even though the endpoint only asks for the
+# org by name in the step language. Org isolation is the machine-API red line
+# (cross-org 404/never-data), enforced by TokenAuthentication#current_organization
+# feeding the scoped query in Api::V1::ChromosomesController#index.
+Given(/^organization "([^"]+)" owns no chromosomes$/) do |org_name|
+  organization = Identity::Organization.find_or_create_by!(name: org_name)
+  expect(organization.chromosomes.count).to eq(0)
+end
+
+When(/^I GET \/api\/v1\/chromosomes of "([^"]+)" using "([^"]+)"'s token$/) do |_query_org_name, token_org_name|
+  token_org = Identity::Organization.find_by!(name: token_org_name)
+  @plain_api_token = Identity::ApiToken.generate_plaintext
+  Identity::ApiToken.create!(
+    organization: token_org,
+    name: 'ci-runner',
+    token_digest: Identity::ApiToken.digest(@plain_api_token)
+  )
+  page.driver.header('Authorization', "Bearer #{@plain_api_token}")
+  page.driver.get('/api/v1/chromosomes')
+end
+
+Then(/^I do not see "([^"]+)"$/) do |chromosome_name|
+  expect(page.status_code).to eq(200)
+  expect(page.body).not_to include(chromosome_name)
+end
