@@ -86,7 +86,7 @@ def add_to_project(issue_url)
   out = sh("gh", "project", "item-add", CONF["project_number"].to_s,
            "--owner", CONF["owner"], "--url", issue_url, "--format", "json")
   item_id = JSON.parse(out)["id"]
-  sh("gh", "project", "item-edit", CONF["project_number"].to_s, "--owner", CONF["owner"],
+  sh("gh", "project", "item-edit",
      "--id", item_id.to_s, "--project-id", CONF["project_id"],
      "--field-id", CONF["status_field_id"],
      "--single-select-option-id", CONF["status_options"]["todo"])
