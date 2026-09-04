@@ -48,14 +48,13 @@ must not fire emails, ads, or analytics beacons that cost money.
 - Request spec green (200, CTA present, no beacons); BDD green; `bin/verify` green.
 - LCP < 2.5s on a 4G throttle (server-rendered page, no heavy assets).
 
-## Open questions (product owner)
-- **A1 Copy:** who does the value-prop copy? (Recommend: draft in PRD, refine
-  after the design sprint's brand concept.)
-- **A2 Domain:** does the product run at `gaas.pi216.ai` or a bought domain?
-  (Affects canonical URLs / meta; recommend `gaas.pi216.ai` for the trial.)
+## Decisions (founder rulings, 2026-09-04)
+- **A1 Copy:** value-prop copy is drafted here (PRD), refined after the design
+  sprint's brand concept lands.
+- **A2 Domain:** the product runs at `gaas.pi216.ai` for the trial; no domain
+  purchase now. Canonical URLs / meta use that host.
 - **A3 Demo:** embed the standalone `demo/index.html` GA simulation as a
-  scroll-triggered section, or keep the page purely static? (Recommend: embed —
-  it's the falsification hook, labeled simulated.)
+  scroll-triggered section, clearly labeled "simulated fitness".
 
 ## Related
 - PRD-0002 (org sign-up) — the CTA target.
