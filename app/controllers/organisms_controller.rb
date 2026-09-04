@@ -14,7 +14,13 @@ class OrganismsController < ApplicationController
 
   def show
     fresh_when(@organism)
-    render json: @organism.to_hsh
+    respond_to do |format|
+      # PRD-0004 DEV-0005 (issue #81): HTML organism viewer — each value
+      # rendered by its allele type (see views/organisms/show.html.erb).
+      format.html
+      # JSON shape for API/JS clients — unchanged.
+      format.json { render json: @organism.to_hsh }
+    end
   end
 
   def update
