@@ -6,7 +6,9 @@
 # - The designer replaces the current chromosome CRUD views (A3 resolved to
 #   replace — one surface, no split).
 # - DEV-0004 (issue #80) implemented: cross-org chromosome access answers
-#   404. The remaining scenarios stay @wip until implemented.
+#   404; DEV-0006 (issue #82, fitness trend line) and DEV-0007 (issue #83,
+#   explicit empty state) implemented. The remaining scenarios stay @wip
+#   until implemented.
 # - DEV-0004 drift: the published scenario references "Alpha-chrom" without
 #   creating it — the implicit prerequisite "organization Alpha owns a
 #   chromosome named Alpha-chrom" is injected (reuses the PRD-0002 DEV-0009
@@ -58,7 +60,6 @@ Feature: Chromosome Designer
     When I open the organism
     Then I see each value rendered by its allele type
 
-  @wip
   @DEV-0006
   Scenario: The fitness trend shows a line from recorded fitness
     Given the experiment has generations with recorded fitness
@@ -66,7 +67,6 @@ Feature: Chromosome Designer
     Then I see a per-generation trend line
     And no external charting is loaded
 
-  @wip
   @DEV-0007
   Scenario: The fitness trend shows an explicit empty state when no fitness is recorded
     Given the experiment has no recorded fitness
