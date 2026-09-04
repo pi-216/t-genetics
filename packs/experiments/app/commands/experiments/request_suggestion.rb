@@ -12,7 +12,7 @@ module Experiments
         return
       end
 
-      organisms_in_generation = current_generation.organisms.includes(:performance_logs) # Eager load to potentially optimize
+      organisms_in_generation = current_generation.organisms
       if organisms_in_generation.empty?
         fail_command!(errors: { generation: ['current generation has no organisms'] })
         return

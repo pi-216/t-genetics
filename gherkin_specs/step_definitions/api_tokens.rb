@@ -236,3 +236,52 @@ Then(/^I receive a 422 response with error keys$/) do
   body = JSON.parse(page.body)
   expect(body).to have_key('errors')
 end
+
+# DEV-0009 (issue #44) — machines report a fitness outcome with a token. The
+# Given mints the suggestion through the engine's RequestSuggestion command
+# (the machine-API suggestion endpoint is DEV-0008 / issue #43), the When
+# posts the ONE customer-reported fitness number for that suggestion, and the
+# Then proves it landed on the same PerformanceLog the suggestion created —
+# the only fitness-bearing input in the product.
+Given(/^a suggestion has been requested for the experiment$/) do
+  organization = @api_test_org or raise 'no feature-background organization in play'
+  chromosome = organization.chromosomes.first or raise 'no chromosome in play'
+  @plain_api_token ||= begin
+    token = Identity::ApiToken.generate_plaintext
+    Identity::ApiToken.create!(
+      organization: organization,
+      name: 'ci-runner',
+      token_digest: Identity::ApiToken.digest(token)
+    )
+    token
+  end
+
+  page.driver.header('Authorization', "Bearer #{@plain_api_token}")
+  page.driver.post('/api/v1/experiments', experiment: { chromosome_id: chromosome.id })
+  expect(page.status_code).to eq(201)
+  @created_experiment = JSON.parse(page.body)
+
+  experiment = Experiment.find(@created_experiment['id'])
+  suggestion = Experiments::RequestSuggestion.call(experiment: experiment)
+  raise "suggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+
+  @suggestion_performance_log = suggestion.performance_log
+end
+
+When(/^I report fitness ([\d.]+) for that suggestion via the API$/) do |fitness|
+  @reported_fitness = fitness.to_f
+  page.driver.header('Authorization', "Bearer #{@plain_api_token}")
+  page.driver.post(
+    "/api/v1/performance_logs/#{@suggestion_performance_log.id}/outcome",
+    { performance_log: { fitness_input_value: @reported_fitness } }.to_json,
+    'CONTENT_TYPE' => 'application/json'
+  )
+  expect(page.status_code).to eq(200)
+end
+
+Then(/^the outcome is recorded on the performance log$/) do
+  @suggestion_performance_log.reload
+  expect(@suggestion_performance_log.fitness_input_value).to eq(@reported_fitness)
+  expect(@suggestion_performance_log.outcome_recorded_at).to be_present
+  expect(@suggestion_performance_log.suggested_at).to be_present
+end
