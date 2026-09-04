@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: GAaaS Lab Instrument
-description: Dark calibrated workbench for a genetic-algorithm engine — precision instrument aesthetic, amber signal thread, mono numerals for data. Draft for founder ruling (design-sprint Phase 1, direction A); not to be implemented until ruled.
+description: Dark calibrated workbench for a genetic-algorithm engine — precision instrument aesthetic, amber signal thread, mono numerals for data. LOCKED — founder-ruled 2026-09-04 (direction A, design-sprint Phase 1). Token set is normative; apply-pass rewires theme.css + component classes mechanically.
 colors:
   primary: "#F5B64A"
   base: "#0B0F14"
