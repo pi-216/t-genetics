@@ -8,6 +8,9 @@
 # - Org display name: free text at sign-up (A4 resolved).
 # - All scenarios @wip until implemented (cucumber --strict excludes @wip).
 #   Tag order (@DEV-0001..) = build order; foundational auth first.
+# - @DEV-0011 (finding #56, founder ruling 2026-09-04, drift flag — NOT in the
+#   original PRD-0002 narrative): anonymous visitors are sent to sign-in before
+#   the org-scoped workspace, incl. legacy org-less rows.
 # - Auth mechanism: email+password (Devise, t-chat house pattern). DESIGN is
 #   NOT part of this slice — functional styling only (brand lands later via
 #   the design sprint).
@@ -102,3 +105,10 @@ Feature: Organization Auth
     When "ada@example.com" attempts to remove her own owner role
     Then the removal is rejected
     And "ada@example.com" remains the owner of "Loop Labs"
+
+  @DEV-0011
+  Scenario: Anonymous visitors are sent to sign in before the workspace
+    Given a legacy chromosome exists without an organization
+    When I visit the chromosomes page
+    Then I am redirected to the sign-in page
+    And the chromosomes are not disclosed

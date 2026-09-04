@@ -3,6 +3,8 @@
 # NOTE: Alleles are now managed within a chromosome scope.
 # This controller is intentionally kept as a thin shim for legacy HTML usage.
 class AllelesController < ApplicationController
+  before_action :require_signed_in
+
   def index
     head :not_found
   end

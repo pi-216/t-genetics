@@ -30,5 +30,19 @@ module Identity
     def sign_out
       session[:user_id] = nil
     end
+
+    # Workspace gate (finding #56, founder ruling 2026-09-04): org-scoped
+    # workspace routes require sign-in. Anonymous HTML requests are sent to
+    # the login page; JSON format answers 401 (never data, never a redirect
+    # body that could echo a record).
+    def require_signed_in
+      return if signed_in?
+
+      if request.format.json?
+        render json: { error: 'unauthorized' }, status: :unauthorized
+      else
+        redirect_to login_path
+      end
+    end
   end
 end

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class GenerationsController < ApplicationController
+  before_action :require_signed_in
   before_action :set_chromosome
 
   def index

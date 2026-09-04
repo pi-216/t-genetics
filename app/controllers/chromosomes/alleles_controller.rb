@@ -2,6 +2,7 @@
 
 module Chromosomes
   class AllelesController < ApplicationController
+    before_action :require_signed_in
     before_action :set_chromosome
     before_action :set_allele, only: %i[show update destroy]
 
