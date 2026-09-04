@@ -9,3 +9,23 @@
   %section{ class: "mt-4 rounded border border-teal-700 p-4" }
     %h2{ class: "text-lg font-semibold" } Token management
     %p{ class: "mt-1 text-sm text-teal-400" } Manage this organization's access tokens.
+
+    - if flash[:api_token].present?
+      %div{ id: "token_plaintext", class: "mt-4 rounded border border-amber-500 bg-amber-900/40 p-4" }
+        %p{ class: "text-sm font-semibold text-amber-200" } Copy this token now — it is shown only once.
+        %p{ id: "token_plaintext_value", class: "mt-2 break-all font-mono text-amber-100" }= flash[:api_token]
+
+    - if flash[:alert].present?
+      %p{ class: "mt-4 text-sm text-red-300" }= flash[:alert]
+
+    = form_with url: api_tokens_path, scope: :api_token, class: "mt-4" do |form|
+      .flex.gap-2.items-end
+        %div
+          = form.label :name, "Token name", class: "block text-sm text-teal-300"
+          = form.text_field :name, required: true, class: "mt-1 rounded border border-teal-700 bg-teal-950 px-3 py-1 text-teal-100"
+        = form.submit "Create token", class: "rounded bg-teal-600 px-4 py-2 font-semibold text-teal-950"
+
+    - if current_user.organization.api_tokens.active.any?
+      %ul{ class: "mt-4 space-y-1 text-sm text-teal-200" }
+        - current_user.organization.api_tokens.active.each do |api_token|
+          %li= "#{api_token.name} (created #{api_token.created_at.to_fs(:short)})"
