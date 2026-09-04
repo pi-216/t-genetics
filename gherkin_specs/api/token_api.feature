@@ -5,7 +5,8 @@
 # - Flat tokens: no scopes/rate-limiting/OAuth in v1 (founder ruling).
 # - Endpoints under /api/v1, Bearer auth; exact payloads reconciled with the
 #   existing rswag artifact during implementation.
-# - DEV-0001 implemented (issue #36). DEV-0002..DEV-0010 remain @wip.
+# - DEV-0001 implemented (issue #36); DEV-0002 implemented (issue #37).
+#   DEV-0003..DEV-0010 remain @wip.
 
 @PRD-0005
 Feature: Token API
@@ -21,7 +22,7 @@ Feature: Token API
     When I create an API token named "ci-runner" for "Loop Labs"
     Then I see the plaintext token exactly once
 
-  @DEV-0002 @wip
+  @DEV-0002
   Scenario: A member cannot create or revoke tokens
     Given I am signed in as a member of "Loop Labs"
     When I try to create an API token
