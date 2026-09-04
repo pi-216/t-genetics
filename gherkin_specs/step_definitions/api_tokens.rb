@@ -208,3 +208,31 @@ Then(/^the experiment appears in the API experiment list$/) do
   listed_ids = JSON.parse(page.body).filter_map { |experiment| experiment['id'] }
   expect(listed_ids).to include(@created_experiment['id'])
 end
+
+# DEV-0010 (issue #45) — malformed payloads return validation errors. A
+# malformed chromosome write (the rswag contract marks `name` required) answers
+# 422 with a top-level "errors" key and creates no row. The missing-wrapper
+# ParameterMissing variant is pinned to the same 422 contract by the base
+# controller's rescue_from and the request spec
+# (spec/requests/api/v1/chromosome_creation_spec.rb).
+When(/^I send a malformed chromosome payload via the API$/) do
+  organization = @api_test_org or raise 'no feature-background organization in play'
+  @plain_api_token ||= begin
+    token = Identity::ApiToken.generate_plaintext
+    Identity::ApiToken.create!(
+      organization: organization,
+      name: 'ci-runner',
+      token_digest: Identity::ApiToken.digest(token)
+    )
+    token
+  end
+
+  page.driver.header('Authorization', "Bearer #{@plain_api_token}")
+  page.driver.post('/api/v1/chromosomes', chromosome: { name: '' })
+end
+
+Then(/^I receive a 422 response with error keys$/) do
+  expect(page.status_code).to eq(422)
+  body = JSON.parse(page.body)
+  expect(body).to have_key('errors')
+end

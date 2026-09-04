@@ -8,6 +8,16 @@ module Api
     class BaseController < ApplicationController
       include Identity::TokenAuthentication
 
+      # PRD-0005 contract: malformed payloads answer 422 with error keys, and
+      # the rswag artifacts document only 201/422 for the write endpoints — no
+      # 400 anywhere. A body missing a required wrapper key would otherwise
+      # surface Rails' default ActionController::ParameterMissing 400; rescue
+      # it here so every endpoint answers the same malformed-payload contract.
+      rescue_from ActionController::ParameterMissing do |exception|
+        render json: { errors: { exception.param.to_s => ['is required'] } },
+               status: :unprocessable_content
+      end
+
       private
 
       # Org-scoped chromosome lookup for the machine API: a chromosome outside

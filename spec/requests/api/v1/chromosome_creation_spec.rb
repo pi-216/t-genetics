@@ -82,5 +82,18 @@ RSpec.describe 'POST /api/v1/chromosomes (token auth)', type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.parsed_body).to have_key('errors')
     end
+
+    # The rswag contract marks the `chromosome` wrapper as required and only
+    # documents 201/422 for this endpoint — a body missing the wrapper key must
+    # answer the same malformed-payload contract (422 with error keys), not
+    # Rails' default 400 for ActionController::ParameterMissing.
+    it 'returns 422 when the required chromosome wrapper key is missing' do
+      expect do
+        post '/api/v1/chromosomes', params: {}, headers: auth_headers
+      end.not_to change(Chromosome, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body).to have_key('errors')
+    end
   end
 end
