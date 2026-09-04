@@ -401,4 +401,77 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
       expect(response).to have_http_status(:not_found)
     end
   end
+
+  describe 'GET /experiments/:id — fitness trend (PRD-0004 DEV-0006 / issue #82)' do
+    let!(:experiment) do
+      result = Experiments::Setup.call(chromosome:, external_entity: chromosome,
+                                       name: 'Donation amounts',
+                                       experiment_configuration: { population_size: 20 })
+      raise "Setup failed: #{result.errors.inspect}" unless result.success?
+
+      result.experiment
+    end
+
+    # Drives the real loop (suggest → report → auto-evolve) twice so the
+    # experiment ends with generations 0, 1, 2 and generations 0 + 1 carry
+    # the recorded (customer-reported) fitness averages — exactly the state
+    # the BDD Given for this scenario produces.
+    def evolve_twice(experiment)
+      experiment.start!
+      2.times do
+        until experiment.reload.ripe_for_evolution?
+          suggestion = Experiments::RequestSuggestion.call(experiment:)
+          raise "RequestSuggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+
+          outcome = Experiments::RecordOutcome.call(performance_log: suggestion.performance_log,
+                                                    fitness_input_value: 0.81)
+          raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
+        end
+
+        next_suggestion = Experiments::RequestSuggestion.call(experiment:)
+        raise "RequestSuggestion failed: #{next_suggestion.errors.inspect}" unless next_suggestion.success?
+      end
+    end
+
+    it 'renders the per-generation fitness trend as a self-hosted SVG line' do
+      sign_in_as(organization: org)
+      evolve_twice(experiment)
+
+      get experiment_url(experiment)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('Fitness trend')
+      expect(response.body).to include('fitness-trend-line')
+      # One point per generation with recorded fitness — generations 0 and 1
+      # (generation 2's organisms have not been evaluated yet), averaged from
+      # the recorded (customer-reported) numbers.
+      expect(response.body).to include('data-generation="0"')
+      expect(response.body).to include('data-generation="1"')
+      # Generation 2's organisms have no recorded fitness — it must NOT get a
+      # trend point (parity with the BDD count:2 assertion).
+      expect(response.body).not_to include('data-generation="2"')
+      expect(response.body).to include('0.81')
+    end
+
+    it 'serves the trend entirely from local assets — no external charting scripts' do
+      sign_in_as(organization: org)
+      evolve_twice(experiment)
+
+      get experiment_url(experiment)
+
+      external_script_srcs = response.body.scan(/<script[^>]+src=["']([^"']+)["']/).flatten
+                                     .select { |src| src.start_with?('http://', 'https://') }
+      expect(external_script_srcs).to be_empty
+    end
+
+    it 'shows an explicit empty state when no fitness is recorded yet' do
+      sign_in_as(organization: org)
+
+      get experiment_url(experiment)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('fitness-trend-empty')
+      expect(response.body).not_to include('fitness-trend-point')
+    end
+  end
 end

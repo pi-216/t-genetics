@@ -1,14 +1,15 @@
 # PRD-0004 — Graphical chromosome designer & generation browser
 # Drift flags vs PRD-0004:
 # - Single-page designer form (open question A1 resolved to single surface).
-# - Fitness trend = self-hosted pure-CSS/SVG bars, no charting gem (A2 resolved;
+# - Fitness trend = self-hosted pure-CSS/SVG line, no charting gem (A2 resolved;
 #   no external charting CDN — dependency + network red line).
 # - The designer replaces the current chromosome CRUD views (A3 resolved to
 #   replace — one surface, no split).
-# - All scenarios @wip until implemented. No paid-tier visualization depth.
+# - DEV-0006 (issue #82, fitness trend line) and DEV-0007 (issue #83, empty
+#   state) implemented; the remaining scenarios stay @wip until implemented.
+#   No paid-tier visualization depth.
 
 @PRD-0004
-@wip
 Feature: Chromosome Designer
   As an organization member
   I want to design chromosomes visually and browse generations
@@ -17,12 +18,14 @@ Feature: Chromosome Designer
   Background:
     Given I am signed in as an owner of "Loop Labs"
 
+  @wip
   @DEV-0001
   Scenario: A user designs a chromosome with mixed allele types and sees a live preview
     When I create a chromosome with a float, an integer, and a boolean allele
     Then I see a live preview of all three alleles
     And the chromosome is saved under my organization
 
+  @wip
   @DEV-0002
   Scenario: Allele bounds are validated inline
     Given I am adding a float allele to a chromosome
@@ -30,18 +33,21 @@ Feature: Chromosome Designer
     Then I see an inline validation error
     And the allele is not saved
 
+  @wip
   @DEV-0003
   Scenario: An option allele requires a non-empty choice list
     Given I am adding an option allele to a chromosome
     When I leave the choice list empty
     Then I see an inline validation error
 
+  @wip
   @DEV-0004
   Scenario: Another organization cannot access my chromosome
     Given I am signed in as an owner of organization "Beta"
     When I visit the chromosome "Alpha-chrom"
     Then I receive a not-found or forbidden response
 
+  @wip
   @DEV-0005
   Scenario: I can open an organism and see its typed values
     Given the generation browser shows an organism

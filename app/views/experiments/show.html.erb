@@ -15,6 +15,8 @@
 
 <p><%= link_to 'Generation history', history_experiment_path(@experiment) %></p>
 
+<%= render FitnessTrendComponent.new(experiment: @experiment) %>
+
 <% if @suggestion_log %>
   <section class="suggested-organism">
     <h2>Suggested organism</h2>
