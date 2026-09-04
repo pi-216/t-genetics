@@ -47,3 +47,16 @@ Then(/^I see the plaintext token exactly once$/) do
   visit settings_path
   expect(page.body).not_to include(@plaintext_token)
 end
+
+# DEV-0002 (issue #37) — a member cannot create API tokens. The token form is
+# hidden from members (owner-only settings render), so the honest attempt is a
+# crafted POST straight at the endpoint; the owner-only controller guard must
+# answer 403 and create no row.
+When(/^I try to create an API token$/) do
+  page.driver.post(api_tokens_path, params: { api_token: { name: 'ci-runner' } })
+end
+
+Then(/^I receive a forbidden response and no token is created$/) do
+  expect(page.status_code).to eq(403)
+  expect(Identity::ApiToken.count).to eq(0)
+end
