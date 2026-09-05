@@ -20,6 +20,7 @@ class ExperimentsController < ApplicationController
 
   def show
     load_latest_suggestion
+    @no_suggestion_available = no_organisms_to_suggest?
   end
 
   # PRD-0003 DEV-0007 (issue #74) — generation history: every generation of
@@ -68,15 +69,20 @@ class ExperimentsController < ApplicationController
   # and records the suggestion's PerformanceLog. Success re-renders the show
   # page with the suggested organism's typed values; a command failure (no
   # current generation / empty generation) re-renders with its errors.
+  # PRD-0003 DEV-0008 (issue #75): an empty current generation renders the
+  # explicit empty state (a dedicated section, not the raw command error
+  # string) — the page tells the member no suggestion is available.
   def suggestion
     result = Experiments::RequestSuggestion.call(experiment: @experiment)
 
     if result.success?
       @suggested_organism = result.organism
       @suggestion_log = result.performance_log
+      @no_suggestion_available = false
       render :show
     else
-      @command_errors = result.errors.full_messages
+      @no_suggestion_available = no_organisms_to_suggest?
+      @command_errors = result.errors.full_messages unless @no_suggestion_available
       load_latest_suggestion
       render :show, status: :unprocessable_content
     end
@@ -110,6 +116,18 @@ class ExperimentsController < ApplicationController
   end
 
   private
+
+  # PRD-0003 DEV-0008 (issue #75) — an empty current generation means there
+  # is nothing to suggest: the show/suggestion pages render a dedicated
+  # explicit empty state instead of a raw command error. Derived from domain
+  # facts (the generation's organism count), not from error strings.
+  # Deliberate boundary: an experiment with NO current generation at all
+  # still renders the raw command error (broken-record state, not the
+  # empty-generation state this ticket scopes).
+  def no_organisms_to_suggest?
+    generation = @experiment.current_generation
+    generation.present? && generation.organisms.empty?
+  end
 
   def set_experiment
     @experiment = Experiment.joins(:chromosome)

@@ -13,6 +13,13 @@
 
 <%= button_to 'Request suggestion', suggestion_experiment_path(@experiment), method: :post %>
 
+<% if @no_suggestion_available %>
+  <section class="no-suggestion-available" aria-label="No suggestion available">
+    <h2>No suggestion is available</h2>
+    <p>The current generation has no organisms to suggest.</p>
+  </section>
+<% end %>
+
 <p><%= link_to 'Generation history', history_experiment_path(@experiment) %></p>
 
 <%= render FitnessTrendComponent.new(experiment: @experiment) %>
