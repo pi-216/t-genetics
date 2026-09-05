@@ -1,0 +1,11 @@
+/*
+ * Tailwind CSS v4 entry point (tailwindcss-rails 4.x default input path).
+ *
+ * The shared layout links `tailwind` (app/assets/builds/tailwind.css),
+ * which is compiled by `rails tailwindcss:build` from THIS file. It
+ * forwards to the real theme source so the app's token set
+ * (application.tailwind.css + mechanically generated theme.css) is what
+ * ships — the empty placeholder this file once was shipped an unstyled
+ * page. PRD-0006 DEV-0001.
+ */
+@import "../stylesheets/application.tailwind.css";

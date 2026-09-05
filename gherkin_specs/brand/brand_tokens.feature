@@ -18,7 +18,6 @@ Feature: Brand Tokens
 
   @DEV-0001
   @javascript
-  @wip
   Scenario: The shared layout renders the brand dark theme
     When I view any page
     Then the page background is the brand base color
