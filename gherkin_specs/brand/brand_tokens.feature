@@ -6,6 +6,12 @@
 #   (gherkin_specs/support/capybara_javascript.rb) — see the landing
 #   feature's DEV-0005 note for the same reason.
 # - Unimplemented scenarios stay @wip (cucumber --strict skips them).
+# - DEV-0002 "mono caption face": DESIGN.md button-primary.typography points
+#   at typography.caption (family Inter per its fontFamily token), but the
+#   founder-ruled Direction A moodboard renders CTAs in the mono face
+#   (docs/design-sprint/ph1/moodboard.html .pv-btn) and this scenario is
+#   authoritative: the CTA gets caption METRICS (0.8125rem / 500 /
+#   +0.08em tracking) applied in the shared layout's mono default face.
 
 @PRD-0006
 Feature: Brand Tokens
@@ -26,7 +32,6 @@ Feature: Brand Tokens
 
   @DEV-0002
   @javascript
-  @wip
   Scenario: The landing primary CTA uses the amber signal button
     When I view the landing page
     Then the primary call to action has the signal background
