@@ -1,0 +1,51 @@
+name: Auto-un-wedge PRs
+
+# Automatic loop for the autonomous feature pipeline: when main advances
+# (a squash or CI-fix lands), open auto-merge PRs whose branch overlaps the
+# change become DIRTY — GitHub's auto-merge stalls forever until someone
+# merges main into the branch. pr-requeue only reacts to review feedback, so
+# this workflow reacts to main itself (issue #34).
+#
+# WHY GH_PAT for checkout (not GITHUB_TOKEN): a push made with the default
+# GITHUB_TOKEN does NOT re-trigger CI — the resulting pull_request runs land
+# in an "approval-required" state, so auto-merge stays blocked on stale
+# checks and the un-wedge is a no-op. A PAT push runs CI automatically
+# (docs.github.com/actions/using-workflows/triggering-a-workflow). GH_PAT is
+# the classic token (repo + project scopes) the pr-requeue workflow already
+# uses; checkout writes it into the local git config, which worktrees share,
+# so `git push` from pr-unwedge.sh authenticates as the PAT.
+#
+# Safe by construction (see pr-unwedge.sh):
+#   * only touches PRs with autoMergeRequest enabled (pipeline-owned) whose
+#     merge state is DIRTY, non-draft, same-repo
+#   * attempts a REAL merge that conflicts are left untouched — never
+#     -Xours/-Xtheirs blind resolution, never force-push
+#   * the resulting PR CI run is the gate.
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: auto-unwedge-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  unwedge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo with full history (GH_PAT auth)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Un-wedge DIRTY auto-merge PRs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/pr-unwedge.sh "${{ github.repository }}"
