@@ -52,11 +52,19 @@ Feature: Brand Tokens
     Then the section kickers render in the signal color
     And the landing hero renders the display typeface on the base background
 
+  # DEV-0004 implicit prerequisites (injected): the page with numeric data is
+  # the experiment show page, so the scenario signs in and drives the real
+  # loop ("the experiment has generations with recorded fitness" — the PRD-0004
+  # Given, reused) before viewing it. DESIGN.md typography.data is normative:
+  # every number, id, and metric renders data (monospace, 600, tnum) — the
+  # shared layout's body already applies the mono face app-wide, so the
+  # binding assertion is the tabular numeral feature.
   @DEV-0004
   @javascript
-  @wip
   Scenario: Numeric data renders in mono tabular numerals
-    When I view a page with numeric data
+    Given I am signed in as an owner of organization "Loop Labs"
+    And the experiment has generations with recorded fitness
+    When I view the page with numeric data
     Then every numeric datum renders in a mono face
     And every numeric datum uses tabular numeral features
 

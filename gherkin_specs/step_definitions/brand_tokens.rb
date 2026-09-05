@@ -140,3 +140,65 @@ Then(/^the landing hero renders the display typeface on the base background$/) d
   expect(style['weight']).to eq('700')
   expect(style['spacing']).to eq('-0.96px')
 end
+
+# ---- DEV-0004: numeric data renders in mono tabular numerals ----
+
+# DESIGN.md typography.data is normative: "every number, id, and metric —
+# tabular, aligned, instrument-grade" and its Do/Don't: "Do use mono tabular
+# numerals for EVERY datum (fitness, ids, generations)." The shared layout's
+# body already applies the mono face app-wide (font-mono — DESIGN.md data
+# fontFamily); the binding behavior under test is the tabular numeral feature
+# (font-variant-numeric: tabular-nums), asserted on EVERY rendered element
+# whose OWN text payload contains a digit — fitness values, ids, generations,
+# timestamps, counts. The experiment show page is the app's densest numeric
+# surface; the loop-driven Given above guarantees it is populated.
+#
+# Requires a real layout engine (@javascript): rack_test renders no layout
+# and evaluate_script raises — the step fails closed if the tag is lost.
+
+def numeric_data_elements
+  page.evaluate_script(<<~'JS')
+    (() => {
+      const numeric = [];
+      for (const el of document.querySelectorAll('body *')) {
+        if (['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(el.tagName)) continue;
+        const ownText = Array.from(el.childNodes)
+          .filter((n) => n.nodeType === Node.TEXT_NODE)
+          .map((n) => n.textContent)
+          .join('');
+        if (/\d/.test(ownText)) {
+          const s = getComputedStyle(el);
+          numeric.push({ tag: el.tagName, family: s.fontFamily, variant: s.fontVariantNumeric, ownText: ownText.trim().slice(0, 40) });
+        }
+      }
+      return numeric;
+    })()
+  JS
+end
+
+def expect_numeric_data!
+  elements = numeric_data_elements
+  # Non-vacuity guard: the Then steps assert over a NON-EMPTY set of numeric
+  # data — if the page ever regresses to rendering zero numeric elements the
+  # scenarios fail instead of passing vacuously over an empty collection.
+  expect(elements).not_to be_empty, 'no numeric data found on the page'
+  elements
+end
+
+When(/^I view the page with numeric data$/) do
+  visit experiment_path(experiment_named('Donation amounts'))
+end
+
+Then(/^every numeric datum renders in a mono face$/) do
+  expect_numeric_data!.each do |datum|
+    expect(datum['family']).to match(/mono|Menlo|Consolas|Monaco/i),
+                               "#{datum['tag']} renders numeric text (#{datum['ownText'].inspect}) in a non-mono face: #{datum['family']}"
+  end
+end
+
+Then(/^every numeric datum uses tabular numeral features$/) do
+  expect_numeric_data!.each do |datum|
+    expect(datum['variant']).to include('tabular-nums'),
+                                "#{datum['tag']} renders numeric text (#{datum['ownText'].inspect}) without tabular numerals: #{datum['variant']}"
+  end
+end

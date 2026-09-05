@@ -70,4 +70,20 @@ RSpec.describe 'Brand dark theme (shared layout)', type: :request do
       expect(hero_title).to include(utility)
     end
   end
+
+  # PRD-0006 DEV-0004 — numeric data renders in mono tabular numerals.
+  # The @javascript BDD scenario measures computed styles (mono face +
+  # font-variant-numeric: tabular-nums) on every numeric datum of the
+  # experiment show page in headless Chrome; this request spec is the
+  # non-JS regression net over the shared layout body's class list — the
+  # mono default and the tabular-nums utility must both be on the body
+  # for the computed styles to hold app-wide.
+  it 'renders the shared layout body with the mono default and tabular numerals' do
+    get root_path
+
+    body_tag = response.body[/<body[^>]*>/]
+    %w[font-mono tabular-nums].each do |utility|
+      expect(body_tag).to include(utility)
+    end
+  end
 end
