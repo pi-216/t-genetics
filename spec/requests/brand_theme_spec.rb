@@ -25,4 +25,18 @@ RSpec.describe 'Brand dark theme (shared layout)', type: :request do
 
     expect(response.body).not_to match(/teal/)
   end
+
+  # PRD-0006 DEV-0002 — the landing primary CTA is the amber signal button.
+  # The @javascript BDD scenario measures computed styles (signal fill,
+  # onSignal text, mono caption face) in headless Chrome; this request spec
+  # is the non-JS regression net over the CTA's rendered class list — the
+  # token utilities must be on the element for the computed styles to hold.
+  it 'renders the landing primary CTA with the button-primary token utilities' do
+    get root_path
+
+    cta_classes = response.body[/<a[^>]*class="([^"]*landing-cta-link[^"]*)"[^>]*>/i, 1]
+    %w[bg-signal text-onSignal font-data text-caption font-medium tracking-caption rounded-md py-3 px-5.5].each do |utility|
+      expect(cta_classes).to include(utility)
+    end
+  end
 end
