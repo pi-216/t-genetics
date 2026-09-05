@@ -8,8 +8,8 @@
 #   resolved to yes — they already exist on the model).
 # - DEV-0001 (issue #68), DEV-0002 (issue #69), DEV-0003 (issue #70),
 #   DEV-0004 (issue #71), DEV-0005 (issue #72), DEV-0006 (issue #73),
-#   DEV-0007 (issue #74) implemented; DEV-0008 (empty state, issue #75)
-#   still @wip (each gets its own ticket). No paid-tier surface
+#   DEV-0007 (issue #74), DEV-0008 (empty state, issue #75) implemented.
+#   No paid-tier surface
 #   (exploitation/greed, generation-progress insights) — those are red lines
 #   until a payer.
 
@@ -67,7 +67,6 @@ Feature: Experiment Workspace
     Then I see each generation with its organisms and recorded fitness
 
   @DEV-0008
-  @wip
   Scenario: An empty generation shows an explicit empty state
     Given the experiment has no organisms to suggest
     When I request a suggestion

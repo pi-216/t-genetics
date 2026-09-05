@@ -249,6 +249,26 @@ Then(/^I see each generation with its organisms and recorded fitness$/) do
   expect(page).to have_content('0.81')
 end
 
+# DEV-0008 (issue #75) — an empty generation shows an explicit empty state.
+# Setup refuses to birth an empty generation (population must be positive),
+# so the Given deletes the organisms of an otherwise-created experiment —
+# the empty-generation state is a runtime edge case, not a creation outcome.
+# The When reuses the shared web request flow; the Then asserts the explicit
+# empty-state element the show page renders instead of a raw command error.
+Given(/^the experiment has no organisms to suggest$/) do
+  experiment = experiment_named('Donation amounts')
+  experiment.current_generation.organisms.destroy_all
+end
+
+When(/^I request a suggestion$/) do
+  step 'I request a suggestion for the experiment'
+end
+
+Then(/^I see an explicit message that no suggestion is available$/) do
+  expect(page).to have_css('.no-suggestion-available')
+  expect(page).to have_content(/no suggestion is available/i)
+end
+
 # The named experiment is an implicit prerequisite for several scenarios —
 # created through the same Experiments::Setup command the UI create flow runs
 # (never a factory where the real command exists). Shared by the suggestion

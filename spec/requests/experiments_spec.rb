@@ -400,6 +400,41 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
 
       expect(response).to have_http_status(:not_found)
     end
+
+    # PRD-0003 DEV-0008 (issue #75) — an empty generation can never yield a
+    # suggestion: the request answers 422 and the show page renders the
+    # explicit empty state (a dedicated section, not the raw command error
+    # string — the page tells the member no suggestion is available).
+    it 'answers 422 with an explicit empty state when the current generation has no organisms' do
+      sign_in_as(organization: org)
+      experiment.current_generation.organisms.destroy_all
+
+      post suggestion_experiment_url(experiment)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to match(/no suggestion is available/i)
+      expect(response.body).to include('no-suggestion-available')
+      expect(response.body).to include('aria-label="No suggestion available"')
+      # The explicit empty state replaces the raw command-error dump (which
+      # rendered under .command-errors) — the member sees the designed
+      # message, not a bare validation string.
+      expect(response.body).not_to include('command-errors')
+    end
+
+    # The explicit empty state is scoped to the EMPTY-GENERATION case: a
+    # different command failure (here: a factory-built experiment with no
+    # current generation at all, a broken-record state Setup never produces)
+    # still renders the raw command error under .command-errors.
+    it 'answers 422 with the raw command error for a non-empty-generation failure' do
+      sign_in_as(organization: org)
+      generationless = FactoryBot.create(:experiment, chromosome:, external_entity: chromosome)
+
+      post suggestion_experiment_url(generationless)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('command-errors')
+      expect(response.body).not_to include('no-suggestion-available')
+    end
   end
 
   describe 'GET /experiments/:id — fitness trend (PRD-0004 DEV-0006 / issue #82)' do
