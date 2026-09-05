@@ -80,6 +80,9 @@ jobs:
             bundle exec gherkin_lint $(ls gherkin_specs/**/*.feature)
           fi
 
+      - name: Ops loop regression test (auto-unwedge)
+        run: bash .github/scripts/test-pr-unwedge.sh
+
   test:
     runs-on: ubuntu-latest
 
