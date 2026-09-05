@@ -58,9 +58,17 @@ Rails.application.routes.draw do
   end
 
   # Web experiment workspace (PRD-0003) — org-scoped experiment index, creation
-  # form, and detail page. Creation runs Experiments::Setup (name + chromosome
-  # + population size); the machine API lives under /api/v1/experiments.
-  resources :experiments, only: %i[index new create show]
+  # form, detail page, and the loop's request-suggestion action. Creation runs
+  # Experiments::Setup (name + chromosome + population size); the suggestion
+  # action runs Experiments::RequestSuggestion; the machine API lives under
+  # /api/v1/experiments.
+  resources :experiments, only: %i[index new create show] do
+    member do
+      post :suggestion
+      post :report
+      get :history
+    end
+  end
 
   # Public landing page (PRD-0001) — the product's front door. The workspace
   # stays reachable at /chromosomes via the resources routes below.

@@ -274,7 +274,18 @@ end
 # posts the ONE customer-reported fitness number for that suggestion, and the
 # Then proves it landed on the same PerformanceLog the suggestion created —
 # the only fitness-bearing input in the product.
+# Shared Given (PRD-0005 DEV-0009 + PRD-0003 DEV-0004): the exact sentence is
+# used by both the token-API feature and the web experiment workspace. The
+# branch is the feature context: @signed_in_org is set only when the web
+# sign-in step ran (experiment_workspace.rb), so the web flow drives the
+# browser UI (whose When step lives in experiment_workspace.rb); otherwise the
+# API flow drives the token suggestion endpoint.
 Given(/^a suggestion has been requested for the experiment$/) do
+  if @signed_in_org
+    step 'I request a suggestion for the experiment'
+    next
+  end
+
   organization = @api_test_org or raise 'no feature-background organization in play'
   chromosome = organization.chromosomes.first or raise 'no chromosome in play'
   @plain_api_token ||= begin

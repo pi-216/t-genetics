@@ -7,6 +7,12 @@
 #   basic loop; paid time-to-result optimization later".
 # - Domain TBD (gaas.pi216.ai vs bought) — tests assert the sign-up path, not
 #   an absolute URL.
+# - DEV-0005 (responsive on mobile) carries @javascript: "no horizontal
+#   scrolling" is a live-layout measurement rack_test cannot perform, so it
+#   runs under headless Chrome (Capybara.javascript_driver, see
+#   gherkin_specs/support/capybara_javascript.rb). The viewport meta it
+#   asserts lives in the shared application layout, so the guard covers every
+#   page, not just the landing page.
 # - Unimplemented scenarios stay @wip (cucumber --strict skips them).
 
 @PRD-0001
@@ -35,28 +41,25 @@ Feature: Landing Page
     When I read the trust section
     Then I see a statement that my fitness function stays mine
 
-  @wip
   @DEV-0004
   Scenario: The page shows a pricing posture teaser without promising paid features
     When I read the pricing section
     Then I see a Free tier for the basic loop
     And I see no paid feature specifics implemented
 
-  @wip
   @DEV-0005
+  @javascript
   Scenario: The page is responsive on mobile
     When I view the page at a 480 pixel viewport
     Then the page declares a responsive viewport
     And there is no horizontal scrolling
 
-  @wip
   @DEV-0006
   Scenario: The footer has privacy and terms placeholders
     When I inspect the page footer
     Then I see a privacy link
     And I see a terms link
 
-  @wip
   @DEV-0007
   Scenario: The page makes no external network calls
     When I inspect the page resources

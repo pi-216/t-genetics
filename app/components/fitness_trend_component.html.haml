@@ -1,0 +1,14 @@
+.fitness-trend
+  %h2 Fitness trend
+  - if empty?
+    %p.fitness-trend-empty No fitness recorded yet
+  - else
+    %svg.fitness-trend-chart{ viewBox: '0 0 320 72', role: 'img', 'aria-label': 'Fitness trend by generation' }
+      %polyline.fitness-trend-line{ points: line_points, fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }
+      - points.each do |point|
+        %g.fitness-trend-point{ data: { generation: point[:iteration], fitness: point[:fitness] } }
+          %circle{ cx: point[:x], cy: point[:y], r: 3, fill: 'currentColor' }
+          %text{ x: point[:x], y: FitnessTrendComponent::LABEL_LINE_1_Y, 'text-anchor': 'middle', 'font-size': 9, fill: 'currentColor' }
+            = "Gen #{point[:iteration]}"
+          %text{ x: point[:x], y: FitnessTrendComponent::LABEL_LINE_2_Y, 'text-anchor': 'middle', 'font-size': 9, fill: 'currentColor' }
+            = formatted_fitness(point[:fitness])

@@ -6,9 +6,12 @@
 #   (open question A2 resolved to yes).
 # - Population size + ripe thresholds are set at creation (open question A3
 #   resolved to yes — they already exist on the model).
-# - DEV-0001 implemented (issue #68); DEV-0002..DEV-0008 still @wip (each gets
-#   its own ticket). No paid-tier surface (exploitation/greed,
-#   generation-progress insights) — those are red lines until a payer.
+# - DEV-0001 (issue #68), DEV-0002 (issue #69), DEV-0003 (issue #70),
+#   DEV-0004 (issue #71), DEV-0005 (issue #72), DEV-0006 (issue #73),
+#   DEV-0007 (issue #74) implemented; DEV-0008 (empty state, issue #75)
+#   still @wip (each gets its own ticket). No paid-tier surface
+#   (exploitation/greed, generation-progress insights) — those are red lines
+#   until a payer.
 
 @PRD-0003
 Feature: Experiment Workspace
@@ -27,28 +30,24 @@ Feature: Experiment Workspace
     And evolution is not yet ripe
 
   @DEV-0002
-  @wip
   Scenario: Another organization cannot see my experiment
     Given I am signed in as an owner of organization "Beta"
     When I visit the experiment "Donation amounts"
     Then I receive a not-found or forbidden response
 
   @DEV-0003
-  @wip
   Scenario: A member can request a suggestion
     When I request a suggestion for the experiment
     Then I receive an organism with values from the current generation
     And a performance log entry records the suggestion
 
   @DEV-0004
-  @wip
   Scenario: Reporting an outcome records exactly one fitness number
     Given a suggestion has been requested for the experiment
     When I report fitness 0.81 for that suggestion
     Then the fitness 0.81 is recorded against that suggestion
 
   @DEV-0005
-  @wip
   Scenario: A ripe experiment evolves to a new generation on the next loop action
     Given the experiment has enough reported outcomes to be ripe
     When I request the next suggestion
@@ -56,14 +55,12 @@ Feature: Experiment Workspace
     And it replaces the current generation
 
   @DEV-0006
-  @wip
   Scenario: Evolution does not double-fire
     Given the experiment is ripe
     When the next loop action runs twice
     Then exactly one new generation is created
 
   @DEV-0007
-  @wip
   Scenario: I can browse generation history
     Given the experiment has evolved more than once
     When I open the generation history

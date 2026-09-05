@@ -1,0 +1,21 @@
+<h1>Organism #<%= @organism.id %></h1>
+<p>From generation <%= @organism.generation.iteration %> of <%= @organism.chromosome.name %></p>
+
+<section class="organism-values">
+  <% @organism.values.includes(:allele).sort_by(&:name).each do |value| %>
+    <div class="value-row value-<%= value.allele.type.downcase %>"
+         data-allele="<%= value.allele.name %>"
+         data-type="<%= value.allele.type.downcase %>">
+      <strong><%= value.allele.name %>:</strong>
+      <%= typed_value_html(value) %>
+    </div>
+  <% end %>
+</section>
+
+<% if @organism.fitness.present? %>
+  <p class="recorded-fitness">Recorded fitness: <%= @organism.fitness %></p>
+<% else %>
+  <p>No fitness recorded yet</p>
+<% end %>
+
+<p><%= link_to 'Back to chromosome', chromosome_path(@organism.chromosome) %></p>

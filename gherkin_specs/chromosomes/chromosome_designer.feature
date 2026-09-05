@@ -5,10 +5,18 @@
 #   no external charting CDN — dependency + network red line).
 # - The designer replaces the current chromosome CRUD views (A3 resolved to
 #   replace — one surface, no split).
-# - All scenarios @wip until implemented. No paid-tier visualization depth.
+# - DEV-0004 (issue #80) implemented: cross-org chromosome access answers
+#   404; DEV-0006 (issue #82, fitness trend line) and DEV-0007 (issue #83,
+#   explicit empty state) implemented. The remaining scenarios stay @wip
+#   until implemented.
+# - DEV-0004 drift: the published scenario references "Alpha-chrom" without
+#   creating it — the implicit prerequisite "organization Alpha owns a
+#   chromosome named Alpha-chrom" is injected (reuses the PRD-0002 DEV-0009
+#   step in org_scoping.rb) so the 404 proves cross-org blocking, not mere
+#   absence of the chromosome.
+# - No paid-tier visualization depth.
 
 @PRD-0004
-@wip
 Feature: Chromosome Designer
   As an organization member
   I want to design chromosomes visually and browse generations
@@ -17,12 +25,14 @@ Feature: Chromosome Designer
   Background:
     Given I am signed in as an owner of "Loop Labs"
 
+  @wip
   @DEV-0001
   Scenario: A user designs a chromosome with mixed allele types and sees a live preview
     When I create a chromosome with a float, an integer, and a boolean allele
     Then I see a live preview of all three alleles
     And the chromosome is saved under my organization
 
+  @wip
   @DEV-0002
   Scenario: Allele bounds are validated inline
     Given I am adding a float allele to a chromosome
@@ -30,6 +40,7 @@ Feature: Chromosome Designer
     Then I see an inline validation error
     And the allele is not saved
 
+  @wip
   @DEV-0003
   Scenario: An option allele requires a non-empty choice list
     Given I am adding an option allele to a chromosome
@@ -38,7 +49,8 @@ Feature: Chromosome Designer
 
   @DEV-0004
   Scenario: Another organization cannot access my chromosome
-    Given I am signed in as an owner of organization "Beta"
+    Given organization "Alpha" owns a chromosome named "Alpha-chrom"
+    And I am signed in as an owner of organization "Beta"
     When I visit the chromosome "Alpha-chrom"
     Then I receive a not-found or forbidden response
 

@@ -11,8 +11,8 @@ require 'rails_helper'
 RSpec.describe 'Experiments workspace (web)', type: :request do
   let!(:org) { FactoryBot.create(:organization, name: 'Loop Labs') }
   let!(:other_org) { FactoryBot.create(:organization, name: 'Beta') }
-  let!(:chromosome) { FactoryBot.create(:chromosome, name: 'Alpha-chrom', organization: org) }
-  let!(:other_chromosome) { FactoryBot.create(:chromosome, name: 'Beta-chrom', organization: other_org) }
+  let!(:chromosome) { FactoryBot.create(:chromosome_with_alleles, name: 'Alpha-chrom', organization: org) }
+  let!(:other_chromosome) { FactoryBot.create(:chromosome_with_alleles, name: 'Beta-chrom', organization: other_org) }
 
   describe 'GET /experiments' do
     it 'requires sign-in (anonymous is redirected to the login page)' do
@@ -130,6 +130,348 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
 
       expect(response).to have_http_status(:not_found)
       expect(response.body).not_to include('Beta secret')
+    end
+  end
+
+  describe 'POST /experiments/:id/report' do
+    let!(:experiment) do
+      result = Experiments::Setup.call(chromosome:, external_entity: chromosome,
+                                       name: 'Donation amounts',
+                                       experiment_configuration: { population_size: 20 })
+      raise "Setup failed: #{result.errors.inspect}" unless result.success?
+
+      result.experiment
+    end
+
+    # A suggestion must exist before anything can be reported — drives the real
+    # loop action like the UI does.
+    def request_suggestion
+      post suggestion_experiment_url(experiment)
+      expect(response).to have_http_status(:ok)
+    end
+
+    it 'requires sign-in (anonymous is redirected to the login page)' do
+      post report_experiment_url(experiment), params: { fitness_input_value: '0.81' }
+
+      expect(response).to redirect_to(login_path)
+    end
+
+    it 'records exactly one fitness number on the latest suggestion log and shows it' do
+      sign_in_as(organization: org)
+      request_suggestion
+      log = PerformanceLog.order(:id).last
+
+      expect do
+        post report_experiment_url(experiment), params: { fitness_input_value: '0.81' }
+      end.to change { log.reload.fitness_input_value }.from(nil).to(0.81)
+
+      expect(response).to have_http_status(:ok)
+      expect(log.reload.outcome_recorded_at).to be_present
+      expect(response.body).to include('0.81')
+      expect(response.body).to match(/recorded fitness/i)
+    end
+
+    it 'answers 404 for another organization\'s experiment and records nothing' do
+      sign_in_as(organization: org)
+      secret = Experiments::Setup.call(chromosome: other_chromosome, external_entity: other_chromosome).experiment
+      secret_log_count = PerformanceLog.where(experiment_id: secret.id).count
+
+      expect do
+        post report_experiment_url(secret), params: { fitness_input_value: '0.81' }
+      end.not_to change(PerformanceLog.where(experiment_id: secret.id), :count)
+      expect(PerformanceLog.where(experiment_id: secret.id).count).to eq(secret_log_count)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'answers 404 for an unknown experiment id' do
+      sign_in_as(organization: org)
+
+      expect do
+        post report_experiment_url(9_999_999), params: { fitness_input_value: '0.81' }
+      end.not_to change(PerformanceLog, :count)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'answers 422 when no suggestion has been requested yet' do
+      sign_in_as(organization: org)
+
+      expect do
+        post report_experiment_url(experiment), params: { fitness_input_value: '0.81' }
+      end.not_to change(PerformanceLog, :count)
+      expect(PerformanceLog.where(experiment_id: experiment.id).count).to eq(0)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to match(/no suggestion/i)
+    end
+
+    it 'rejects a non-numeric fitness value with 422 and no change' do
+      sign_in_as(organization: org)
+      request_suggestion
+      log = PerformanceLog.order(:id).last
+
+      expect do
+        post report_experiment_url(experiment), params: { fitness_input_value: 'high' }
+      end.not_to(change { log.reload.fitness_input_value })
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to match(/number/i)
+    end
+
+    it 're-reporting updates the same suggestion log (drift A2 — audit trail on the log)' do
+      sign_in_as(organization: org)
+      request_suggestion
+      log = PerformanceLog.order(:id).last
+
+      post report_experiment_url(experiment), params: { fitness_input_value: '0.81' }
+      expect(log.reload.fitness_input_value).to eq(0.81)
+
+      post report_experiment_url(experiment), params: { fitness_input_value: '0.90' }
+
+      expect(log.reload.fitness_input_value).to eq(0.90)
+      expect(PerformanceLog.where(experiment_id: experiment.id).count).to eq(1)
+    end
+  end
+
+  describe 'GET /experiments/:id/history (PRD-0003 DEV-0007 / issue #74)' do
+    let!(:experiment) do
+      result = Experiments::Setup.call(chromosome:, external_entity: chromosome,
+                                       name: 'Donation amounts',
+                                       experiment_configuration: { population_size: 20 })
+      raise "Setup failed: #{result.errors.inspect}" unless result.success?
+
+      result.experiment
+    end
+
+    # Drives the real loop (suggest → report → auto-evolve) twice, so the
+    # experiment ends with generations 0, 1, 2 — exactly the "evolved more
+    # than once" state the BDD Given for this scenario produces.
+    def evolve_twice(experiment)
+      experiment.start!
+      2.times do
+        until experiment.reload.ripe_for_evolution?
+          suggestion = Experiments::RequestSuggestion.call(experiment:)
+          raise "RequestSuggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+
+          outcome = Experiments::RecordOutcome.call(performance_log: suggestion.performance_log,
+                                                    fitness_input_value: 0.81)
+          raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
+        end
+        next_suggestion = Experiments::RequestSuggestion.call(experiment:)
+        raise "RequestSuggestion failed: #{next_suggestion.errors.inspect}" unless next_suggestion.success?
+      end
+    end
+
+    it 'requires sign-in (anonymous is redirected to the login page)' do
+      get history_experiment_url(experiment)
+
+      expect(response).to redirect_to(login_path)
+    end
+
+    it 'lists each generation with its organisms and recorded fitness' do
+      sign_in_as(organization: org)
+      evolve_twice(experiment)
+
+      get history_experiment_url(experiment)
+
+      expect(response).to have_http_status(:ok)
+      # Three generations exist: 0 (Setup) plus the two evolutions.
+      expect(experiment.reload.current_generation.iteration).to eq(2)
+      expect_history_lists_every_generation(response.body)
+      # Evolved generations carry the recorded (customer-reported) fitness.
+      expect(response.body).to include('Recorded fitness:')
+      expect(response.body).to include('0.81')
+    end
+
+    # Each generation row shows its iteration, organism count, and every
+    # organism id — the browse surface of the generation history.
+    def expect_history_lists_every_generation(body)
+      Generation.where(chromosome: experiment.chromosome).order(:iteration).each do |generation|
+        expect(body).to include("Generation #{generation.iteration}")
+        expect(body).to include("#{generation.organisms.size} organisms")
+        generation.organisms.each { |organism| expect(body).to include("Organism ##{organism.id}") }
+      end
+    end
+
+    it 'answers 404 for another organization\'s experiment and keeps it secret' do
+      sign_in_as(organization: org)
+      secret = Experiments::Setup.call(chromosome: other_chromosome, external_entity: other_chromosome).experiment
+
+      get history_experiment_url(secret)
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.body).not_to include(secret.name)
+    end
+
+    it 'answers 404 for an unknown experiment id' do
+      sign_in_as(organization: org)
+
+      get history_experiment_url(9_999_999)
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  describe 'POST /experiments/:id/suggestion' do
+    let!(:experiment) do
+      result = Experiments::Setup.call(chromosome:, external_entity: chromosome,
+                                       name: 'Donation amounts',
+                                       experiment_configuration: { population_size: 20 })
+      raise "Setup failed: #{result.errors.inspect}" unless result.success?
+
+      result.experiment
+    end
+
+    # Drives the real loop commands (suggest → report) until the experiment's
+    # own ripe_for_evolution? turns true — the same setup the BDD Given uses
+    # (shared by the ripe-evolution example below).
+    def make_ripe(experiment)
+      experiment.start!
+      until experiment.reload.ripe_for_evolution?
+        suggestion = Experiments::RequestSuggestion.call(experiment:)
+        raise "RequestSuggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+
+        outcome = Experiments::RecordOutcome.call(performance_log: suggestion.performance_log,
+                                                  fitness_input_value: 0.81)
+        raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
+      end
+    end
+
+    it 'requires sign-in (anonymous is redirected to the login page)' do
+      post suggestion_experiment_url(experiment)
+
+      expect(response).to redirect_to(login_path)
+    end
+
+    it 'returns an organism with typed values from the current generation' do
+      sign_in_as(organization: org)
+      post suggestion_experiment_url(experiment)
+
+      expect(response).to have_http_status(:ok)
+      chromosome.alleles.each { |a| expect(response.body).to include(a.name) }
+    end
+
+    it 'records a performance log for the suggestion' do
+      sign_in_as(organization: org)
+      expect { post suggestion_experiment_url(experiment) }
+        .to change(PerformanceLog, :count).by(1)
+
+      log = PerformanceLog.order(:id).last
+      expect(log.organism.generation).to eq(experiment.current_generation)
+      expect(log.suggested_at).to be_present
+    end
+
+    # PRD-0003 DEV-0005 (issue #72) — the next loop action on a ripe
+    # experiment evolves it first: a new generation replaces the current one
+    # and the suggested organism comes from the new generation.
+    it 'evolves a ripe experiment: new generation replaces current and the suggestion comes from it' do
+      sign_in_as(organization: org)
+      make_ripe(experiment)
+      previous_generation = experiment.current_generation
+
+      post suggestion_experiment_url(experiment)
+
+      expect(response).to have_http_status(:ok)
+      expect(experiment.reload.current_generation).not_to eq(previous_generation)
+      expect(experiment.current_generation.iteration).to eq(previous_generation.iteration + 1)
+      log = PerformanceLog.order(:id).last
+      expect(log.organism.generation).to eq(experiment.current_generation)
+      expect(log.organism.generation.iteration).to eq(1)
+    end
+
+    it 'answers 404 for another organization\'s experiment and records nothing' do
+      sign_in_as(organization: org)
+      secret = Experiments::Setup.call(chromosome: other_chromosome, external_entity: other_chromosome).experiment
+
+      expect do
+        post suggestion_experiment_url(secret)
+      end.not_to change(PerformanceLog, :count)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'answers 404 for an unknown experiment id' do
+      sign_in_as(organization: org)
+
+      expect do
+        post suggestion_experiment_url(9_999_999)
+      end.not_to change(PerformanceLog, :count)
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  describe 'GET /experiments/:id — fitness trend (PRD-0004 DEV-0006 / issue #82)' do
+    let!(:experiment) do
+      result = Experiments::Setup.call(chromosome:, external_entity: chromosome,
+                                       name: 'Donation amounts',
+                                       experiment_configuration: { population_size: 20 })
+      raise "Setup failed: #{result.errors.inspect}" unless result.success?
+
+      result.experiment
+    end
+
+    # Drives the real loop (suggest → report → auto-evolve) twice so the
+    # experiment ends with generations 0, 1, 2 and generations 0 + 1 carry
+    # the recorded (customer-reported) fitness averages — exactly the state
+    # the BDD Given for this scenario produces.
+    def evolve_twice(experiment)
+      experiment.start!
+      2.times do
+        until experiment.reload.ripe_for_evolution?
+          suggestion = Experiments::RequestSuggestion.call(experiment:)
+          raise "RequestSuggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+
+          outcome = Experiments::RecordOutcome.call(performance_log: suggestion.performance_log,
+                                                    fitness_input_value: 0.81)
+          raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
+        end
+
+        next_suggestion = Experiments::RequestSuggestion.call(experiment:)
+        raise "RequestSuggestion failed: #{next_suggestion.errors.inspect}" unless next_suggestion.success?
+      end
+    end
+
+    it 'renders the per-generation fitness trend as a self-hosted SVG line' do
+      sign_in_as(organization: org)
+      evolve_twice(experiment)
+
+      get experiment_url(experiment)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('Fitness trend')
+      expect(response.body).to include('fitness-trend-line')
+      # One point per generation with recorded fitness — generations 0 and 1
+      # (generation 2's organisms have not been evaluated yet), averaged from
+      # the recorded (customer-reported) numbers.
+      expect(response.body).to include('data-generation="0"')
+      expect(response.body).to include('data-generation="1"')
+      # Generation 2's organisms have no recorded fitness — it must NOT get a
+      # trend point (parity with the BDD count:2 assertion).
+      expect(response.body).not_to include('data-generation="2"')
+      expect(response.body).to include('0.81')
+    end
+
+    it 'serves the trend entirely from local assets — no external charting scripts' do
+      sign_in_as(organization: org)
+      evolve_twice(experiment)
+
+      get experiment_url(experiment)
+
+      external_script_srcs = response.body.scan(/<script[^>]+src=["']([^"']+)["']/).flatten
+                                     .select { |src| src.start_with?('http://', 'https://') }
+      expect(external_script_srcs).to be_empty
+    end
+
+    it 'shows an explicit empty state when no fitness is recorded yet' do
+      sign_in_as(organization: org)
+
+      get experiment_url(experiment)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('fitness-trend-empty')
+      expect(response.body).not_to include('fitness-trend-point')
     end
   end
 end
