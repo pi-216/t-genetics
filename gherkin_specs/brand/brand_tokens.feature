@@ -12,6 +12,13 @@
 #   (docs/design-sprint/ph1/moodboard.html .pv-btn) and this scenario is
 #   authoritative: the CTA gets caption METRICS (0.8125rem / 500 /
 #   +0.08em tracking) applied in the shared layout's mono default face.
+# - DEV-0003 kicker face: DESIGN.md components.kicker.typography references
+#   typography.caption (Inter family), but the founded-ruled Direction A
+#   moodboard + skeleton render kickers in the mono face with uppercase
+#   (moodboard .A .kicker, skeleton .hero .k). Same resolution as DEV-0002:
+#   kickers get signal color + caption METRICS in the mono face.
+# - DEV-0003 hero face: DESIGN.md typography.display (Inter 700, 3rem,
+#   -0.02em) is normative and asserts the hero h1 NOT in the mono default.
 
 @PRD-0006
 Feature: Brand Tokens
@@ -40,7 +47,6 @@ Feature: Brand Tokens
 
   @DEV-0003
   @javascript
-  @wip
   Scenario: The landing page declares the brand structure
     When I view the landing page
     Then the section kickers render in the signal color
