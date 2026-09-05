@@ -50,7 +50,6 @@ Feature: Brand Tokens
     And every numeric datum uses tabular numeral features
 
   @DEV-0005
-  @wip
   Scenario: The theme layer matches the locked token set
     When I compare the application theme with the locked DESIGN.md tokens
     Then every color token matches
