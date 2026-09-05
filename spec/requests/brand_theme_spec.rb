@@ -39,4 +39,35 @@ RSpec.describe 'Brand dark theme (shared layout)', type: :request do
       expect(cta_classes).to include(utility)
     end
   end
+
+  # PRD-0006 DEV-0003 — the landing page declares the brand structure.
+  # The @javascript BDD scenario measures computed styles (kickers in signal,
+  # hero h1 in the display typeface, hero on base) in headless Chrome; this
+  # request spec is the non-JS regression net over the rendered class lists —
+  # the token utilities must be on the elements for the computed styles to
+  # hold.
+  it 'renders the landing section kickers with the kicker token utilities' do
+    get root_path
+
+    kicker_elements = response.body.scan(/class="([^"]*landing-kicker[^"]*)"/)
+    expect(kicker_elements.length).to be >= 3
+    kicker_utilities = %w[font-data text-caption font-medium tracking-caption uppercase text-signal]
+    kicker_elements.each do |(classes)|
+      kicker_utilities.each do |utility|
+        expect(classes).to include(utility)
+      end
+    end
+  end
+
+  it 'renders the landing hero h1 with the display typeface utilities on base' do
+    get root_path
+
+    hero_section = response.body[/<section[^>]*class="([^"]*landing-hero[^"]*)"[^>]*>/i, 1]
+    expect(hero_section).to include('bg-base')
+
+    hero_title = response.body[/<h1[^>]*class="([^"]*)"[^>]*>TGenetics/i, 1]
+    %w[font-display text-display font-bold tracking-display].each do |utility|
+      expect(hero_title).to include(utility)
+    end
+  end
 end

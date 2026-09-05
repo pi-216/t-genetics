@@ -100,3 +100,43 @@ Then(/^the primary call to action renders in the mono caption face$/) do
   expect(style['weight']).to eq('500')
   expect(style['spacing']).to eq('1.04px')
 end
+
+# ---- DEV-0003: the landing page declares the brand structure ----
+
+# The landing page's section kickers are the small uppercase labels above the
+# content sections (design-sprint skeleton .hero .k / moodboard .A .kicker).
+# Per the feature-header drift flag they carry the signal color with caption
+# METRICS in the mono face: computed color rgb(245, 182, 74) is the binding
+# assertion; the face/metrics are the design resolution, not asserted here.
+
+Then(/^the section kickers render in the signal color$/) do
+  kickers = page.all('.landing-kicker')
+  expect(kickers.length).to be >= 1
+  kickers.each do |kicker|
+    color = kicker.evaluate_script('getComputedStyle(this).color')
+    expect(color).to eq('rgb(245, 182, 74)')
+  end
+end
+
+Then(/^the landing hero renders the display typeface on the base background$/) do
+  # DESIGN.md typography.display: Inter 700 3rem -0.02em computed at a 16px
+  # root: family "Inter, system-ui, sans-serif", 48px, 700, -0.96px spacing.
+  # The display face lives on the hero's h1 title; the hero section itself
+  # must sit on the base background (rgb(11, 15, 20)).
+  hero = page.find('.landing-hero')
+  title = hero.find('h1')
+
+  background = hero.evaluate_script('getComputedStyle(this).backgroundColor')
+  expect(background).to eq('rgb(11, 15, 20)')
+
+  style = title.evaluate_script(<<~JS)
+    (() => {
+      const s = getComputedStyle(this);
+      return { family: s.fontFamily, size: s.fontSize, weight: s.fontWeight, spacing: s.letterSpacing };
+    })()
+  JS
+  expect(style['family']).to match(/Inter|sans-serif/i)
+  expect(style['size']).to eq('48px')
+  expect(style['weight']).to eq('700')
+  expect(style['spacing']).to eq('-0.96px')
+end
