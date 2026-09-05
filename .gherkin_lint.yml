@@ -17,3 +17,11 @@ TooManyDifferentTags:
 # yields 3 tags on a scenario. The default threshold rejects the mandated scheme.
 TooManyTags:
   Enabled: false
+
+# Conflicts with the mandated workflow: tickets are published with EVERY
+# scenario @wip (cucumber --strict excludes @wip), and the @wip tag is removed
+# per-scenario as each ticket lands. A freshly published feature therefore has
+# the tag on all scenarios by design; feature-level @wip would break the
+# per-scenario removal flow.
+SameTagForAllScenarios:
+  Enabled: false
