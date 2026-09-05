@@ -31,8 +31,12 @@ WORK="$TMP/work"
 BIN="$TMP/bin"
 
 # ---------------------------------------------------------------- fixtures --
-git init -q --bare "$ORIGIN"
-git init -q "$WORK"
+# Explicit --initial-branch=main: CI runners lack the local
+# init.defaultBranch=main global config, so a bare `git init` would create
+# `master` and every `git checkout -b X main` below would fail (verified on
+# PR #110 lint job: "fatal: 'main' is not a commit").
+git init -q --bare --initial-branch=main "$ORIGIN"
+git init -q --initial-branch=main "$WORK"
 cd "$WORK"
 git config user.email test@example.com
 git config user.name "test"
