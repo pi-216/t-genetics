@@ -1,5 +1,5 @@
 - if resource.errors.any?
-  %div{ id: "error_explanation", class: "mb-4 rounded bg-red-900/50 p-3 text-red-200" }
+  %div{ id: "error_explanation", class: "mb-4 rounded bg-danger/10 p-3 text-danger" }
     - resource.errors.full_messages.each do |message|
       %p= message
 
@@ -8,5 +8,5 @@
 = form_with url: user_password_path, class: "mt-8 space-y-4" do |form|
   %div
     = form.label :email, "Email", class: "block text-sm font-medium"
-    = form.email_field :email, name: "user[email]", required: true, autofocus: true, class: "mt-1 w-full rounded border border-teal-700 bg-teal-800/50 px-3 py-2 text-teal-100"
-  = form.submit "Send me password reset instructions", class: "rounded bg-teal-600 px-4 py-2 font-semibold text-teal-950"
+    = form.email_field :email, name: "user[email]", required: true, autofocus: true, class: "mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink placeholder:text-inkMuted"
+  = form.submit "Send me password reset instructions", class: "inline-flex items-center rounded-md bg-signal px-5.5 py-3 font-data text-caption font-medium tracking-caption text-onSignal"
