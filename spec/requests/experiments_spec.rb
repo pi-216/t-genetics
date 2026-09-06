@@ -79,6 +79,37 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
       expect(response.body).to include('Alpha-chrom')
       expect(response.body).not_to include('Beta-chrom')
     end
+
+    # Issue #142 — a chromosome is the prerequisite of an experiment. An org
+    # with zero chromosomes must never land on the dead form (empty select,
+    # unsubmittable): the new page leads into the designer instead, exactly
+    # like the index empty state (issue #139).
+    it 'leads an org with no chromosomes from the new form into the designer' do
+      empty_org = FactoryBot.create(:organization, name: 'Blank Labs')
+      sign_in_as(organization: empty_org)
+
+      get new_experiment_url
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('No chromosomes yet')
+      expect(response.body).to include('Design your first chromosome')
+      expect(response.body).to include('href="/chromosomes/new"')
+      # Never the dead form with an empty select.
+      expect(response.body).not_to include('experiment[chromosome_id]')
+      expect(response.body).not_to include('Create experiment')
+    end
+
+    it 'still renders the create form when the organization has a chromosome' do
+      sign_in_as(organization: org)
+
+      get new_experiment_url
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('New experiment')
+      expect(response.body).to include('experiment[chromosome_id]')
+      expect(response.body).to include('Create experiment')
+      expect(response.body).not_to include('No chromosomes yet')
+    end
   end
 
   describe 'POST /experiments' do
