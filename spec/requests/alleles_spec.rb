@@ -59,6 +59,19 @@ RSpec.describe '/chromosomes/:chromosome_id/alleles' do
         expect(response).to have_http_status(:unprocessable_content)
       end
     end
+
+    # PRD-0004 DEV-0002 (issue #78): the bounds rule is server-side truth —
+    # the machine path must reject a reversed bound exactly like the designer.
+    context 'with a minimum greater than the maximum (bounds rule)' do
+      it 'does not create the Allele and returns 422' do
+        expect do
+          post chromosome_alleles_url(chromosome),
+               params: { allele: { name: 'legs', type: 'Integer', minimum: 50, maximum: 1 } }
+        end.not_to change(Allele, :count)
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to match(/less than or equal/i)
+      end
+    end
   end
 
   describe 'PATCH /update' do
@@ -77,6 +90,13 @@ RSpec.describe '/chromosomes/:chromosome_id/alleles' do
       it 'rejects changing type' do
         patch chromosome_allele_url(chromosome, allele), params: { allele: { type: 'Float' } }
         expect(response).to have_http_status(:unprocessable_content)
+      end
+
+      it 'rejects reversing the bounds (minimum above maximum)' do
+        patch chromosome_allele_url(chromosome, allele), params: { allele: { minimum: 60, maximum: 2 } }
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(allele.reload.inheritable.minimum).to eq(1)
+        expect(allele.reload.inheritable.maximum).to eq(50)
       end
     end
   end

@@ -1,0 +1,22 @@
+<%# PRD-0004 DEV-0001 (issue #77) — live preview of an allele set. Shared by
+    the designer new page (built from the entered cards) and the chromosome
+    show page (built from the saved alleles, via Allele#to_hsh). Both shapes
+    carry :name / :type and type-specific keys (:minimum/:maximum/:choices). %>
+<section class="allele-preview">
+  <h2>Allele preview</h2>
+  <% alleles.each do |allele| %>
+    <div class="allele-preview-item" data-allele-type="<%= allele[:type] %>">
+      <span class="allele-name"><%= allele[:name] %></span>
+      <span class="allele-type"><%= allele[:type] %></span>
+      <% if allele[:type] == 'Float' || allele[:type] == 'Integer' %>
+        <span class="allele-bounds">
+          (<%= allele[:minimum] %>…<%= allele[:maximum] %>)
+        </span>
+      <% elsif allele[:type] == 'Option' %>
+        <span class="allele-choices">
+          [<%= Array(allele[:choices]).join(', ') %>]
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+</section>

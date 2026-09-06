@@ -7,6 +7,9 @@ RSpec.describe 'chromosomes/new' do
     assign(:chromosome, Chromosome.new(
                           name: 'MyString'
                         ))
+    # The designer controller (ChromosomesController#new) always sets one
+    # blank allele card; the template iterates it.
+    assign(:allele_cards, [{ name: '', type: 'Float' }])
   end
 
   it 'renders new chromosome form' do

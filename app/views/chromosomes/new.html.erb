@@ -1,3 +1,82 @@
-<h1>New chromosome</h1>
+<%# PRD-0004 DEV-0001 (issue #77) — the chromosome designer: a single surface
+    for building a chromosome from typed allele cards with a live preview.
+    "Add allele" posts back (commit=Add allele) to re-render with one more
+    blank card, preserving entered cards — server-rendered, no JS dependency.
+    The final submit runs Chromosomes::Create (PRD-0004 red line: designer
+    mutations go through commands, never direct model writes). %>
+<h1>Design chromosome</h1>
 
-<%= render 'form', chromosome: @chromosome %>
+<% if @chromosome.errors.any? %>
+  <div class="command-errors">
+    <ul>
+      <% @chromosome.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<%= form_with(model: @chromosome, local: true) do |form| %>
+  <div>
+    <%= form.label :name %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div class="allele-cards">
+    <% @allele_cards.each_with_index do |card, index| %>
+      <div class="allele-card">
+        <h3>Allele <%= index + 1 %></h3>
+        <div>
+          <label for="allele-<%= index %>-type">Type</label>
+          <select id="allele-<%= index %>-type" name="chromosome[alleles][][type]">
+            <% %w[Float Integer Boolean Option].each do |type| %>
+              <option value="<%= type %>" <%= 'selected' if card[:type] == type %>><%= type %></option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <label for="allele-<%= index %>-name">Allele name</label>
+          <input id="allele-<%= index %>-name" name="chromosome[alleles][][name]"
+                 type="text" value="<%= card[:name] %>" autocomplete="off">
+        </div>
+        <div>
+          <label for="allele-<%= index %>-minimum">Minimum</label>
+          <input id="allele-<%= index %>-minimum" name="chromosome[alleles][][minimum]"
+                 type="number" step="any" value="<%= card[:minimum] %>" autocomplete="off">
+        </div>
+        <div>
+          <label for="allele-<%= index %>-maximum">Maximum</label>
+          <input id="allele-<%= index %>-maximum" name="chromosome[alleles][][maximum]"
+                 type="number" step="any" value="<%= card[:maximum] %>" autocomplete="off">
+        </div>
+        <div>
+          <label for="allele-<%= index %>-choices">Choices</label>
+          <input id="allele-<%= index %>-choices" name="chromosome[alleles][][choices]"
+                 type="text" value="<%= Array(card[:choices]).join(', ') %>"
+                 placeholder="comma-separated" autocomplete="off">
+        </div>
+        <%# PRD-0004 DEV-0002 (issue #78): inline per-card validation. The
+            command fails with per-allele messages ("allele '<name>': …");
+            surface the ones that name this card right under its fields.
+            Errors that don't name a card still render in the top-level
+            .command-errors summary, so nothing is lost. %>
+        <% if card[:name].present? %>
+          <% card_errors = @chromosome.errors[:alleles].select { |m| m.include?("allele '#{card[:name]}':") } %>
+          <% if card_errors.any? %>
+            <div class="allele-error">
+              <%= card_errors.map { |m| m.sub(/\Aallele '.+?':\s*/, '') }.join('; ') %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <div>
+    <%= submit_tag 'Add allele' %>
+    <%= form.submit 'Create chromosome' %>
+  </div>
+<% end %>
+
+<%= render 'allele_preview',
+           alleles: @allele_cards.reject { |card| card[:name].blank? } %>

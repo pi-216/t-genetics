@@ -22,11 +22,19 @@ module Chromosomes
       return render json: { errors: missing.index_with { 'is required' } }, status: :unprocessable_entity unless missing.empty?
 
       allele = build_typed_allele
+      # PRD-0004 DEV-0002 (issue #78): the bounds rule lives on the typed
+      # inheritable (Float/Integer model validation) — check it before the
+      # row is attached so a reversed bound is a 422, never a 500.
+      return render json: { errors: allele.inheritable.errors }, status: :unprocessable_entity unless allele.inheritable.valid?
+
       @chromosome.alleles << allele
 
       render json: allele.to_hsh, status: :created
     rescue ArgumentError => e
       render json: { errors: { type: e.message } }, status: :unprocessable_entity
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+      errors = e.respond_to?(:record) && e.record ? e.record.errors : { base: [e.message] }
+      render json: { errors: }, status: :unprocessable_entity
     end
 
     def update
