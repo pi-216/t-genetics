@@ -1,9 +1,13 @@
-<h1>New experiment</h1>
+<%# Issue #133 — the experiment create form on the kit form treatment. %>
+<%= render PageHeaderComponent.new(title: 'New experiment',
+                                   kicker: 'Experiment',
+                                   back_path: experiments_path,
+                                   back_label: 'Experiments') %>
 
 <% if @experiment.errors.any? || @command_errors.present? %>
-  <div id="error_explanation">
-    <h2>Could not create the experiment</h2>
-    <ul>
+  <div id="error_explanation" class="mb-4 rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+    <h2 class="font-semibold">Could not create the experiment</h2>
+    <ul class="mt-1 list-disc space-y-1 pl-5">
       <% @experiment.errors.full_messages.each do |message| %>
         <li><%= message %></li>
       <% end %>
@@ -14,21 +18,26 @@
   </div>
 <% end %>
 
-<%= form_with(model: @experiment, url: experiments_path) do |form| %>
-  <div>
-    <%= form.label :name %>
-    <%= form.text_field :name %>
-  </div>
+<%= form_with(model: @experiment, url: experiments_path, class: 'max-w-xl space-y-4') do |form| %>
+  <%= render FormFieldComponent.new(input_id: 'experiment_name', label: 'Name', required: true,
+                                    errors: @experiment.errors[:name]) do %>
+    <%= form.text_field :name, autocomplete: 'off', class: FormFieldComponent::INPUT_CLASSES %>
+  <% end %>
 
-  <div>
-    <label for="experiment_chromosome_id">Chromosome</label>
-    <%= select_tag 'experiment[chromosome_id]', options_from_collection_for_select(@chromosomes, :id, :name) %>
-  </div>
+  <%= render FormFieldComponent.new(input_id: 'experiment_chromosome_id', label: 'Chromosome', required: true,
+                                    hint: 'The value space this experiment evolves.') do %>
+    <%= select_tag 'experiment[chromosome_id]',
+                   options_from_collection_for_select(@chromosomes, :id, :name),
+                   class: FormFieldComponent::INPUT_CLASSES %>
+  <% end %>
 
-  <div>
-    <label for="experiment_population_size">Population size</label>
-    <%= number_field_tag 'experiment[population_size]', @population_size.presence || 10, min: 1, autocomplete: 'off' %>
-  </div>
+  <%= render FormFieldComponent.new(input_id: 'experiment_population_size', label: 'Population size', required: true,
+                                    hint: 'Organisms birthed per generation.') do %>
+    <%= number_field_tag 'experiment[population_size]', @population_size.presence || 10, min: 1,
+                         autocomplete: 'off', class: FormFieldComponent::INPUT_CLASSES %>
+  <% end %>
 
-  <%= form.submit 'Create experiment' %>
+  <div class="pt-2">
+    <%= render ButtonComponent.new(label: 'Create experiment', type: :submit, variant: :primary) %>
+  </div>
 <% end %>

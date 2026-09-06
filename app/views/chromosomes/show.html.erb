@@ -1,9 +1,16 @@
-<%# PRD-0004 DEV-0001 (issue #77) — the chromosome show page renders the
-    saved allele set as the live preview. The designer create flow lands here
-    (redirect after Chromosomes::Create), so the mixed-type allele set is
-    visible immediately under the chromosome's org. %>
-<p>
-  <%= @chromosome.name %>
-</p>
+<%# Issue #133 — chromosome show: the saved allele set as the live preview.
+    The designer create flow lands here (redirect after Chromosomes::Create),
+    so the mixed-type allele set is visible immediately under the
+    chromosome's org — now on the shared page-header + card treatment. %>
+<%= render PageHeaderComponent.new(title: @chromosome.name,
+                                   kicker: 'Chromosome',
+                                   subtitle: "#{pluralize(@chromosome.alleles.count, 'allele')} · #{pluralize(@chromosome.generations.count, 'generation')}") do |header| %>
+  <% header.with_actions do %>
+    <%= render ButtonComponent.new(label: 'Edit', href: edit_chromosome_path(@chromosome), variant: :secondary) %>
+  <% end %>
+<% end %>
 
-<%= render 'allele_preview', alleles: @chromosome.alleles.map(&:to_hsh) %>
+<%= render CardComponent.new(title: 'Allele preview',
+                             description: 'The saved allele set — the value space of every organism on this chromosome.') do %>
+  <%= render 'allele_preview', alleles: @chromosome.alleles.map(&:to_hsh) %>
+<% end %>

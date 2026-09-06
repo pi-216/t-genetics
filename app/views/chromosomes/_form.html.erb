@@ -1,10 +1,16 @@
+<%# Issue #133 — shared chromosome form: FormField + kit button, hairline
+    inputs, cardinality handled by the caller's model. %>
 <%= form_with(model: chromosome, local: true) do |form| %>
-  <div>
-    <%= form.label :name %>
-    <%= form.text_field :name %>
-  </div>
+  <div class="max-w-xl space-y-4">
+    <%= render FormFieldComponent.new(input_id: 'chromosome_name', label: 'Name', required: true,
+                                      errors: chromosome.errors[:name]) do %>
+      <%= form.text_field :name, autocomplete: 'off', class: FormFieldComponent::INPUT_CLASSES %>
+    <% end %>
 
-  <div>
-    <%= form.submit %>
+    <div class="flex flex-wrap items-center gap-3">
+      <%= render ButtonComponent.new(label: 'Save chromosome', type: :submit, name: 'commit',
+                                     value: 'Save chromosome', variant: :primary) %>
+      <%= render ButtonComponent.new(label: 'Cancel', href: chromosome, variant: :ghost) %>
+    </div>
   </div>
 <% end %>

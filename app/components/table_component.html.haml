@@ -1,0 +1,16 @@
+.table-wrap{ class: root_class }
+  %table.table.w-full.text-left
+    %thead
+      %tr
+        - @columns.each do |column|
+          %th{ class: header_cell_class }= column
+    %tbody
+      - if @empty
+        %tr
+          %td{ colspan: [@columns.size, 1].max, class: empty_cell_class }
+            - if empty?
+              = empty
+            - else
+              No records yet
+      - else
+        = body

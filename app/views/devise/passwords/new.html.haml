@@ -1,12 +1,14 @@
 - if resource.errors.any?
-  %div{ id: "error_explanation", class: "mb-4 rounded bg-danger/10 p-3 text-danger" }
+  %div{ id: "error_explanation", class: "mb-4 rounded-md border border-danger/30 bg-danger/10 p-3 text-danger" }
     - resource.errors.full_messages.each do |message|
       %p= message
 
-%h1{ class: "text-2xl font-bold" } Reset your password
+= render PageHeaderComponent.new(title: 'Reset your password',
+                                 subtitle: 'We’ll email you a one-time reset link.',
+                                 back_path: login_path,
+                                 back_label: 'Back to sign in')
 
-= form_with url: user_password_path, class: "mt-8 space-y-4" do |form|
-  %div
-    = form.label :email, "Email", class: "block text-sm font-medium"
-    = form.email_field :email, name: "user[email]", required: true, autofocus: true, class: "mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink placeholder:text-inkMuted"
-  = form.submit "Send me password reset instructions", class: "inline-flex items-center rounded-md bg-signal px-5.5 py-3 font-data text-caption font-medium tracking-caption text-onSignal"
+= form_with url: user_password_path, class: "mt-6 max-w-md space-y-4" do |form|
+  = render FormFieldComponent.new(input_id: 'user_email', label: 'Email', required: true) do
+    = form.email_field :email, name: "user[email]", required: true, autofocus: true, class: FormFieldComponent::INPUT_CLASSES
+  = render ButtonComponent.new(label: 'Send me password reset instructions', type: :submit, variant: :primary)

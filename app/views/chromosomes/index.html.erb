@@ -1,5 +1,22 @@
-<% @chromosomes.each do |chromosome| %>
-  <div>
-    <p><%= chromosome.name %></p>
+<%# Issue #133 — chromosomes index: the designer's list of org value spaces.
+    Each chromosome renders through ChromosomeComponent (card row with hairline
+    border + mono allele counts); an empty org gets the explicit empty state,
+    never a bare list. Page header carries the single amber action. %>
+<%= render PageHeaderComponent.new(title: 'Chromosomes',
+                                   kicker: 'Workspace',
+                                   subtitle: 'Design the value space your experiments evolve on.') do |header| %>
+  <% header.with_actions do %>
+    <%= render ButtonComponent.new(label: 'Design chromosome', href: new_chromosome_path, variant: :primary) %>
+  <% end %>
+<% end %>
+
+<% if @chromosomes.any? %>
+  <div class="space-y-4">
+    <% @chromosomes.each do |chromosome| %>
+      <%= render ChromosomeComponent.new(chromosome: chromosome) %>
+    <% end %>
   </div>
+<% else %>
+  <%= render EmptyStateComponent.new(title: 'No chromosomes yet',
+                                     body: 'Design your first chromosome — the allele set defines the value space of every organism your experiments evolve.') %>
 <% end %>

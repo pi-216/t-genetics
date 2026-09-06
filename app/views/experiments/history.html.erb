@@ -1,28 +1,44 @@
-<h1>Generation history — <%= @experiment.name %></h1>
+<%# Issue #133 — generation history: one kit card per generation with its
+    organisms as hairline-divided rows (mono ids + typed values + recorded
+    fitness). Empty experiment -> explicit empty state. %>
+<%= render PageHeaderComponent.new(title: 'Generation history',
+                                   kicker: @experiment.name,
+                                   back_path: experiment_path(@experiment),
+                                   back_label: 'Back to experiment') %>
 
-<p>Chromosome: <%= @experiment.chromosome.name %></p>
-
-<% @generations.each do |generation| %>
-  <section class="generation-history">
-    <h2>Generation <%= generation.iteration %></h2>
-    <p><%= generation.organisms.size %> organisms</p>
-
-    <% generation.organisms.sort_by(&:id).each do |organism| %>
-      <div class="history-organism">
-        <h3><%= link_to "Organism ##{organism.id}", chromosome_generation_organism_path(organism.chromosome, generation, organism) %></h3>
-        <ul>
-          <% organism.values.sort_by(&:name).each do |value| %>
-            <li><strong><%= value.allele.name %>:</strong> <%= value.data %></li>
+<% if @generations.any? %>
+  <div class="space-y-4">
+    <% @generations.each do |generation| %>
+      <%= render CardComponent.new(title: "Generation #{generation.iteration}",
+                                   description: "#{generation.organisms.size} organisms") do %>
+        <div class="generation-history">
+          <% generation.organisms.sort_by(&:id).each do |organism| %>
+            <div class="history-organism border-t border-line py-3 first:border-t-0">
+              <div class="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 class="text-sm font-semibold text-ink">
+                  <%= link_to "Organism ##{organism.id}",
+                              chromosome_generation_organism_path(organism.chromosome, generation, organism),
+                              class: 'hover:text-signal' %>
+                </h3>
+                <% if organism.fitness.present? %>
+                  <p class="recorded-fitness font-data text-sm tabular-nums text-good">Recorded fitness: <%= organism.fitness %></p>
+                <% else %>
+                  <p class="text-sm text-inkMuted">No fitness recorded yet</p>
+                <% end %>
+              </div>
+              <ul class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-inkMuted">
+                <% organism.values.sort_by(&:name).each do |value| %>
+                  <li><strong class="font-medium text-ink"><%= value.allele.name %>:</strong>
+                    <span class="font-data tabular-nums"><%= value.data %></span></li>
+                <% end %>
+              </ul>
+            </div>
           <% end %>
-        </ul>
-        <% if organism.fitness.present? %>
-          <p class="recorded-fitness">Recorded fitness: <%= organism.fitness %></p>
-        <% else %>
-          <p>No fitness recorded yet</p>
-        <% end %>
-      </div>
+        </div>
+      <% end %>
     <% end %>
-  </section>
+  </div>
+<% else %>
+  <%= render EmptyStateComponent.new(title: 'No generations yet',
+                                     body: 'Run the loop — suggestions and reported fitness birth generations.') %>
 <% end %>
-
-<p><%= link_to 'Back to experiment', experiment_path(@experiment) %></p>

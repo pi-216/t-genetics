@@ -1,13 +1,34 @@
-<h1>Experiments</h1>
+<%# Issue #133 — experiments index: the loop monitor. Dense data -> table
+    treatment: hairline rows, muted uppercase header, status badge per
+    experiment, mono numerals inherited app-wide. Empty org -> explicit
+    empty state. %>
+<%= render PageHeaderComponent.new(title: 'Experiments',
+                                   kicker: 'Workspace',
+                                   subtitle: 'Suggest an organism, report ONE fitness number, breed the next generation.') do |header| %>
+  <% header.with_actions do %>
+    <%= render ButtonComponent.new(label: 'New experiment', href: new_experiment_path, variant: :primary) %>
+  <% end %>
+<% end %>
 
-<p><%= link_to 'New experiment', new_experiment_path %></p>
-
-<% @experiments.each do |experiment| %>
-  <div>
-    <p>
-      <%= link_to experiment.name, experiment %>
-      — <%= experiment.chromosome.name %>
-      (<%= experiment.status %>)
-    </p>
-  </div>
+<% if @experiments.any? %>
+  <% status_intents = { 'pending' => :default, 'running' => :signal, 'completed' => :good, 'failed' => :danger } %>
+  <%= render TableComponent.new(columns: %w[Experiment Chromosome Status]) do |table| %>
+    <% table.with_body do %>
+      <% @experiments.each do |experiment| %>
+        <tr class="hover:bg-raised/40">
+          <td class="<%= table.cell_class %>">
+            <%= link_to experiment.name, experiment, class: 'font-medium text-ink hover:text-signal' %>
+          </td>
+          <td class="<%= table.cell_class %>"><%= experiment.chromosome.name %></td>
+          <td class="<%= table.cell_class %>">
+            <%= render BadgeComponent.new(text: experiment.status,
+                                          intent: status_intents.fetch(experiment.status, :default)) %>
+          </td>
+        </tr>
+      <% end %>
+    <% end %>
+  <% end %>
+<% else %>
+  <%= render EmptyStateComponent.new(title: 'No experiments yet',
+                                     body: 'Create your first experiment on a chromosome to start the evolution loop.') %>
 <% end %>

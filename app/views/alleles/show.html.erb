@@ -1,3 +1,18 @@
-<p>
-  <%= @allele.name %>
-</p>
+<%# Issue #133 — allele show (legacy surface). %>
+<%= render PageHeaderComponent.new(title: @allele.name,
+                                   kicker: 'Allele',
+                                   back_path: chromosomes_path,
+                                   back_label: 'Chromosomes') %>
+
+<%= render CardComponent.new(title: @allele.name) do %>
+  <dl class="space-y-2 text-sm">
+    <div class="flex items-baseline justify-between gap-4">
+      <dt class="text-inkMuted">Type</dt>
+      <dd class="font-data tabular-nums text-ink"><%= @allele.type %></dd>
+    </div>
+    <div class="flex items-baseline justify-between gap-4">
+      <dt class="text-inkMuted">Chromosome</dt>
+      <dd class="font-data tabular-nums text-ink"><%= @allele.chromosome_id %></dd>
+    </div>
+  </dl>
+<% end %>

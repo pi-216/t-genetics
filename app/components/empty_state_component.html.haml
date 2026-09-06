@@ -1,0 +1,8 @@
+.empty-state{ class: root_class, 'aria-label': @aria_label }
+  - if @title
+    %h3.text-base.font-semibold.text-ink= @title
+  - if @body
+    %p.mx-auto.mt-2.max-w-md.text-sm.text-inkMuted= @body
+  - if action?
+    .mt-5.flex.justify-center
+      = action

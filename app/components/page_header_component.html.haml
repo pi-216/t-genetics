@@ -1,0 +1,14 @@
+%header.mb-6.page-header
+  - if @back_path
+    .mb-3
+      = render ButtonComponent.new(label: @back_label, href: @back_path, variant: :ghost)
+  - if @kicker
+    %p.kicker.mb-1.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal= @kicker
+  .flex.items-start.justify-between.gap-4.flex-wrap
+    .min-w-0
+      %h1.text-2xl.font-bold.tracking-tight.text-ink= @title
+      - if @subtitle
+        %p.mt-1.text-sm.text-inkMuted= @subtitle
+    - if actions?
+      .shrink-0.flex.items-center.gap-3
+        = actions

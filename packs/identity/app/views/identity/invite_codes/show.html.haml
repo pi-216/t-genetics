@@ -1,14 +1,19 @@
-%h1{ class: "text-2xl font-bold" } Organization invite
-%p{ class: "mt-2 text-ink" }
-  Share this code with someone you want to join
-  %span{ class: "font-semibold" }= current_user.organization.name
-  as a member.
+= render PageHeaderComponent.new(title: 'Organization invite',
+                                 kicker: 'Workspace',
+                                 subtitle: "Share this code with someone you want to join #{current_user.organization.name} as a member.")
 
-- if @invite_code
-  .invite-code{ class: "mt-4 inline-block rounded border border-line bg-surface p-4 text-2xl font-mono tracking-widest text-ink" }
-    = @invite_code.code
-- else
-  %p{ class: "mt-4 text-inkMuted" } No invite code yet.
+= render CardComponent.new(title: 'Invite code') do
+  - if @invite_code
+    %p.mt-2
+      %span.invite-code.inline-block.rounded-md.border.border-line.bg-raised.p-4.font-data.text-2xl.tracking-widest.text-ink
+        = @invite_code.code
+  - else
+    = render EmptyStateComponent.new(title: 'No invite code yet',
+                                     body: 'Generate an invite code to let others join your organization.')
 
-= form_with url: organization_invite_code_path, class: "mt-6" do |form|
-  = form.submit "Generate invite code", class: "inline-flex items-center rounded-md bg-signal px-5.5 py-3 font-data text-caption font-medium tracking-caption text-onSignal"
+  - if @invite_code
+    %p.mt-3.text-sm.text-inkMuted Share this code with someone you want to join your organization as a member.
+
+  .mt-4
+    = form_with url: organization_invite_code_path, class: "mt-2" do |form|
+      = render ButtonComponent.new(label: 'Generate invite code', type: :submit, variant: :primary)

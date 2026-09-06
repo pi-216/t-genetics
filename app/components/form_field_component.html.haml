@@ -1,0 +1,12 @@
+%section.field{ class: 'space-y-1' }
+  - if @label
+    %label.block.text-sm.font-medium.text-ink{ for: @input_id }
+      = @label
+      - if @required
+        %span.text-signal{ 'aria-hidden': 'true' } *
+  = content
+  - if @hint
+    %p.text-sm.text-inkMuted= @hint
+  - if error?
+    - @errors.each do |message|
+      %p.field-error.text-sm.text-danger= message

@@ -1,0 +1,10 @@
+%section.card{ class: root_class }
+  - if @title
+    .mb-4
+      %h2.text-lg.font-semibold.text-ink= @title
+      - if @description
+        %p.mt-1.text-sm.text-inkMuted= @description
+  = content
+  - if footer?
+    .card-footer.mt-4.pt-4.border-t.border-line
+      = footer

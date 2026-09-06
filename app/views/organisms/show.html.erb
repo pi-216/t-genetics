@@ -1,21 +1,27 @@
-<h1>Organism #<%= @organism.id %></h1>
-<p>From generation <%= @organism.generation.iteration %> of <%= @organism.chromosome.name %></p>
+<%# Issue #133 — organism show: the specimen detail. Page header (mono id),
+    one values card with typed rows (value-row value-<type> + data attrs kept
+    for the machine-checkable contract), and the recorded-fitness readout. %>
+<%= render PageHeaderComponent.new(title: "Organism ##{@organism.id}",
+                                   kicker: 'Organism',
+                                   subtitle: "From generation #{@organism.generation.iteration} of #{@organism.chromosome.name}",
+                                   back_path: chromosome_path(@organism.chromosome),
+                                   back_label: 'Back to chromosome') %>
 
-<section class="organism-values">
-  <% @organism.values.includes(:allele).sort_by(&:name).each do |value| %>
-    <div class="value-row value-<%= value.allele.type.downcase %>"
-         data-allele="<%= value.allele.name %>"
-         data-type="<%= value.allele.type.downcase %>">
-      <strong><%= value.allele.name %>:</strong>
-      <%= typed_value_html(value) %>
-    </div>
-  <% end %>
-</section>
-
-<% if @organism.fitness.present? %>
-  <p class="recorded-fitness">Recorded fitness: <%= @organism.fitness %></p>
-<% else %>
-  <p>No fitness recorded yet</p>
+<%= render CardComponent.new(title: 'Values') do %>
+  <section class="organism-values divide-y divide-line">
+    <% @organism.values.includes(:allele).sort_by(&:name).each do |value| %>
+      <div class="value-row value-<%= value.allele.type.downcase %> flex flex-wrap items-baseline gap-x-3 py-2.5"
+           data-allele="<%= value.allele.name %>"
+           data-type="<%= value.allele.type.downcase %>">
+        <strong class="text-sm font-medium text-ink"><%= value.allele.name %>:</strong>
+        <span class="text-sm"><%= typed_value_html(value) %></span>
+      </div>
+    <% end %>
+  </section>
 <% end %>
 
-<p><%= link_to 'Back to chromosome', chromosome_path(@organism.chromosome) %></p>
+<% if @organism.fitness.present? %>
+  <p class="recorded-fitness mt-4 font-data text-sm tabular-nums text-good">Recorded fitness: <%= @organism.fitness %></p>
+<% else %>
+  <p class="mt-4 text-sm text-inkMuted">No fitness recorded yet</p>
+<% end %>
