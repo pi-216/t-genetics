@@ -3,8 +3,6 @@
 class ApplicationController < ActionController::Base
   skip_before_action :verify_authenticity_token
 
-  include Identity::Authentication
-
   private
 
   # The organization of the signed-in user (nil when anonymous). Every
@@ -12,6 +10,22 @@ class ApplicationController < ActionController::Base
   # bare `Chromosome.find`.
   def current_organization
     @current_organization ||= current_user&.organization
+  end
+
+  # Workspace gate (finding #56, founder ruling 2026-09-04): org-scoped
+  # workspace routes require sign-in. Anonymous HTML requests are sent to
+  # the login page; JSON format answers 401 (never data, never a redirect
+  # body that could echo a record). Thin compat shim over Devise's
+  # user_signed_in? — it keeps the exact wire contract while Warden owns the
+  # session (issue #118 scope 3).
+  def require_signed_in
+    return if user_signed_in?
+
+    if request.format.json?
+      render json: { error: 'unauthorized' }, status: :unauthorized
+    else
+      redirect_to login_path
+    end
   end
 
   # Org-scoped chromosome lookup shared by ChromosomesController and the

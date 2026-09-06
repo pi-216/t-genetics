@@ -26,7 +26,7 @@ Then(/^I am signed in with an organization named "([^"]+)"$/) do |name|
   organization = Identity::Organization.find_by!(name: name)
 
   expect(Identity::OrgMembership.find_by!(user:, organization:)).to be_present
-  expect(page.driver.request.session[:user_id]).to eq(user.id)
+  expect(signed_in_user).to eq(user)
 
   expect(page).to have_current_path(root_path)
 end
@@ -54,7 +54,7 @@ And(/^no new account or organization is created$/) do
   expect(Identity::User.count).to eq(1) # only the pre-existing user
   expect(Identity::Organization.count).to eq(0)
   expect(Identity::OrgMembership.count).to eq(0)
-  expect(page.driver.request.session[:user_id]).to be_nil
+  expect(signed_in_user).to be_nil
 end
 
 # --- DEV-0003 — signing in with valid credentials establishes a session. ---#
@@ -76,18 +76,18 @@ end
 # step serves both: set up when no session exists, then assert the session state.
 
 Then(/^I am signed in$/) do
-  if page.driver.request.session[:user_id].nil?
+  if signed_in_user.nil?
     step 'a user exists with email "ada@example.com" and password "S3cretPass!"'
     step 'I sign in with email "ada@example.com" and password "S3cretPass!"'
   end
   user = Identity::User.find_by!(email: @signed_in_email)
-  expect(page.driver.request.session[:user_id]).to eq(user.id)
+  expect(signed_in_user).to eq(user)
   expect(page).to have_current_path(root_path)
 end
 
 # --- DEV-0004 — signing in with invalid credentials fails safely. ---#
 Then(/^I am not signed in$/) do
-  expect(page.driver.request.session[:user_id]).to be_nil
+  expect(signed_in_user).to be_nil
   expect(page).to have_current_path(login_path)
 end
 

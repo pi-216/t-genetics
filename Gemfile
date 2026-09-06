@@ -8,6 +8,7 @@ ruby '3.4.5'
 gem 'aasm'
 gem 'bcrypt', '~> 3.1.7'
 gem 'bootsnap', require: false
+gem 'devise', '~> 5.0' # house auth tooling (issue #118); 5.0.4+ carries CVE-2026-40295 fix
 gem 'gl_command', git: 'https://github.com/givelively/gl_command.git'
 gem 'haml-rails'
 gem 'importmap-rails'

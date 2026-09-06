@@ -8,8 +8,6 @@ module Identity
   # organization settings page.
 
   class ApiTokensController < ApplicationController
-    include Identity::Authentication
-
     before_action :require_owner
 
     def create

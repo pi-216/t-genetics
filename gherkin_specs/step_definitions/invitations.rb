@@ -28,16 +28,7 @@ When(/^I join "([^"]+)" with the following details:$/) do |_org_name, table|
 end
 
 Given(/^I am signed in as a member of "([^"]+)"$/) do |org_name|
-  session_user_id =
-    begin
-      page.driver.request.session[:user_id]
-    rescue Rack::Test::Error
-      # No request has been made yet (fresh scenario, Given usage) — there is
-      # no session to inspect, so treat it as signed-out and log in below.
-      nil
-    end
-
-  if session_user_id.nil?
+  if signed_in_user.nil?
     # DEV-0008 (Given usage): establish the member session through the real
     # login flow, recording the email for the assertions below.
     organization = Identity::Organization.find_or_create_by!(name: org_name)
@@ -54,7 +45,7 @@ Given(/^I am signed in as a member of "([^"]+)"$/) do |org_name|
   membership = Identity::OrgMembership.find_by!(user: user, organization: organization)
 
   expect(membership.role).to eq(Identity::OrgMembership::MEMBER_ROLE)
-  expect(page.driver.request.session[:user_id]).to eq(user.id)
+  expect(signed_in_user).to eq(user)
   expect(page).to have_current_path(root_path)
 end
 

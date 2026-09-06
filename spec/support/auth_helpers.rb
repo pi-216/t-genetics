@@ -13,6 +13,13 @@ module AuthHelpers
     post login_path, params: { identity_user: { email: user.email, password: user.password } }
     user
   end
+
+  # The signed-in user as Warden sees it on the just-processed request
+  # (issue #118: sessions are Devise/Warden-owned; the hand-rolled
+  # session[:user_id] key is gone).
+  def signed_in_user
+    request.env['warden']&.user(:user)
+  end
 end
 
 RSpec.configure do |config|

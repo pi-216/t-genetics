@@ -33,7 +33,7 @@ RSpec.describe 'Registrations', type: :request do
         post register_path, params: valid_params
 
         expect(response).to redirect_to(root_path)
-        expect(session[:user_id]).to eq(Identity::User.last.id)
+        expect(signed_in_user).to eq(Identity::User.last)
       end
     end
 
@@ -44,7 +44,7 @@ RSpec.describe 'Registrations', type: :request do
         end.not_to change(Identity::User, :count)
 
         expect(response).to have_http_status(:unprocessable_content)
-        expect(session[:user_id]).to be_nil
+        expect(signed_in_user).to be_nil
       end
 
       it 'renders 422 and creates nothing when the org name is blank' do

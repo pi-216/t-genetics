@@ -56,6 +56,13 @@ RSpec.describe 'Workspace authentication', type: :request do
 
       expect(response).to redirect_to(login_path)
     end
+
+    it 'answers JSON requests with 401 and no data (never a redirect body)' do
+      get chromosomes_path, as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(response.parsed_body).to eq('error' => 'unauthorized')
+    end
   end
 
   describe 'signed-in access' do
