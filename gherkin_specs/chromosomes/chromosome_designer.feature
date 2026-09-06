@@ -38,7 +38,6 @@ Feature: Chromosome Designer
     Then I see an inline validation error
     And the allele is not saved
 
-  @wip
   @DEV-0003
   Scenario: An option allele requires a non-empty choice list
     Given I am adding an option allele to a chromosome

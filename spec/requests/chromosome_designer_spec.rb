@@ -94,6 +94,27 @@ RSpec.describe '/chromosomes — designer create (DEV-0001)' do
         expect(response.body).to match(%r{<div class="allele-error">\s*minimum \(10\) must be less than or equal to maximum \(1\)\s*</div>})
       end
     end
+
+    # PRD-0004 DEV-0003 (issue #79): an option allele with an empty choice
+    # list is an inline validation error on the re-rendered designer, and
+    # nothing is saved. The message must carry the "allele '<name>':" prefix
+    # so the per-card .allele-error matcher picks it up (mirror of the
+    # DEV-0002 bounds case above).
+    context 'with an option allele whose choice list is empty' do
+      it 'renders a 422 with an inline per-card error and creates nothing' do
+        expect do
+          post chromosomes_url,
+               params: { chromosome: { name: 'Option genome',
+                                       alleles: [{ name: 'flavor', type: 'Option', choices: '' }] } }
+        end.not_to change(Chromosome, :count)
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include('allele-error')
+        expect(response.body).to match(/choice list must not be empty/i)
+        # The per-card .allele-error renders the STRIPPED message (no
+        # "allele 'flavor':" prefix).
+        expect(response.body).to match(%r{<div class="allele-error">\s*choice list must not be empty\s*</div>})
+      end
+    end
   end
 
   describe 'GET /chromosomes/:id (live preview on the show page)' do

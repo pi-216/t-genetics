@@ -68,11 +68,28 @@ When(/^I set a minimum greater than the maximum$/) do
   click_button 'Create chromosome'
 end
 
+# Shared by DEV-0002 (bounds) and DEV-0003 (empty choice list): both are
+# inline per-card validation errors. The precise message text for each case
+# is asserted at the request-spec level; here we assert the inline surface.
 Then(/^I see an inline validation error$/) do
-  expect(page).to have_css('.allele-error', text: /less than or equal/i)
+  expect(page).to have_css('.allele-error')
 end
 
 And(/^the allele is not saved$/) do
   expect(Chromosome.find_by(name: 'Bounded genome')).to be_nil
   expect(Allele.where(name: 'weight')).to be_empty
+end
+
+# PRD-0004 DEV-0003 (issue #79): an option allele whose choice list is left
+# empty is an inline validation error on the re-rendered designer, and
+# nothing is saved (atomic designer create). The choices text input is
+# simply never filled, so the card submits choices: "".
+Given(/^I am adding an option allele to a chromosome$/) do
+  visit new_chromosome_path
+  fill_in 'Name', with: 'Option genome'
+  fill_allele_card(0, type: 'Option', name: 'flavor')
+end
+
+When(/^I leave the choice list empty$/) do
+  click_button 'Create chromosome'
 end
