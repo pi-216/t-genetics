@@ -327,3 +327,25 @@ Then(/^the outcome is recorded on the performance log$/) do
   expect(@suggestion_performance_log.outcome_recorded_at).to be_present
   expect(@suggestion_performance_log.suggested_at).to be_present
 end
+
+# PRD-0005 Q4 (issue #131) — machines re-read the current pending suggestion
+# with a token. The endpoint is the long-lived-suggestion READ: it returns the
+# most recent unreported PerformanceLog (organism + log) WITHOUT creating a
+# new one, so a machine can re-present the SAME suggestion across sessions
+# (payment-form tip case) instead of drawing a new random organism. The Given
+# ("a suggestion has been requested for the experiment") leaves the pending
+# log on @suggestion_performance_log and the created experiment on
+# @created_experiment.
+When(/^I GET the current suggestion for the experiment via the API$/) do
+  experiment = @created_experiment or raise 'no created experiment in play'
+  token = @plain_api_token or raise 'no API token in play'
+  page.driver.header('Authorization', "Bearer #{token}")
+  page.driver.get("/api/v1/experiments/#{experiment['id']}/current_suggestion")
+end
+
+Then(/^I receive the same organism and performance log that were pending$/) do
+  expect(page.status_code).to eq(200)
+  body = JSON.parse(page.body)
+  expect(body['performance_log']['id']).to eq(@suggestion_performance_log.id)
+  expect(body['organism']['id']).to eq(@suggestion_performance_log.organism_id)
+end

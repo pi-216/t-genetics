@@ -9,7 +9,10 @@
 #   DEV-0003 implemented (issue #38); DEV-0004 implemented (issue #39);
 #   DEV-0005 implemented (issue #40); DEV-0006 implemented (issue #41);
 #   DEV-0007 implemented (issue #42); DEV-0008 implemented (issue #43);
-#   DEV-0009 implemented (issue #44); DEV-0010 implemented (issue #45).
+#   DEV-0009 implemented (issue #44); DEV-0010 implemented (issue #45);
+#   Q4 current-suggestion read implemented (issue #131, @DEV-0012 — founder
+#   Q4 follow-on: a long-lived suggestion can be re-read without drawing a
+#   new organism).
 
 @PRD-0005
 Feature: Token API
@@ -74,3 +77,9 @@ Feature: Token API
   Scenario: Malformed payloads return validation errors
     When I send a malformed chromosome payload via the API
     Then I receive a 422 response with error keys
+
+  @DEV-0012
+  Scenario: A machine can re-read the current pending suggestion without creating a new one
+    Given a suggestion has been requested for the experiment
+    When I GET the current suggestion for the experiment via the API
+    Then I receive the same organism and performance log that were pending
