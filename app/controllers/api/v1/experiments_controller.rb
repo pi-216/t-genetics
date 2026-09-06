@@ -52,6 +52,30 @@ module Api
         end
       end
 
+      # PRD-0005 Q4 (issue #131) — read the experiment's current PENDING
+      # suggestion (the most recent unreported PerformanceLog whose organism is
+      # in the current generation) without creating a new log. This is how a
+      # machine re-presents the SAME long-lived suggestion across sessions —
+      # POST /suggestion draws a new random organism and must not be called
+      # just to re-read. Org-scoped (cross-org/unknown id solves 404, never
+      # data); when nothing is pending the response is an explicit 200 with
+      # nulls, never silent (404 stays reserved for not-found/cross-org).
+      def current_suggestion
+        experiment = Experiment.joins(:chromosome)
+                               .where(chromosomes: { organization_id: current_organization.id })
+                               .find_by(id: params[:id])
+        return render_not_found unless experiment
+
+        result = Experiments::CurrentSuggestion.call(experiment:)
+        log = result.performance_log
+
+        if log
+          render json: { performance_log: log.to_h, organism: log.organism.to_hsh }
+        else
+          render json: { performance_log: nil, organism: nil }
+        end
+      end
+
       private
 
       def render_not_found
