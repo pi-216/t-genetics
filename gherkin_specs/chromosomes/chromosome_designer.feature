@@ -25,14 +25,12 @@ Feature: Chromosome Designer
   Background:
     Given I am signed in as an owner of "Loop Labs"
 
-  @wip
   @DEV-0001
   Scenario: A user designs a chromosome with mixed allele types and sees a live preview
     When I create a chromosome with a float, an integer, and a boolean allele
     Then I see a live preview of all three alleles
     And the chromosome is saved under my organization
 
-  @wip
   @DEV-0002
   Scenario: Allele bounds are validated inline
     Given I am adding a float allele to a chromosome

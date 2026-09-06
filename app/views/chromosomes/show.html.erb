@@ -1,3 +1,9 @@
+<%# PRD-0004 DEV-0001 (issue #77) — the chromosome show page renders the
+    saved allele set as the live preview. The designer create flow lands here
+    (redirect after Chromosomes::Create), so the mixed-type allele set is
+    visible immediately under the chromosome's org. %>
 <p>
   <%= @chromosome.name %>
 </p>
+
+<%= render 'allele_preview', alleles: @chromosome.alleles.map(&:to_hsh) %>

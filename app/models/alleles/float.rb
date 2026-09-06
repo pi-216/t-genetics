@@ -6,6 +6,8 @@ module Alleles
 
     include Inheritable
 
+    validate :validate_minimum_not_greater_than_maximum
+
     def to_s
       "minimum: #{minimum}, maximum: #{maximum}"
     end
