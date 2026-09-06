@@ -53,6 +53,7 @@ Rails.application.routes.draw do
       resources :experiments, only: %i[index create] do
         member do
           post :suggestion
+          get :current_suggestion
         end
       end
       resources :performance_logs, only: [] do
