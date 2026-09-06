@@ -9,6 +9,8 @@ module Identity
   # for an existing user — sign-up remains the mutation path (command
   # pattern, AGENTS.md).
   class SessionsController < Devise::SessionsController
+    include PostAuthDestination
+
     # Pre-Devise wire behavior (issue #118): POST /login always processes the
     # posted credentials, even when a session already exists — the old
     # session[:user_id] flow replaced the id unconditionally, and account
@@ -28,7 +30,7 @@ module Identity
 
       if user&.valid_password?(password_param)
         sign_in(user)
-        redirect_to root_path, notice: "Welcome back, #{user.email}!"
+        redirect_to after_sign_in_path_for(user), notice: "Welcome back, #{user.email}!"
       else
         @user = User.new(email: email_param)
         @user.errors.add(:base, 'Invalid email or password')

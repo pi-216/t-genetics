@@ -28,7 +28,7 @@ Then(/^I am signed in with an organization named "([^"]+)"$/) do |name|
   expect(Identity::OrgMembership.find_by!(user:, organization:)).to be_present
   expect(signed_in_user).to eq(user)
 
-  expect(page).to have_current_path(root_path)
+  expect(page).to have_current_path(experiments_path)
 end
 
 And(/^I am the owner of "([^"]+)"$/) do |name|
@@ -82,7 +82,7 @@ Then(/^I am signed in$/) do
   end
   user = Identity::User.find_by!(email: @signed_in_email)
   expect(signed_in_user).to eq(user)
-  expect(page).to have_current_path(root_path)
+  expect(page).to have_current_path(experiments_path)
 end
 
 # --- DEV-0004 — signing in with invalid credentials fails safely. ---#

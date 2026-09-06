@@ -29,10 +29,10 @@ RSpec.describe 'Registrations', type: :request do
         expect(membership.organization.name).to eq('Loop Labs')
       end
 
-      it 'signs me in and redirects to the root path' do
+      it 'signs me in and redirects to the experiments workspace' do
         post register_path, params: valid_params
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(experiments_path)
         expect(signed_in_user).to eq(Identity::User.last)
       end
     end
