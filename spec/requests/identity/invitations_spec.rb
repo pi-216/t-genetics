@@ -31,10 +31,10 @@ RSpec.describe 'Invitations', type: :request do
         expect(membership.role).to eq(Identity::OrgMembership::MEMBER_ROLE)
       end
 
-      it 'signs me in and redirects to the root path' do
+      it 'signs me in and redirects to the experiments workspace' do
         post join_path, params: valid_params
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(experiments_path)
         expect(signed_in_user).to eq(Identity::User.find_by!(email: 'bob@example.com'))
       end
     end

@@ -15,10 +15,10 @@ RSpec.describe 'Sessions', type: :request do
 
   describe 'POST /login' do
     context 'with valid credentials' do
-      it 'signs me in and redirects to the root path' do
+      it 'signs me in and redirects to the experiments workspace' do
         post login_path, params: { identity_user: { email: 'ada@example.com', password: 'S3cretPass!' } }
 
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(experiments_path)
         expect(signed_in_user).to eq(user)
       end
 

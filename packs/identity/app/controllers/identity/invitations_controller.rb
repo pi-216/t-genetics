@@ -7,6 +7,8 @@ module Identity
   # AGENTS.md). Sign-in of the new member happens at the controller layer,
   # like registration.
   class InvitationsController < ApplicationController
+    include PostAuthDestination
+
     def new
       @user = User.new
     end
@@ -20,7 +22,7 @@ module Identity
 
       if result.success?
         sign_in(result.user)
-        redirect_to root_path, notice: "Welcome, #{result.user.email}! You joined #{result.organization.name}."
+        redirect_to after_sign_in_path_for(result.user), notice: "Welcome, #{result.user.email}! You joined #{result.organization.name}."
       else
         @user = User.new(email: join_params.fetch(:email, ''))
         @user.errors.add(:base, result.full_error_message)

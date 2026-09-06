@@ -8,6 +8,8 @@ module Identity
   # input → call a Command → render from the Result; they never mutate
   # models directly (command pattern, AGENTS.md).
   class RegistrationsController < Devise::RegistrationsController
+    include PostAuthDestination
+
     def new
       @user = User.new
     end
@@ -21,7 +23,7 @@ module Identity
 
       if result.success?
         sign_in(result.user)
-        redirect_to root_path, notice: "Welcome, #{result.user.email}!"
+        redirect_to after_sign_up_path_for(result.user), notice: "Welcome, #{result.user.email}!"
       else
         @user = User.new(
           email: registration_params.fetch(:email, ''),

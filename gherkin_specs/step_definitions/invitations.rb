@@ -46,7 +46,7 @@ Given(/^I am signed in as a member of "([^"]+)"$/) do |org_name|
 
   expect(membership.role).to eq(Identity::OrgMembership::MEMBER_ROLE)
   expect(signed_in_user).to eq(user)
-  expect(page).to have_current_path(root_path)
+  expect(page).to have_current_path(experiments_path)
 end
 
 And(/^"([^"]+)" is a member, not an owner, of "([^"]+)"$/) do |email, org_name|

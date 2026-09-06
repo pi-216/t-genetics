@@ -11,6 +11,15 @@
     = javascript_importmap_tags
 
   %body.h-full.font-mono.tabular-nums.antialiased.bg-base.text-ink
+    %header.flex.items-center.justify-between.border-b.border-line.px-5.py-3
+      = link_to 'TGenetics', root_path, class: 'font-data text-sm font-semibold tracking-caption text-ink hover:text-signal'
+      %nav.flex.items-center.gap-4.text-sm
+        - if user_signed_in?
+          = link_to 'Experiments', experiments_path, class: 'font-data text-caption tracking-caption text-inkMuted hover:text-ink'
+          = form_with url: logout_path, method: :post, class: 'inline' do
+            = button_tag 'Sign out', type: 'submit', class: 'inline-flex items-center rounded-md border border-line px-3 py-1.5 font-data text-caption tracking-caption text-inkMuted hover:text-ink'
+        - else
+          = link_to 'Sign in', login_path, class: 'font-data text-caption tracking-caption text-inkMuted hover:text-ink'
     %main.container.mx-auto.mt-28.px-5
       = yield
     %footer.mt-16.border-t.border-line.py-6.px-5

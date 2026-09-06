@@ -27,6 +27,16 @@ RSpec.describe 'Landing page', type: :request do
       expect(response.body).to include('Start free')
     end
 
+    # Founder bug report 2026-09-06 (issue #136): the landing page had no
+    # entry point to the sign-in form. The shared layout renders a "Sign in"
+    # link when signed out, and the landing CTA row repeats it.
+    it 'shows a Sign in link that leads to the login form' do
+      get root_path
+
+      expect(response.body).to include('Sign in')
+      expect(response.body).to include('href="/login"')
+    end
+
     # PRD-0001, DEV-0003 — the trust block states that the customer keeps
     # their fitness function: we never run or evaluate it for them.
     it 'states that the customer keeps their fitness function' do
