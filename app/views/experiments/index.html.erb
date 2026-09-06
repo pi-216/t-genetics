@@ -30,5 +30,9 @@
   <% end %>
 <% else %>
   <%= render EmptyStateComponent.new(title: 'No experiments yet',
-                                     body: 'Create your first experiment on a chromosome to start the evolution loop.') %>
+                                     body: 'Create your first experiment on a chromosome to start the evolution loop.') do |empty| %>
+    <% empty.with_action do %>
+      <%= render ButtonComponent.new(label: 'Design your first chromosome', href: new_chromosome_path) %>
+    <% end %>
+  <% end %>
 <% end %>

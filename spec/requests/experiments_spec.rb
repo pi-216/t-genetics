@@ -34,6 +34,33 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
       expect(response.body).to include('Donation amounts')
       expect(response.body).not_to include('Beta secret')
     end
+
+    # Issue #139 — a fresh org lands here with no experiments and no way to
+    # reach the chromosome designer. The empty state must lead into it.
+    it 'leads a fresh org from the empty state into the chromosome designer' do
+      empty_org = FactoryBot.create(:organization, name: 'Blank Labs')
+      sign_in_as(organization: empty_org)
+
+      get experiments_url
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('No experiments yet')
+      expect(response.body).to include('Design your first chromosome')
+      expect(response.body).to include('href="/chromosomes/new"')
+    end
+
+    # Issue #139 — the signed-in header nav exposes both workspace surfaces
+    # (loop home + chromosome designer) and sign-out.
+    it 'signed-in header offers the workspace surfaces (Experiments, Chromosomes, Sign out)' do
+      sign_in_as(organization: org)
+
+      get experiments_url
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('href="/experiments"')
+      expect(response.body).to include('href="/chromosomes"')
+      expect(response.body).to include('Sign out')
+    end
   end
 
   describe 'GET /experiments/new' do

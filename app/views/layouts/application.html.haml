@@ -16,6 +16,7 @@
       %nav.flex.items-center.gap-4.text-sm
         - if user_signed_in?
           = link_to 'Experiments', experiments_path, class: 'font-data text-caption tracking-caption text-inkMuted hover:text-ink'
+          = link_to 'Chromosomes', chromosomes_path, class: 'font-data text-caption tracking-caption text-inkMuted hover:text-ink'
           = form_with url: logout_path, method: :post, class: 'inline' do
             = button_tag 'Sign out', type: 'submit', class: 'inline-flex items-center rounded-md border border-line px-3 py-1.5 font-data text-caption tracking-caption text-inkMuted hover:text-ink'
         - else
