@@ -48,6 +48,7 @@ module Chromosomes
         raise ArgumentError, "allele '#{attrs[:name]}' requires: #{missing.join(', ')}" if missing.any?
 
         validate_bounds!(attrs)
+        validate_choices!(attrs)
 
         @chromosome.alleles << build_typed_allele(attrs)
       end
@@ -68,16 +69,31 @@ module Chromosomes
       raise ArgumentError, "allele '#{attrs[:name]}': minimum (#{min}) must be less than or equal to maximum (#{max})"
     end
 
+    # PRD-0004 DEV-0003 (issue #79): an option allele requires a non-empty
+    # choice list — mirrors the single model rule on Alleles::Option (the
+    # machine-API guard rejects a wholly missing list; the blank-only shapes
+    # that slip past it — [''] — are stopped here and by the model rule).
+    # The message carries the "allele '<name>':" prefix so the designer
+    # renders it as an inline per-card .allele-error (DEV-0002 shape).
+    def validate_choices!(attrs)
+      return unless attrs[:type] == 'Option'
+      return if Array(attrs[:choices]).any?(&:present?)
+
+      raise ArgumentError, "allele '#{attrs[:name]}': choice list must not be empty"
+    end
+
     # Mirrors the JSON-API guard in Chromosomes::AllelesController#missing_fields_for
-    # (PRD-0004 red line: designer validation matches the server-side rules exactly).
+    # (PRD-0004 red line: designer validation matches the server-side rules
+    # exactly). Option choices are deliberately NOT in the missing-fields set:
+    # the choice-list rule for Option lives in validate_choices! above (same
+    # substance, inline-compatible message), mirroring the model rule on
+    # Alleles::Option that backs the machine-API path.
     def missing_fields_for(type, attrs)
       missing = []
       case type
       when 'Integer', 'Float'
         missing << :minimum if attrs[:minimum].blank?
         missing << :maximum if attrs[:maximum].blank?
-      when 'Option'
-        missing << :choices if attrs[:choices].blank?
       when 'Boolean'
         # no constraints
       end

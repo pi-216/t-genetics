@@ -72,6 +72,29 @@ RSpec.describe '/chromosomes/:chromosome_id/alleles' do
         expect(response.body).to match(/less than or equal/i)
       end
     end
+
+    # PRD-0004 DEV-0003 (issue #79): the option-allele choice-list rule is
+    # server-side truth — a blank-only choices array slips past the field-
+    # presence guard ([''] is not blank) and must be stopped by the model
+    # rule via the inheritable.valid? check, exactly like a reversed bound.
+    context 'with an option allele whose choices are blank-only' do
+      it 'does not create the Allele and returns 422' do
+        expect do
+          post chromosome_alleles_url(chromosome),
+               params: { allele: { name: 'flavor', type: 'Option', choices: [''] } }
+        end.not_to change(Allele, :count)
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to match(/must not be empty/i)
+      end
+
+      it 'still rejects a wholly missing choices array' do
+        expect do
+          post chromosome_alleles_url(chromosome),
+               params: { allele: { name: 'flavor', type: 'Option' } }
+        end.not_to change(Allele, :count)
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
   end
 
   describe 'PATCH /update' do
@@ -97,6 +120,33 @@ RSpec.describe '/chromosomes/:chromosome_id/alleles' do
         expect(response).to have_http_status(:unprocessable_content)
         expect(allele.reload.inheritable.minimum).to eq(1)
         expect(allele.reload.inheritable.maximum).to eq(50)
+      end
+    end
+
+    # PRD-0004 DEV-0003 (issue #79): the machine path must not be able to
+    # clear an option allele's choices (or reduce them to blanks) — the same
+    # choice-list rule applies on PATCH via update! RecordInvalid.
+    context 'with an option allele and invalid choices' do
+      let(:option_allele) do
+        (chromosome.alleles << Allele.new_with_option(name: 'flavor', choices: %w[chocolate vanilla])).last
+      end
+
+      it 'rejects clearing all choices' do
+        patch chromosome_allele_url(chromosome, option_allele), params: { allele: { choices: [] } }
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(option_allele.reload.inheritable.choices).to eq(%w[chocolate vanilla])
+      end
+
+      it 'rejects blank-only choices' do
+        patch chromosome_allele_url(chromosome, option_allele), params: { allele: { choices: ['', ' '] } }
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(option_allele.reload.inheritable.choices).to eq(%w[chocolate vanilla])
+      end
+
+      it 'accepts replacing choices with a non-empty list' do
+        patch chromosome_allele_url(chromosome, option_allele), params: { allele: { choices: %w[red blue] } }
+        expect(response).to have_http_status(:ok)
+        expect(option_allele.reload.inheritable.choices).to eq(%w[red blue])
       end
     end
   end

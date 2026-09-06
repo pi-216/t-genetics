@@ -125,5 +125,43 @@ RSpec.describe Chromosomes::Create do
         expect(result.errors[:alleles].join).to match(/less than or equal/i)
       end
     end
+
+    # PRD-0004 DEV-0003 (issue #79): an option allele requires a non-empty
+    # choice list — the designer surface of the rule must reject an empty or
+    # blank-only list with a per-allele message (formatted with the
+    # "allele '<name>':" prefix so the designer renders it as an inline
+    # per-card .allele-error, mirroring DEV-0002's bounds message shape).
+    context 'with an option allele whose choice list is empty' do
+      it 'fails and creates nothing (atomic)' do
+        expect do
+          described_class.call(organization:, name: 'Option genome',
+                               alleles: [{ name: 'flavor', type: 'Option', choices: [] }])
+        end.not_to change(Chromosome, :count)
+      end
+
+      it 'surfaces a choice-list error naming the allele' do
+        result = described_class.call(organization:, name: 'Option genome',
+                                      alleles: [{ name: 'flavor', type: 'Option', choices: [] }])
+
+        expect(result.success?).to be false
+        expect(result.errors[:alleles]).to be_present
+        expect(result.errors[:alleles].join).to match(/allele 'flavor': choice list must not be empty/i)
+      end
+
+      it 'rejects a list of only blank entries' do
+        expect do
+          described_class.call(organization:, name: 'Option genome',
+                               alleles: [{ name: 'flavor', type: 'Option', choices: ['', nil, '  '] }])
+        end.not_to change(Chromosome, :count)
+      end
+
+      it 'accepts a non-empty choice list' do
+        result = described_class.call(organization:, name: 'Option genome',
+                                      alleles: [{ name: 'flavor', type: 'Option', choices: %w[chocolate vanilla] }])
+
+        expect(result.success?).to be true
+        expect(result.chromosome.alleles.by_name('flavor').inheritable.choices).to match_array(%w[chocolate vanilla])
+      end
+    end
   end
 end
