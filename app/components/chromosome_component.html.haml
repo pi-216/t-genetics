@@ -1,12 +1,12 @@
-.border-b.border-coral-200.bg-olive.px-4.py-5.sm:px-6{ id: dom_id(@chromosome) }
+.border-b.border-line.bg-surface.px-4.py-5.sm:px-6{ id: dom_id(@chromosome) }
   .-ml-4.-mt-2.flex.flex-wrap.items-center.justify-between.sm:flex-no-wrap
     .ml-4.mt-2
-      %h3.text-base.font-semibold.text-gray-900
+      %h3.text-base.font-semibold.text-ink
         = link_to chromosome_path(@chromosome) do
           = @chromosome.name
   .hidden.shrink-0.sm:flex.sm:flex-col.sm:items-end
-    %p.text-sm.leading-6.text-teal-300= pluralize(@chromosome.alleles.count, 'allele')
-    %p.text-sm.leading-6.text-teal-300= pluralize(@chromosome.generations.count, 'generation')
+    %p.text-sm.leading-6.text-inkMuted.font-mono.tabular-nums= pluralize(@chromosome.alleles.count, 'allele')
+    %p.text-sm.leading-6.text-inkMuted.font-mono.tabular-nums= pluralize(@chromosome.generations.count, 'generation')
 
   - @chromosome.alleles.order(:name).each do |allele|
-    %p.text-sm.leading-6.text-teal-300= allele.to_s
+    %p.text-sm.leading-6.text-inkMuted.font-mono.tabular-nums= allele.to_s
