@@ -35,7 +35,7 @@ RSpec.describe 'Invitations', type: :request do
         post join_path, params: valid_params
 
         expect(response).to redirect_to(root_path)
-        expect(session[:user_id]).to eq(Identity::User.find_by!(email: 'bob@example.com').id)
+        expect(signed_in_user).to eq(Identity::User.find_by!(email: 'bob@example.com'))
       end
     end
 
@@ -47,7 +47,7 @@ RSpec.describe 'Invitations', type: :request do
 
         expect(response).to have_http_status(:unprocessable_content)
         expect(Identity::OrgMembership.count).to eq(0)
-        expect(session[:user_id]).to be_nil
+        expect(signed_in_user).to be_nil
       end
     end
 
@@ -59,7 +59,7 @@ RSpec.describe 'Invitations', type: :request do
 
         expect(response).to have_http_status(:unprocessable_content)
         expect(Identity::OrgMembership.count).to eq(0)
-        expect(session[:user_id]).to be_nil
+        expect(signed_in_user).to be_nil
       end
     end
 
@@ -73,7 +73,7 @@ RSpec.describe 'Invitations', type: :request do
 
         expect(response).to have_http_status(:unprocessable_content)
         expect(Identity::OrgMembership.count).to eq(0)
-        expect(session[:user_id]).to be_nil
+        expect(signed_in_user).to be_nil
       end
     end
   end

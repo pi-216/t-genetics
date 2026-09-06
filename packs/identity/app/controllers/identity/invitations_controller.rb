@@ -7,8 +7,6 @@ module Identity
   # AGENTS.md). Sign-in of the new member happens at the controller layer,
   # like registration.
   class InvitationsController < ApplicationController
-    include Identity::Authentication
-
     def new
       @user = User.new
     end

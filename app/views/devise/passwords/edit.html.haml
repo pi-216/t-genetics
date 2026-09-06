@@ -1,0 +1,16 @@
+- if resource.errors.any?
+  %div{ id: "error_explanation", class: "mb-4 rounded bg-red-900/50 p-3 text-red-200" }
+    - resource.errors.full_messages.each do |message|
+      %p= message
+
+%h1{ class: "text-2xl font-bold" } Change your password
+
+= form_with url: user_password_path, method: :patch, class: "mt-8 space-y-4" do |form|
+  = form.hidden_field :reset_password_token, name: "user[reset_password_token]", value: resource.reset_password_token
+  %div
+    = form.label :password, "New password", class: "block text-sm font-medium"
+    = form.password_field :password, name: "user[password]", required: true, autofocus: true, class: "mt-1 w-full rounded border border-teal-700 bg-teal-800/50 px-3 py-2 text-teal-100"
+  %div
+    = form.label :password_confirmation, "Confirm new password", class: "block text-sm font-medium"
+    = form.password_field :password_confirmation, name: "user[password_confirmation]", required: true, class: "mt-1 w-full rounded border border-teal-700 bg-teal-800/50 px-3 py-2 text-teal-100"
+  = form.submit "Change my password", class: "rounded bg-teal-600 px-4 py-2 font-semibold text-teal-950"

@@ -1,16 +1,38 @@
 Rails.application.routes.draw do
   # Identity context — org sign-up (PRD-0002. Sign-up creates an organization
-  # with the user as its owner and signs them in.
+  # with the user as its owner and signs them in. Auth mechanism: Devise
+  # (issue #118). `devise_for :users, skip: :all` registers ONLY the Warden
+  # mapping (scope :user ↔ Identity::User + controller helpers); the routes
+  # themselves are declared explicitly below so the public paths and their
+  # legacy named helpers (login_path / register_path / logout_path) never
+  # change.
 
-  get "register" => "identity/registrations#new"
-  post "register" => "identity/registrations#create"
+  devise_for :users,
+             class_name: 'Identity::User',
+             skip: :all
+
+  devise_scope :user do
+    get 'register', to: 'identity/registrations#new', as: :register
+    post 'register', to: 'identity/registrations#create'
+
+    get 'login', to: 'identity/sessions#new', as: :login
+    # Devise helpers reference new_session_path(resource_name): Devise's own
+    # controllers (e.g. PasswordsController after-send redirect) expect it.
+    get 'login', to: 'identity/sessions#new', as: :new_user_session
+    post 'login', to: 'identity/sessions#create'
+    post 'logout', to: 'identity/sessions#destroy', as: :logout
+
+    # :recoverable — password reset (Devise::PasswordsController; the mail
+    # stays dev-delivery only until mail infra + founder sign-off).
+    get 'password/new', to: 'devise/passwords#new', as: :new_user_password
+    post 'password', to: 'devise/passwords#create', as: :user_password
+    get 'password/edit', to: 'devise/passwords#edit', as: :edit_user_password
+    patch 'password', to: 'devise/passwords#update'
+    put 'password', to: 'devise/passwords#update'
+  end
 
   get "join" => "identity/invitations#new"
   post "join" => "identity/invitations#create"
-
-  get "login" => "identity/sessions#new"
-  post "login" => "identity/sessions#create"
-  post "logout" => "identity/sessions#destroy"
 
   get "organization/invite_code" => "identity/invite_codes#show", as: :organization_invite_code
   post "organization/invite_code" => "identity/invite_codes#create"

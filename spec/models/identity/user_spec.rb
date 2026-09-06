@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe Identity::User do
-  subject { FactoryBot.create(:user) }
+  subject(:user) { FactoryBot.create(:user) }
 
   describe 'associations' do
     it { is_expected.to have_one(:org_membership).dependent(:destroy) }
@@ -17,13 +17,19 @@ RSpec.describe Identity::User do
     it { is_expected.not_to allow_value('not-an-email').for(:email) }
   end
 
-  describe 'password' do
-    it 'hashes the password with bcrypt' do
+  describe 'Devise authentication (issue #118)' do
+    it 'hashes the password with bcrypt and authenticates via valid_password?' do
       user = FactoryBot.create(:user, password: 'S3cretPass!')
 
-      expect(user.authenticate('S3cretPass!')).to eq(user)
-      expect(user.authenticate('wrong-password')).to be_falsey
-      expect(user.password_digest).not_to include('S3cretPass!')
+      expect(user.valid_password?('S3cretPass!')).to be true
+      expect(user.valid_password?('wrong-password')).to be false
+      expect(user.encrypted_password).not_to include('S3cretPass!')
+    end
+
+    it 'exposes the recoverable and rememberable hooks' do
+      expect(user).to respond_to(:reset_password_token)
+      expect(user).to respond_to(:reset_password_sent_at)
+      expect(user).to respond_to(:remember_created_at)
     end
   end
 end

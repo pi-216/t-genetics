@@ -8,8 +8,6 @@ module Identity
   # pattern); the controller only guards and renders.
 
   class InviteCodesController < ApplicationController
-    include Identity::Authentication
-
     before_action :require_owner
 
     def show
