@@ -65,10 +65,12 @@ class ExperimentsController < ApplicationController
 
   # PRD-0003 DEV-0003 (issue #70) — a member requests a suggestion from the
   # experiment show page. Runs the engine's Experiments::RequestSuggestion
-  # command, which picks the least-tested organism of the current generation
-  # and records the suggestion's PerformanceLog. Success re-renders the show
-  # page with the suggested organism's typed values; a command failure (no
-  # current generation / empty generation) re-renders with its errors.
+  # command, which draws uniformly at random from the current generation's
+  # untested organisms (no reported fitness, per the founder ruling 2026-09-04
+  # — issue #130) and records the suggestion's PerformanceLog. Success
+  # re-renders the show page with the suggested organism's typed values; a
+  # command failure (no current generation / empty generation / no untested
+  # organisms) re-renders with its errors.
   # PRD-0003 DEV-0008 (issue #75): an empty current generation renders the
   # explicit empty state (a dedicated section, not the raw command error
   # string) — the page tells the member no suggestion is available.
