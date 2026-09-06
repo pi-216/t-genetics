@@ -29,34 +29,31 @@ module Experiments
         return
       end
 
-      # MVP: Select organism with the fewest PerformanceLog entries for this experiment.
-      # This is an N+1 query pattern within the loop if not careful,
-      # but for MVP, we map and then count.
-      # A more optimized query could be `organisms_in_generation.min_by { |org| org.performance_logs.where(experiment_id: context.experiment.id).count }`
-      # but that's still N+1.
-      # Let's do a slightly more direct N+1 for clarity in MVP:
-      organisms_with_log_counts = organisms_in_generation.map do |org|
-        # Count logs specific to this organism AND this experiment
-        log_count = PerformanceLog.where(experiment_id: context.experiment.id, organism_id: org.id).count
-        { organism: org, count: log_count }
+      # Founder ruling 2026-09-04 (issue #130, "Suggestion semantics" in
+      # docs/design-sprint/ph2/ux-concept.md): a suggestion is a UNIFORM RANDOM
+      # draw from the current generation's UNTESTED pool — organisms without a
+      # reported fitness for this experiment (a PerformanceLog with a
+      # fitness_input_value). A reported organism is never suggested again
+      # while the generation is current; a suggested-but-unreported organism
+      # stays in the pool (its pending log carries no fitness value — drawing
+      # it again just samples it more, which is fine for the payment-form use
+      # case). Exploit mode (proportional sampling of known-good organisms) is
+      # paid tier and deliberately absent. One grouped query, no N+1.
+      reported_organism_ids = PerformanceLog.where(
+        experiment_id: context.experiment.id,
+        organism_id: organisms_in_generation.select(:id)
+      ).where.not(fitness_input_value: nil).distinct.pluck(:organism_id)
+
+      untested_organisms = organisms_in_generation.reject do |org|
+        reported_organism_ids.include?(org.id)
       end
 
-      # This should not happen if organisms_in_generation is not empty, but as a safeguard:
-      if organisms_with_log_counts.empty?
-        fail_command!(errors: { generation: ["Could not process organisms for log counting"] })
+      if untested_organisms.empty?
+        fail_command!(errors: { generation: ['every organism in the current generation already has a reported fitness'] })
         return
       end
-      
-      # Find the minimum count
-      min_count = organisms_with_log_counts.map { |data| data[:count] }.min
-      
-      # Get all organisms with that minimum count
-      least_logged_organisms_data = organisms_with_log_counts.select { |data| data[:count] == min_count }
-      
-      # Select one randomly from the least logged (handles ties)
-      # .sample can return nil if the array is empty, but we've guarded against that.
-      selected_organism_data = least_logged_organisms_data.sample
-      selected_organism = selected_organism_data[:organism]
+
+      selected_organism = untested_organisms.sample
 
       @performance_log = PerformanceLog.new(
         experiment: context.experiment,

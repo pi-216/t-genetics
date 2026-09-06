@@ -46,6 +46,16 @@ RSpec.describe 'POST /api/v1/experiments/:id/suggestion (token auth)', type: :re
     end
   end
 
+  # Reports a fitness outcome through the public token endpoint for the given
+  # suggestion's performance log (mirrors what the machine client does).
+  def report_fitness_for(log, fitness = 0.81)
+    post "/api/v1/performance_logs/#{log.id}/outcome",
+         params: { performance_log: { fitness_input_value: fitness } }.to_json,
+         headers: auth_headers.merge('Content-Type' => 'application/json')
+    expect(response).to have_http_status(:ok)
+    expect(log.reload.fitness_input_value).to eq(fitness)
+  end
+
   describe 'with a valid token' do
     it 'returns an organism with its allele values and records a performance log' do
       expect do
@@ -68,10 +78,28 @@ RSpec.describe 'POST /api/v1/experiments/:id/suggestion (token auth)', type: :re
         organism = response.parsed_body
         first_id ||= organism['id']
       end
-      # The loop suggests the least-tested organism first; a fresh population
-      # of identical organisms means the second call may pick the same row,
-      # but each call must produce a valid organism with values.
+      # The loop draws uniformly at random from the current generation's
+      # untested pool; a fresh population of identical organisms means the
+      # second call may pick the same row, but each call must produce a valid
+      # organism with values.
       expect(first_id).to be_present
+    end
+
+    # Founder ruling 2026-09-04 (issue #130): a suggestion is a uniform random
+    # draw from the generation's UNTESTED pool — an organism with a reported
+    # fitness for this experiment is never suggested again while the
+    # generation is current (least-logged queue order is gone).
+    it 'never returns an organism that already has a reported fitness for this experiment' do
+      post "/api/v1/experiments/#{experiment.id}/suggestion", headers: auth_headers
+      expect(response).to have_http_status(:ok)
+      reported_organism_id = response.parsed_body['id']
+      report_fitness_for(PerformanceLog.order(:id).last)
+
+      10.times do
+        post "/api/v1/experiments/#{experiment.id}/suggestion", headers: auth_headers
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body['id']).not_to eq(reported_organism_id)
+      end
     end
 
     # PRD-0003 DEV-0005 (issue #72) — the machine-API sibling of the web loop
