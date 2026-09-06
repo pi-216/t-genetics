@@ -4,9 +4,11 @@ require 'swagger_helper'
 
 # OpenAPI contract for the token-authenticated suggestion request (PRD-0005
 # DEV-0008 / issue #43). A machine asks the token org's experiment for the
-# next organism to test; the engine's RequestSuggestion command picks the
-# least-tested organism of the current generation, records a PerformanceLog
-# for that suggestion, and the response carries the organism's allele values.
+# next organism to test; the engine's RequestSuggestion command draws
+# uniformly at random among the current generation's untested organisms (no
+# reported fitness — founder ruling 2026-09-04, issue #130), records a
+# PerformanceLog for that suggestion, and the response carries the organism's
+# allele values.
 # The experiment is resolved org-scoped through its chromosome, so an unknown
 # or cross-org id answers 404 (never data).
 RSpec.describe 'TGenetics token API', openapi_spec: 'v1/swagger.yaml', type: :request do
@@ -18,10 +20,13 @@ RSpec.describe 'TGenetics token API', openapi_spec: 'v1/swagger.yaml', type: :re
       produces 'application/json'
       description <<~MD
         Requests the next organism to test from the token organization's
-        experiment. The engine suggests the least-tested organism of the
-        current generation and records the suggestion as a PerformanceLog; the
-        customer then tests the organism on their own infrastructure and
-        reports the single fitness number via the outcome endpoint.
+        experiment. The engine draws uniformly at random among the current
+        generation's untested organisms (those without a reported fitness — a
+        PerformanceLog with a fitness_input_value) and records the suggestion
+        as a PerformanceLog; a reported organism is never suggested again
+        while the generation is current. The customer then tests the organism
+        on their own infrastructure and reports the single fitness number via
+        the outcome endpoint.
 
         Authenticate with an org-scoped API token
         (`Authorization: Bearer <token>`). A missing, invalid, or revoked

@@ -42,10 +42,13 @@ paths:
       - bearerAuth: []
       description: |
         Requests the next organism to test from the token organization's
-        experiment. The engine suggests the least-tested organism of the
-        current generation and records the suggestion as a PerformanceLog; the
-        customer then tests the organism on their own infrastructure and
-        reports the single fitness number via the outcome endpoint.
+        experiment. The engine draws uniformly at random among the current
+        generation's untested organisms (those without a reported fitness — a
+        PerformanceLog with a fitness_input_value) and records the suggestion
+        as a PerformanceLog; a reported organism is never suggested again
+        while the generation is current. The customer then tests the organism
+        on their own infrastructure and reports the single fitness number via
+        the outcome endpoint.
 
         Authenticate with an org-scoped API token
         (`Authorization: Bearer <token>`). A missing, invalid, or revoked
