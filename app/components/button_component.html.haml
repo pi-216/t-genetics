@@ -1,0 +1,7 @@
+- if link?
+  = link_to @label, @href, class: button_class, data: @data
+- elsif form?
+  = button_to @label, @form_action, method: @method, class: button_class, data: @data
+- else
+  %button.button{ class: button_class, type: @type, name: @name, value: @value, disabled: @disabled, data: @data }
+    = @label

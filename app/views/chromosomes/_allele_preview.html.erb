@@ -1,22 +1,28 @@
-<%# PRD-0004 DEV-0001 (issue #77) — live preview of an allele set. Shared by
-    the designer new page (built from the entered cards) and the chromosome
-    show page (built from the saved alleles, via Allele#to_hsh). Both shapes
-    carry :name / :type and type-specific keys (:minimum/:maximum/:choices). %>
-<section class="allele-preview">
-  <h2>Allele preview</h2>
-  <% alleles.each do |allele| %>
-    <div class="allele-preview-item" data-allele-type="<%= allele[:type] %>">
-      <span class="allele-name"><%= allele[:name] %></span>
-      <span class="allele-type"><%= allele[:type] %></span>
-      <% if allele[:type] == 'Float' || allele[:type] == 'Integer' %>
-        <span class="allele-bounds">
-          (<%= allele[:minimum] %>…<%= allele[:maximum] %>)
-        </span>
-      <% elsif allele[:type] == 'Option' %>
-        <span class="allele-choices">
-          [<%= Array(allele[:choices]).join(', ') %>]
-        </span>
-      <% end %>
-    </div>
+<%# Issue #133 — the allele preview partial. The kit Card provides the
+    "Allele preview" heading; this partial renders only the item list so the
+    show page and the designer share it. Item classes stay stable for the
+    BDD/request selectors (.allele-preview, .allele-preview-item,
+    .allele-name/.allele-type/.allele-bounds/.allele-choices). %>
+<div class="allele-preview space-y-2">
+  <% if alleles.any? %>
+    <% alleles.each do |allele| %>
+      <div class="allele-preview-item flex flex-wrap items-baseline gap-x-3 rounded-md border border-line bg-raised/40 px-3 py-2"
+           data-allele-type="<%= allele[:type] %>">
+        <span class="allele-name font-medium text-ink"><%= allele[:name] %></span>
+        <span class="allele-type font-data text-xs text-inkMuted"><%= allele[:type] %></span>
+        <% if %w[Float Integer].include?(allele[:type]) %>
+          <span class="allele-bounds font-data text-xs tabular-nums text-inkMuted">
+            (<%= allele[:minimum] %>…<%= allele[:maximum] %>)
+          </span>
+        <% elsif allele[:type] == 'Option' %>
+          <span class="allele-choices font-data text-xs tabular-nums text-inkMuted">
+            [<%= Array(allele[:choices]).join(', ') %>]
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  <% else %>
+    <%= render EmptyStateComponent.new(title: 'No alleles yet',
+                                       body: 'Add allele cards to define the value space.') %>
   <% end %>
-</section>
+</div>

@@ -1,18 +1,17 @@
 - if @user.errors.any?
-  %div{ id: "error_explanation", class: "mb-4 rounded bg-danger/10 p-3 text-danger" }
+  %div{ id: "error_explanation", class: "mb-4 rounded-md border border-danger/30 bg-danger/10 p-3 text-danger" }
     - @user.errors.full_messages.each do |message|
       %p= message
 
-%h1{ class: "text-2xl font-bold" } Create your account
+= render PageHeaderComponent.new(title: 'Create your account',
+                                 kicker: 'Identity',
+                                 subtitle: 'Start your own organization and its evolution workspace.')
 
-= form_with model: @user, url: register_path, class: "mt-8 space-y-4" do |form|
-  %div
-    = form.label :email, class: "block text-sm font-medium"
-    = form.email_field :email, required: true, class: "mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink placeholder:text-inkMuted"
-  %div
-    = form.label :password, class: "block text-sm font-medium"
-    = form.password_field :password, required: true, class: "mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink placeholder:text-inkMuted"
-  %div
-    = form.label :organization_name, "Organization", class: "block text-sm font-medium"
-    = form.text_field :organization_name, required: true, class: "mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink placeholder:text-inkMuted"
-  = form.submit "Create account", class: "inline-flex items-center rounded-md bg-signal px-5.5 py-3 font-data text-caption font-medium tracking-caption text-onSignal"
+= form_with model: @user, url: register_path, class: "mt-6 max-w-md space-y-4" do |form|
+  = render FormFieldComponent.new(input_id: 'identity_user_email', label: 'Email', required: true) do
+    = form.email_field :email, required: true, class: FormFieldComponent::INPUT_CLASSES
+  = render FormFieldComponent.new(input_id: 'identity_user_password', label: 'Password', required: true) do
+    = form.password_field :password, required: true, class: FormFieldComponent::INPUT_CLASSES
+  = render FormFieldComponent.new(input_id: 'identity_user_organization_name', label: 'Organization', required: true) do
+    = form.text_field :organization_name, required: true, class: FormFieldComponent::INPUT_CLASSES
+  = render ButtonComponent.new(label: 'Create account', type: :submit, variant: :primary)

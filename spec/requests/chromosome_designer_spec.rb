@@ -91,7 +91,7 @@ RSpec.describe '/chromosomes — designer create (DEV-0001)' do
         # The per-card .allele-error renders the STRIPPED message (no
         # "allele 'weight':" prefix — the prefix stays in the top-level
         # .command-errors summary only).
-        expect(response.body).to match(%r{<div class="allele-error">\s*minimum \(10\) must be less than or equal to maximum \(1\)\s*</div>})
+        expect(response.body).to match(%r{<div class="allele-error[^"]*">\s*minimum \(10\) must be less than or equal to maximum \(1\)\s*</div>})
       end
     end
 
@@ -112,7 +112,7 @@ RSpec.describe '/chromosomes — designer create (DEV-0001)' do
         expect(response.body).to match(/choice list must not be empty/i)
         # The per-card .allele-error renders the STRIPPED message (no
         # "allele 'flavor':" prefix).
-        expect(response.body).to match(%r{<div class="allele-error">\s*choice list must not be empty\s*</div>})
+        expect(response.body).to match(%r{<div class="allele-error[^"]*">\s*choice list must not be empty\s*</div>})
       end
     end
   end

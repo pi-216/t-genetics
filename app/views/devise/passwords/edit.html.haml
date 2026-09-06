@@ -1,16 +1,17 @@
 - if resource.errors.any?
-  %div{ id: "error_explanation", class: "mb-4 rounded bg-danger/10 p-3 text-danger" }
+  %div{ id: "error_explanation", class: "mb-4 rounded-md border border-danger/30 bg-danger/10 p-3 text-danger" }
     - resource.errors.full_messages.each do |message|
       %p= message
 
-%h1{ class: "text-2xl font-bold" } Change your password
+= render PageHeaderComponent.new(title: 'Change your password',
+                                 subtitle: 'Set a new password for your account.',
+                                 back_path: login_path,
+                                 back_label: 'Back to sign in')
 
-= form_with url: user_password_path, method: :patch, class: "mt-8 space-y-4" do |form|
+= form_with url: user_password_path, method: :patch, class: "mt-6 max-w-md space-y-4" do |form|
   = form.hidden_field :reset_password_token, name: "user[reset_password_token]", value: resource.reset_password_token
-  %div
-    = form.label :password, "New password", class: "block text-sm font-medium"
-    = form.password_field :password, name: "user[password]", required: true, autofocus: true, class: "mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink placeholder:text-inkMuted"
-  %div
-    = form.label :password_confirmation, "Confirm new password", class: "block text-sm font-medium"
-    = form.password_field :password_confirmation, name: "user[password_confirmation]", required: true, class: "mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink placeholder:text-inkMuted"
-  = form.submit "Change my password", class: "inline-flex items-center rounded-md bg-signal px-5.5 py-3 font-data text-caption font-medium tracking-caption text-onSignal"
+  = render FormFieldComponent.new(input_id: 'user_password', label: 'New password', required: true) do
+    = form.password_field :password, name: "user[password]", required: true, autofocus: true, class: FormFieldComponent::INPUT_CLASSES
+  = render FormFieldComponent.new(input_id: 'user_password_confirmation', label: 'Confirm new password', required: true) do
+    = form.password_field :password_confirmation, name: "user[password_confirmation]", required: true, class: FormFieldComponent::INPUT_CLASSES
+  = render ButtonComponent.new(label: 'Change my password', type: :submit, variant: :primary)

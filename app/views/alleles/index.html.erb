@@ -1,6 +1,23 @@
-<% @alleles.each do |allele| %>
-  <div>
-    <p><%= allele.name %></p>
-    <p><%= allele.chromosome_id %></p>
-  </div>
+<%# Issue #133 — alleles index (legacy surface; alleles are managed under
+    chromosomes today). Kept on the kit table treatment in case legacy HTML
+    callers render it. %>
+<%= render PageHeaderComponent.new(title: 'Alleles',
+                                   kicker: 'Workspace',
+                                   back_path: chromosomes_path,
+                                   back_label: 'Chromosomes') %>
+
+<% if @alleles.any? %>
+  <%= render TableComponent.new(columns: %w[Allele Chromosome]) do |table| %>
+    <% table.with_body do %>
+      <% @alleles.each do |allele| %>
+        <tr class="hover:bg-raised/40">
+          <td class="<%= table.cell_class %> font-medium"><%= allele.name %></td>
+          <td class="<%= table.numeric_cell_class %>"><%= allele.chromosome_id %></td>
+        </tr>
+      <% end %>
+    <% end %>
+  <% end %>
+<% else %>
+  <%= render EmptyStateComponent.new(title: 'No alleles yet',
+                                     body: 'Alleles are designed under a chromosome — open the designer to add allele cards.') %>
 <% end %>

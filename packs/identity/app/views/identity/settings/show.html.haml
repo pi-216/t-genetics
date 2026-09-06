@@ -1,31 +1,31 @@
-%h1{ class: "text-2xl font-bold" } Organization settings
-%p{ class: "mt-2 text-ink" }= current_user.organization.name
+= render PageHeaderComponent.new(title: 'Organization settings',
+                                 kicker: 'Workspace',
+                                 subtitle: current_user.organization.name)
 
 - if current_user.org_membership.role == Identity::OrgMembership::OWNER_ROLE
-  %section{ class: "mt-8 rounded border border-line bg-surface p-4" }
-    %h2{ class: "text-lg font-semibold" } Member management
-    %p{ class: "mt-1 text-sm text-inkMuted" } Manage who belongs to this organization.
+  .space-y-4
+    = render CardComponent.new(title: 'Member management') do
+      %p.text-sm.text-inkMuted Manage who belongs to this organization.
 
-  %section{ class: "mt-4 rounded border border-line bg-surface p-4" }
-    %h2{ class: "text-lg font-semibold" } Token management
-    %p{ class: "mt-1 text-sm text-inkMuted" } Manage this organization's access tokens.
+    = render CardComponent.new(title: 'Token management') do
+      %p.text-sm.text-inkMuted Manage this organization’s access tokens.
 
-    - if flash[:api_token].present?
-      %div{ id: "token_plaintext", class: "mt-4 rounded border border-signal bg-signal/10 p-4" }
-        %p{ class: "text-sm font-semibold text-signal" } Copy this token now — it is shown only once.
-        %p{ id: "token_plaintext_value", class: "mt-2 break-all font-mono text-ink" }= flash[:api_token]
+      - if flash[:api_token].present?
+        %div{ id: "token_plaintext", class: "mt-4 rounded-md border border-signal bg-signal/10 p-4" }
+          %p.text-sm.font-semibold.text-signal Copy this token now — it is shown only once.
+          %p{ id: "token_plaintext_value", class: "mt-2 break-all font-data tabular-nums text-ink" }= flash[:api_token]
 
-    - if flash[:alert].present?
-      %p{ class: "mt-4 text-sm text-danger" }= flash[:alert]
+      - if flash[:alert].present?
+        %p.mt-4.text-sm.text-danger= flash[:alert]
 
-    = form_with url: api_tokens_path, scope: :api_token, class: "mt-4" do |form|
-      .flex.gap-2.items-end
-        %div
-          = form.label :name, "Token name", class: "block text-sm text-inkMuted"
-          = form.text_field :name, required: true, class: "mt-1 rounded border border-line bg-surface px-3 py-1 text-ink placeholder:text-inkMuted"
-        = form.submit "Create token", class: "inline-flex items-center rounded-md bg-signal px-5.5 py-3 font-data text-caption font-medium tracking-caption text-onSignal"
+      = form_with url: api_tokens_path, scope: :api_token, class: "mt-4" do |form|
+        .flex.flex-wrap.gap-3.items-end
+          .flex-1
+            = render FormFieldComponent.new(input_id: 'api_token_name', label: 'Token name', required: true) do
+              = form.text_field :name, required: true, class: FormFieldComponent::INPUT_CLASSES
+          = render ButtonComponent.new(label: 'Create token', type: :submit, variant: :primary)
 
-    - if current_user.organization.api_tokens.active.any?
-      %ul{ class: "mt-4 space-y-1 text-sm text-inkMuted" }
-        - current_user.organization.api_tokens.active.each do |api_token|
-          %li= "#{api_token.name} (created #{api_token.created_at.to_fs(:short)})"
+      - if current_user.organization.api_tokens.active.any?
+        %ul.mt-4.space-y-1.text-sm.text-inkMuted
+          - current_user.organization.api_tokens.active.each do |api_token|
+            %li= "#{api_token.name} (created #{api_token.created_at.to_fs(:short)})"
