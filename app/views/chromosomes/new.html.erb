@@ -4,6 +4,11 @@
     preserving entered cards — server-rendered, no JS dependency. The final
     submit runs Chromosomes::Create (PRD-0004 red line: designer mutations
     go through commands, never direct model writes). %>
+<%# Issue #141 — the allele cards render their fields through the kit
+    (FormFieldComponent + INPUT_CLASSES) instead of hand-rolled label/input
+    markup, so the designer inherits the label→input rhythm and touch-reach
+    padding of every other internal form surface at 480px. Field ids, names,
+    and label text are unchanged (the request/BDD wire contract). %>
 <%= render PageHeaderComponent.new(title: 'Design chromosome',
                                    kicker: 'Chromosome',
                                    back_path: chromosomes_path,
@@ -30,40 +35,40 @@
     <% @allele_cards.each_with_index do |card, index| %>
       <%= render CardComponent.new(title: "Allele #{index + 1}") do %>
         <div class="allele-card space-y-3">
-          <div>
-            <label class="block text-sm font-medium text-ink" for="allele-<%= index %>-type">Type</label>
+          <%= render FormFieldComponent.new(input_id: "allele-#{index}-type", label: 'Type') do %>
             <select id="allele-<%= index %>-type" name="chromosome[alleles][][type]"
-                    class="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink">
+                    class="<%= FormFieldComponent::INPUT_CLASSES %>">
               <% %w[Float Integer Boolean Option].each do |type| %>
                 <option value="<%= type %>" <%= 'selected' if card[:type] == type %>><%= type %></option>
               <% end %>
             </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-ink" for="allele-<%= index %>-name">Allele name</label>
+          <% end %>
+
+          <%= render FormFieldComponent.new(input_id: "allele-#{index}-name", label: 'Allele name') do %>
             <input id="allele-<%= index %>-name" name="chromosome[alleles][][name]"
                    type="text" value="<%= card[:name] %>" autocomplete="off"
-                   class="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink placeholder:text-inkMuted">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-ink" for="allele-<%= index %>-minimum">Minimum</label>
+                   class="<%= FormFieldComponent::INPUT_CLASSES %>">
+          <% end %>
+
+          <%= render FormFieldComponent.new(input_id: "allele-#{index}-minimum", label: 'Minimum') do %>
             <input id="allele-<%= index %>-minimum" name="chromosome[alleles][][minimum]"
                    type="number" step="any" value="<%= card[:minimum] %>" autocomplete="off"
-                   class="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink placeholder:text-inkMuted">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-ink" for="allele-<%= index %>-maximum">Maximum</label>
+                   class="<%= FormFieldComponent::INPUT_CLASSES %>">
+          <% end %>
+
+          <%= render FormFieldComponent.new(input_id: "allele-#{index}-maximum", label: 'Maximum') do %>
             <input id="allele-<%= index %>-maximum" name="chromosome[alleles][][maximum]"
                    type="number" step="any" value="<%= card[:maximum] %>" autocomplete="off"
-                   class="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink placeholder:text-inkMuted">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-ink" for="allele-<%= index %>-choices">Choices</label>
+                   class="<%= FormFieldComponent::INPUT_CLASSES %>">
+          <% end %>
+
+          <%= render FormFieldComponent.new(input_id: "allele-#{index}-choices", label: 'Choices') do %>
             <input id="allele-<%= index %>-choices" name="chromosome[alleles][][choices]"
                    type="text" value="<%= Array(card[:choices]).join(', ') %>"
                    placeholder="comma-separated" autocomplete="off"
-                   class="mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink placeholder:text-inkMuted">
-          </div>
+                   class="<%= FormFieldComponent::INPUT_CLASSES %>">
+          <% end %>
+
           <%# PRD-0004 DEV-0002 (issue #78): inline per-card validation. The
               command fails with per-allele messages ("allele '<name>': …");
               surface the ones that name this card right under its fields.
