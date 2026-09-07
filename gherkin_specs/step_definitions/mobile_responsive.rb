@@ -18,6 +18,15 @@ When(/^I view the page at a (\d+) pixel viewport$/) do |width|
   page.driver.browser.manage.window.resize_to(width.to_i, 800)
 end
 
+# Issue #141 — the new-experiment form is the reported mobile cramping case
+# (a chromosome exists in the feature Background, so the real form renders,
+# not the empty state). One action step so the scenario stays single-action
+# for gherkin_lint AvoidScripting; resize needs the same JS driver as above.
+When(/^I view the new experiment form at a (\d+) pixel viewport$/) do |width|
+  visit new_experiment_path
+  page.driver.browser.manage.window.resize_to(width.to_i, 800)
+end
+
 Then(/^the page declares a responsive viewport$/) do
   # Prefix match: "width=device-width,…" must be the LEADING declaration, so a
   # malformed value like "width=device-widthX" does not pass.

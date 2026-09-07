@@ -5,7 +5,7 @@
 # danger signal color. Inputs wear INPUT_CLASSES — the shared hairline-input
 # treatment (the exact class string the auth-surface request specs pin).
 class FormFieldComponent < ViewComponent::Base
-  INPUT_CLASSES = 'mt-1 w-full rounded border border-line bg-surface px-3 py-2 text-ink placeholder:text-inkMuted'
+  INPUT_CLASSES = 'mt-1 w-full min-h-reach rounded border border-line bg-surface px-3 py-2.5 text-ink placeholder:text-inkMuted'
 
   def initialize(label: nil, input_id: nil, hint: nil, errors: [], required: false)
     @label = label

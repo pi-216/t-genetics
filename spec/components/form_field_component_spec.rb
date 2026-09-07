@@ -7,9 +7,21 @@ require 'rails_helper'
 # danger signal color. Inputs themselves wear the shared hairline-input
 # treatment (INPUT_CLASSES) — the same class string the auth-surface request
 # specs pin.
+#
+# Issue #141 — mobile spacing pass: the label/input/hint stack gets the kit
+# vertical rhythm (space-y-2) and inputs the touch-reach padding (py-2.5 →
+# ≥44px effective hit area, see --spacing-reach in theme.css).
 RSpec.describe FormFieldComponent, type: :component do
   it 'pins the shared input treatment' do
-    expect(described_class::INPUT_CLASSES).to include('border border-line bg-surface px-3 py-2 text-ink')
+    expect(described_class::INPUT_CLASSES).to include('border border-line bg-surface px-3 py-2.5 text-ink')
+  end
+
+  it 'separates label, content slot, and hint with the kit vertical rhythm' do
+    rendered = render_inline(described_class.new(label: 'Fitness', hint: 'One number per organism')) do
+      '<input id="fitness" type="number">'.html_safe
+    end
+
+    expect(rendered.css('section.field').first['class']).to include('space-y-2')
   end
 
   it 'renders the label above the content slot' do

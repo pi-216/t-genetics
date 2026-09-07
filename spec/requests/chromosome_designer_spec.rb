@@ -26,6 +26,16 @@ RSpec.describe '/chromosomes — designer create (DEV-0001)' do
       expect(response.body).to include('allele-card')
       expect(response.body).to include('allele-preview')
     end
+
+    # Issue #141 — the allele cards render their fields through the kit
+    # (FormFieldComponent + INPUT_CLASSES), not hand-rolled duplicates: the
+    # same touch-reach treatment applies to the designer at 480px and the
+    # literal class strings can't drift out of sync for lack of a second pin.
+    it 'renders allele-card fields through the kit input treatment' do
+      get new_chromosome_url
+      expect(response).to be_successful
+      expect(response.body.scan(FormFieldComponent::INPUT_CLASSES).length).to be >= 6
+    end
   end
 
   describe 'POST /chromosomes (designer create)' do

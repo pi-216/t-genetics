@@ -21,7 +21,7 @@
             = button_tag 'Sign out', type: 'submit', class: 'inline-flex items-center rounded-md border border-line px-3 py-1.5 font-data text-caption tracking-caption text-inkMuted hover:text-ink'
         - else
           = link_to 'Sign in', login_path, class: 'font-data text-caption tracking-caption text-inkMuted hover:text-ink'
-    %main.container.mx-auto.mt-28.px-5
+    %main.container.mx-auto.mt-10.md:mt-28.px-5
       = yield
     %footer.mt-16.border-t.border-line.py-6.px-5
       %nav.flex.space-x-6.text-sm.text-inkMuted

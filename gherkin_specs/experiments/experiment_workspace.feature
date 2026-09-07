@@ -71,3 +71,13 @@ Feature: Experiment Workspace
     Given the experiment has no organisms to suggest
     When I request a suggestion
     Then I see an explicit message that no suggestion is available
+
+  # Issue #141 — mobile responsiveness of the internal form surfaces. The
+  # new-experiment form (labels/asterisks/hints + the population block) was
+  # the reported 480px cramping case; this live-layout guard reuses the
+  # DEV-0005 viewport steps (real engine only, @javascript).
+  @DEV-0141
+  @javascript
+  Scenario: The new experiment form fits a 480px viewport without horizontal scrolling
+    When I view the new experiment form at a 480 pixel viewport
+    Then there is no horizontal scrolling
