@@ -90,3 +90,76 @@ Then(/^I see a terms link$/) do
     expect(page).to have_link('Terms', href: '#')
   end
 end
+
+# Issue #132 (founder direction 2026-09-06) — the landing page sweep:
+#  - DEV-0142: a plain-language GA primer — the evolutionary loop
+#    (variation → test → selection → repeat) searching a design space against
+#    a fitness function the customer owns.
+#  - DEV-0143: concrete use-case cards (≥3), including the payment-form tip
+#    suggestion case.
+#  - DEV-0144: a "create a genome" walkthrough with REAL screenshots of the
+#    live chromosome designer and experiment workspace, served as local
+#    assets (same-host src) — the walkthrough and its images are the section.
+#
+# Section ids are the stable selectors (the sabotage discipline: remove the
+# section or swap an image to an external host and the scenario dies).
+
+When(/^I read the GA primer section$/) do
+  expect(page).to have_css('#what-is-a-ga')
+end
+
+Then(/^I see a plain-language explanation of a genetic algorithm$/) do
+  expect(page).to have_content('genetic algorithm')
+  expect(page).to have_content('evolutionary loop')
+end
+
+Then(/^I see that the loop searches a design space the customer owns$/) do
+  expect(page).to have_content('design space')
+  expect(page).to have_content('fitness function')
+end
+
+When(/^I read the use case cards$/) do
+  expect(page).to have_css('#use-cases')
+end
+
+Then(/^I see at least three use cases$/) do
+  use_case_cards = page.all('.use-case-card')
+  expect(use_case_cards.length).to be >= 3
+end
+
+Then(/^I see the payment form tip suggestion use case$/) do
+  expect(page).to have_content(/payment form/i)
+  expect(page).to have_content(/tip/i)
+end
+
+When(/^I read the genome walkthrough section$/) do
+  expect(page).to have_css('#create-a-genome')
+end
+
+Then(/^I see an explanation of typed alleles$/) do
+  expect(page).to have_content('typed alleles')
+  expect(page).to have_content('Float')
+  expect(page).to have_content('Integer')
+  expect(page).to have_content('Boolean')
+  expect(page).to have_content('Option')
+end
+
+Then(/^I see a real screenshot of the chromosome designer served from the app$/) do
+  # Mobile-width capture is the img fallback; the desktop-width capture is the
+  # picture source for ≥640px viewports. Both must be real, same-host assets.
+  designer_img = page.all('img[src*="/assets/"]').find { |img| img[:alt].to_s.match?(/chromosome designer/i) }
+  expect(designer_img).to be_present
+  expect(designer_img[:src]).to start_with('/assets/')
+  designer_src = page.all('picture source[srcset*="designer-desktop"]').first
+  expect(designer_src).to be_present
+  expect(designer_src[:srcset]).to start_with('/assets/')
+end
+
+Then(/^I see a real screenshot of the experiment workspace served from the app$/) do
+  experiment_img = page.all('img[src*="/assets/"]').find { |img| img[:alt].to_s.match?(/experiment/i) }
+  expect(experiment_img).to be_present
+  expect(experiment_img[:src]).to start_with('/assets/')
+  experiment_src = page.all('picture source[srcset*="experiment-desktop"]').first
+  expect(experiment_src).to be_present
+  expect(experiment_src[:srcset]).to start_with('/assets/')
+end

@@ -63,4 +63,29 @@ Feature: Landing Page
   @DEV-0007
   Scenario: The page makes no external network calls
     When I inspect the page resources
-    Then I see no external scripts or stylesheets
+    Then I see no external scripts, stylesheets, or images
+
+  # Issue #132 (founder direction 2026-09-06): the landing page sweep. New
+  # sections explain what a GA is, show concrete use cases, and walk through
+  # creating a genome with REAL screenshots of the live designer and
+  # experiment workspace (captured from the running app at desktop + mobile
+  # widths, served as local assets — never mockups, never external hosts).
+
+  @DEV-0142
+  Scenario: The page explains what a genetic algorithm is in plain language
+    When I read the GA primer section
+    Then I see a plain-language explanation of a genetic algorithm
+    And I see that the loop searches a design space the customer owns
+
+  @DEV-0143
+  Scenario: The page shows concrete use cases
+    When I read the use case cards
+    Then I see at least three use cases
+    And I see the payment form tip suggestion use case
+
+  @DEV-0144
+  Scenario: The page walks through creating a genome with real screenshots
+    When I read the genome walkthrough section
+    Then I see an explanation of typed alleles
+    And I see a real screenshot of the chromosome designer served from the app
+    And I see a real screenshot of the experiment workspace served from the app

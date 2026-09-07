@@ -29,6 +29,59 @@
   %p.landing-tier-desc Suggestions, one fitness number per suggestion, and offspring breeding. Free while we learn who really needs this.
   %p.landing-paid-note A paid tier is planned for later. Nothing about it is built or promised yet.
 
+%section#what-is-a-ga
+  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal What is a genetic algorithm?
+  %h2 An evolution loop that searches your design space
+  %p
+    A genetic algorithm is an evolutionary loop: we vary candidate solutions, you test them,
+    the best ones get selected, and we breed the next round. Variation → test → selection →
+    repeat. Each cycle searches a design space for candidates that score well against a
+    fitness function — the one number per candidate that measures what you actually care about.
+  %p
+    The fitness function stays yours. We never run or evaluate it — you test every suggestion
+    on your own infrastructure and report one number back.
+
+%section#use-cases
+  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal Use cases
+  %h2 Where one number per candidate is enough
+  .use-case-cards.grid.grid-cols-1.gap-4.lg:grid-cols-3
+    .use-case-card
+      %h3 Payment form tips
+      %p
+        A tip amount is a genome: three amounts you tune. We suggest a configuration, your
+        checkout measures the one number that matters, and we breed the next generation of tip
+        suggestions.
+    .use-case-card
+      %h3 Design parameter search
+      %p
+        Any product with a recipe — layout, thresholds, component sizing — where each candidate
+        can be scored. We propose, you measure on your box, we evolve toward better candidates.
+    .use-case-card
+      %h3 Hyperparameter selection
+      %p
+        Pick a set of numeric knobs for a model or process, score each combination once, and let
+        the loop find the region worth exploring next — one reported number per trial.
+
+%section#create-a-genome
+  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal Create a genome
+  %h2 From blank chromosome to first suggestion
+  %p
+    A genome is a set of typed alleles that define the value space you want to search. The designer
+    lets you build one with four allele types: Float, Integer, Boolean, and Option. Set a
+    population size and evolution thresholds, turn it into an experiment, and request your first
+    suggestion.
+  .landing-shots.grid.grid-cols-1.gap-4.sm:grid-cols-2
+    %figure.landing-figure
+      %picture.landing-picture
+        %source{media: '(min-width: 640px)', srcset: image_path('designer-desktop.png')}
+        = image_tag 'designer-mobile.png', alt: 'Chromosome designer — typed alleles for Float, Integer, Boolean and Option', class: 'landing-shot w-full rounded-md border border-line'
+      %figcaption Build a chromosome from typed alleles.
+    %figure.landing-figure
+      %picture.landing-picture
+        %source{media: '(min-width: 640px)', srcset: image_path('experiment-desktop.png')}
+        = image_tag 'experiment-mobile.png', alt: 'Experiment workspace — configuration, population and fitness trend', class: 'landing-shot w-full rounded-md border border-line'
+      %figcaption Turn it into an experiment and request a suggestion.
+
 %section.landing-cta
   = link_to 'Start free', register_path, class: 'landing-cta-link inline-block bg-signal text-onSignal font-data text-caption font-medium tracking-caption rounded-md py-3 px-5.5'
   = link_to 'Sign in', login_path, class: 'landing-cta-link inline-block border border-line text-ink hover:text-signal font-data text-caption font-medium tracking-caption rounded-md py-3 px-5.5'

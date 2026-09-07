@@ -2,6 +2,10 @@
 //= link tailwind.css
 //= link application.css
 //= link application.tailwind.css
+//= link designer-desktop.png
+//= link designer-mobile.png
+//= link experiment-desktop.png
+//= link experiment-mobile.png
 //= link_tree ../../javascript .js
 //= link_tree ../../javascript .js
 //= link_tree ../../../vendor/javascript .js
