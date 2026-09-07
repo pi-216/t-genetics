@@ -75,5 +75,41 @@ RSpec.describe 'Landing page', type: :request do
       expect(response.body).to include('>Privacy<')
       expect(response.body).to include('>Terms<')
     end
+
+    # Issue #132 (founder direction 2026-09-06) — the landing sweep: a
+    # plain-language GA primer, concrete use-case cards (≥3, incl. the
+    # payment-form tip case), and a genome walkthrough with REAL local
+    # screenshots of the designer and experiment workspace. Every screenshot
+    # is served as a same-host asset (/assets/...) so the DEV-0007
+    # no-external-calls guard keeps holding.
+    it 'explains what a genetic algorithm is in plain language' do
+      get root_path
+
+      expect(response.body).to include('genetic algorithm')
+      expect(response.body).to include('evolutionary loop')
+      expect(response.body).to include('design space')
+    end
+
+    it 'shows at least three concrete use cases including the payment tip case' do
+      get root_path
+
+      expect(response.body.scan('class="use-case-card').length).to be >= 3
+      expect(response.body).to match(/payment form/i)
+      expect(response.body).to match(/tip/i)
+    end
+
+    it 'walks through creating a genome with real same-host screenshots' do
+      get root_path
+
+      # Mobile imgs are the browser fallback; desktop captures ride the
+      # <picture><source srcset> (issue #132: desktop + mobile widths).
+      ['chromosome designer', 'experiment'].each do |alt_text|
+        img = response.body[/<img[^>]*alt="[^"]*#{alt_text}[^"]*"[^>]*>/i]
+        expect(img).to match(%r{src="/assets/})
+      end
+      %w[designer-desktop experiment-desktop designer-mobile experiment-mobile].each do |base|
+        expect(response.body).to include(base)
+      end
+    end
   end
 end
