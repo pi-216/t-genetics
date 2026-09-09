@@ -1,4 +1,8 @@
-# TGenetics: Evolutionary Computation Platform
+# TGenetics: the evolution loop, as a service
+
+**Genetic algorithms as a service.** You define a chromosome, we run the loop: we suggest an organism to test → you test it on your own infrastructure and report ONE fitness number → we breed the next generation worth exploring → repeat.
+
+**We never run or evaluate your fitness function.** The customer owns their evaluation infrastructure and compute; we operate the evolution (population, generations, breeding, history). The only fitness-bearing input is the customer-reported number. See THESIS.md for the full contract.
 
 This application provides a framework for exploring and utilizing genetic algorithms and evolutionary computation.
 
@@ -31,7 +35,7 @@ The system is designed to:
 
 *   **Manage Populations:** The application supports the creation and management of `Generation`s, which are collections of `Organism`s. Each organism possesses a set of `Value`s corresponding to the alleles in its chromosome.
 *   **Simulate Evolution:** Key evolutionary operations are implemented as commands, allowing for:
-    *   **Fitness Evaluation:** Calculating the `Fitness` of organisms within a generation.
+    *   **Fitness aggregation:** Computing aggregate fitness statistics (total, average) from reported fitness values within a generation — never running the customer's fitness function itself.
     *   **Selection:** Picking organisms for reproduction based on fitness or other criteria (`Generations::Pick`).
     *   **Reproduction:**
         *   `Cloning`: Creating identical copies of organisms.

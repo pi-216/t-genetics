@@ -67,14 +67,10 @@ alleles), experiments (create, show, index), suggestion (POST
 - Agent walkthrough: create token → curl a full loop (create chromosome →
   experiment → suggestion → outcome) with the token.
 
-## Open questions (product owner)
-- **A1 Token UI:** owner page under org settings (recommend) vs. only-rake.
-- **A2 Naming/paths:** `/api/v1` prefix + resource names — confirm the
-  OpenAPI artifact's current paths (they may already define a compatible
-  shape — align rather than invent).
-- **A3 Suggestion/outcome payload shape:** confirm the exact request/response
-  (existing rswag specs define the intent — this PRD reconciles them with org
-  scoping + tokens).
+## Decisions (resolved — closed by shipped implementation, 2026-09-08)
+- **A1 Token UI:** owner page under org settings — shipped (`/tokens` owner surface; members cannot create tokens, PR #47).
+- **A2 Naming/paths:** `/api/v1` prefix + resource names aligned to the existing OpenAPI artifact — shipped (rswag spec + swagger.yaml regenerated, PRs #59–#66, #138).
+- **A3 Suggestion/outcome payload shape:** reconciled with org scoping + tokens per rswag specs — shipped (token API full loop incl. `current_suggestion` read, PRs #65/#66/#138).
 
 ## Related
 - PRD-0002 (orgs/tokens ownership).
