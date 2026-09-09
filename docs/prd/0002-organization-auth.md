@@ -63,13 +63,11 @@ ownership scoping of all domain records (`experiments.*_belongs_to :organization
   returns 403/404.
 - No plaintext password anywhere in codebase/tests.
 
-## Open questions (product owner)
-- **A1 Auth:** email+password confirmed (founder ruling 2026-09-02).
-- **A2 Org per user:** allow one org per user for v1 (simplest) or multiple
-  memberships? (Recommend: one org per user for v1; multiple memberships later.)
-- **A3 Invite flow:** email link (needs mailer) vs. invite code shown to owner?
-  (Recommend email link if we have SMTP; else code.)
-- **A4 Org naming:** org display name from sign-up form (recommend yes, free text).
+## Decisions (resolved — closed by shipped implementation, 2026-09-08)
+- **A1 Auth:** email+password — confirmed (founder ruling 2026-09-02), shipped as Devise (PR #127).
+- **A2 Org per user:** one org per user for v1 — shipped: sign-up creates the user's single org; membership-join later via invite (PR #21, #28).
+- **A3 Invite flow:** invite code shown to owner (no mailer at v1) — shipped (PR #31, owner generates/tracks invite code).
+- **A4 Org naming:** free-text org display name from sign-up form — shipped.
 
 ## Related
 - PRD-0001 (landing CTA → sign-up).

@@ -62,14 +62,10 @@ ripe; generation history list (generation id, organism count, avg fitness).
   end-to-end in the dev server (agent walkthrough per the visual-review runbook).
 - No fitness evaluation code path exists anywhere in the product.
 
-## Open questions (product owner)
-- **A1 Ripe indicator semantics:** show "ready to evolve" as a badge/label only
-  (recommend), or add an explicit "Evolve now" button for owners?
-  (Recommend badge-only for v1 — evolution stays automatic.)
-- **A2 Re-reporting:** allow correcting a fitness value after recording
-  (recommend yes, with an audit trail on the log) or immutable?
-- **A3 Population size / thresholds:** expose them as experiment config at
-  creation (recommend yes — they already exist on the model).
+## Decisions (resolved — closed by shipped implementation, 2026-09-08)
+- **A1 Ripe indicator semantics:** badge/label only — shipped; evolution stays automatic (`ripe_for_evolution?` → `EvaluateAndEvolve`), no manual evolve button (PRs #92/#102).
+- **A2 Re-reporting:** *not* implemented — a suggestion's outcome is recorded once (RecordOutcome). **Genuinely open founder question** — see Vision Review 2026-09-08: may a customer correct a recorded fitness (with audit trail), or is the log immutable?
+- **A3 Population size / thresholds:** exposed as experiment config at creation — shipped (experiment workspace, population size at create, PRD-0003 DEV-0001, PR #92).
 
 ## Related
 - PRD-0004 (chromosome designer + visual generation browser) — sibling UI.

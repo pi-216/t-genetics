@@ -63,13 +63,10 @@ charting CDN, see Edge cases).
   experiment) passes the agent visual walkthrough.
 - No new JS framework added; chart is dependency-light or pure CSS/SVG.
 
-## Open questions (product owner)
-- **A1 Designer layout:** single-page form with allele card list (recommend —
-  simplest) vs. two-pane (list + preview side-by-side)?
-- **A2 Chart library:** tiny self-hosted SVG/CSS trend (recommend for v1) vs.
-  add a chart gem? (Dependency approval needed.)
-- **A3 Existing CRUD:** fully replace the current chromosome views with the
-  designer (recommend — single surface) or keep both?
+## Decisions (resolved — closed by shipped implementation, 2026-09-08)
+- **A1 Designer layout:** single-page form with allele-card list — shipped (`Chromosomes::Create` + designer view, PRD-0004 DEV-0001, PR #126; allele-card inline errors).
+- **A2 Chart library:** tiny self-hosted SVG/CSS trend — shipped (inline SVG polyline `FitnessTrendComponent`, PR #105); no chart gem.
+- **A3 Existing CRUD:** fully replaced by the designer — shipped (single surface; legacy chromosome views superseded).
 
 ## Related
 - PRD-0003 (experiment workspace) — the generation browser lives there;
