@@ -105,6 +105,61 @@ Dev DB migrated by the agent; test DB routinely lags behind.
 - PRs are opened by the worker or the product owner — never merge your own PR
   without a `[verified]` review pass.
 
+## Security & data privacy — no external exfiltration
+
+AI coding agents working in this repo must never publish its code, schema, data,
+experiment parameters, or generated previews to any host outside Tim's control —
+no gists, pastebins, public AI artifact/canvas surfaces (e.g. Claude Artifacts),
+CodePen/JSFiddle, or third-party preview tools. "Private by default" doesn't make
+a third-party host trustworthy; the content still leaves our infrastructure.
+Keep temp output in the working tree / local servers; anything shared beyond the
+machine goes through Tim's own infra (tunnel subdomains, the repo's own GitHub,
+the venture board).
+
+## Code comments
+
+Default to **no comment**. Code shows *how*; comment only to carry *why* — a
+non-obvious constraint, deliberate deviation, gotcha, or workaround. Never
+narrate the code ("loop over organisms") or the change ("fixed X", "updated Y").
+Out of scope: magic comments, `# rubocop:disable` (keep its justification), and
+`TODO:`/`HACK:`/`NOTE:` annotations.
+
+## Generated files — never hand-edit
+
+`db/schema.rb`, `Gemfile.lock` / `yarn.lock`, Jest snapshots, VCR cassettes, and
+`swagger/v1/swagger.yaml` are generated — regenerate with their owner (run the
+migration, `bundle install` / `yarn install`, re-run the suite with `-u`, delete
++ re-record for cassettes, `bundle exec rake rswag:specs:swaggerize` for swagger).
+A hand-tuned cassette or swagger makes a spec assert against a reply no real
+system ever sent — it goes green while production breaks.
+
+## Sentry pillar
+
+Sentry is the observability substrate for this venture, not an optional add-on.
+Minimum install (mostly pending — gems land via Gemfile, wired in an
+initializer; DSN from encrypted credentials, never env or the repo):
+- **SDK + environment tagging** — `sentry-ruby`/`sentry-rails`; enabled
+  environments include `production` and `staging`.
+- **Releases** — deploys set `SENTRY_RELEASE` (git SHA) so new issues land on the
+  right release.
+- **Cron monitoring (check-ins)** — the dev-worker/PM crons and scheduled jobs
+  send check-ins with expected intervals; a silently-paused job fires an alert
+  instead of rotting (Expected-Event Absence Detection).
+- **Triage** — new issue → blast radius (events/users/first-seen, Seer root
+  cause) → suggested severity → GitHub issue with evidence; human approves
+  creation. Issues carry the `bug` label so the board/worker consumes them.
+- **Acceptance counters as metrics** — the feature pipeline emits per-cycle
+  accepted/rejected counters so pipeline health is a dashboard, not a log crawl.
+
+## PR readiness gate
+
+Before opening a PR — dev-worker and ad-hoc alike — run the `pr-conventions-gate`
+skill: issue link (`Closes #N`), test coverage, authz on new actions, frontend/
+backend validation parity, a11y on UI changes, `bin/verify` clean (Tier-0 gate),
+rswag/swagger consistency, migration safety, generated files, comment
+guidelines. Creating a PR implies the gate; never `gh pr create` directly
+without it.
+
 ## References
 
 - PRDs: `docs/prd/` · Design sprint: `docs/design-sprint.md` · Venture
