@@ -31,10 +31,58 @@ RSpec.describe '/chromosomes — designer create (DEV-0001)' do
     # (FormFieldComponent + INPUT_CLASSES), not hand-rolled duplicates: the
     # same touch-reach treatment applies to the designer at 480px and the
     # literal class strings can't drift out of sync for lack of a second pin.
+    # Finding #148 (T2): the floor dropped 6 -> 5 because the default single
+    # Float card now renders ONLY its type-specific fields (name, type select,
+    # min, max — no Choices), so fewer kit inputs appear by design.
     it 'renders allele-card fields through the kit input treatment' do
       get new_chromosome_url
       expect(response).to be_successful
-      expect(response.body.scan(FormFieldComponent::INPUT_CLASSES).length).to be >= 6
+      expect(response.body.scan(FormFieldComponent::INPUT_CLASSES).length).to be >= 5
+    end
+
+    # Finding #148 (T2) — the allele card renders ONLY the fields its type has
+    # (Float/Integer: name + min + max; Boolean: name only; Option: name +
+    # choices). Before this, every card rendered all five fields regardless of
+    # type, so a Float card advertised a Choices input the model doesn't have
+    # (and Boolean cards advertised bounds) — designer validation that
+    # contradicts the server rules (PRD-0004 red line).
+    describe 'type-aware allele card fields' do
+      it 'renders the default first card as Float with bounds and no choices' do
+        get new_chromosome_url
+        expect(response).to be_successful
+        expect(response.body).to include('allele-0-minimum', 'allele-0-maximum')
+        expect(response.body).not_to include('allele-0-choices')
+        expect(response.body).to match(/<option value="Float" selected>Float<\/option>/)
+      end
+
+      it 'renders an Option card with choices and no bounds fields' do
+        post chromosomes_url,
+             params: { chromosome: { name: 'Mixed genome',
+                                     alleles: [{ type: 'Option', name: 'flavor', choices: 'vanilla, chocolate' }] },
+                       commit: 'Add allele' }
+        expect(response).to be_successful
+        expect(response.body).to include('allele-0-choices')
+        expect(response.body).not_to include('allele-0-minimum', 'allele-0-maximum')
+        expect(response.body).to match(/<option value="Option" selected>Option<\/option>/)
+      end
+
+      it 'renders a Boolean card with name only' do
+        post chromosomes_url,
+             params: { chromosome: { name: 'Mixed genome', alleles: [{ type: 'Boolean', name: 'wings' }] },
+                       commit: 'Add allele' }
+        expect(response).to be_successful
+        expect(response.body).not_to include('allele-0-minimum', 'allele-0-maximum', 'allele-0-choices')
+      end
+
+      it 'renders an Integer card with bounds and no choices' do
+        post chromosomes_url,
+             params: { chromosome: { name: 'Mixed genome',
+                                     alleles: [{ type: 'Integer', name: 'limbs', minimum: '2', maximum: '4' }] },
+                       commit: 'Add allele' }
+        expect(response).to be_successful
+        expect(response.body).to include('allele-0-minimum', 'allele-0-maximum')
+        expect(response.body).not_to include('allele-0-choices')
+      end
     end
   end
 

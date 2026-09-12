@@ -15,6 +15,11 @@
 #   step in org_scoping.rb) so the 404 proves cross-org blocking, not mere
 #   absence of the chromosome.
 # - No paid-tier visualization depth.
+# - Finding #148 (T2): DEV-0148 walks the first allele card through all four
+#   types and asserts the field set matches per type — in a real browser
+#   (@javascript), because the finding came from a live walk where the
+#   request layer (which rendered every field for every type) stayed green.
+#   Tag @DEV-0148 (finding lineage, like @DEV-0141..@DEV-0144 for UX fixes).
 
 @PRD-0004
 Feature: Chromosome Designer
@@ -43,6 +48,13 @@ Feature: Chromosome Designer
     Given I am adding an option allele to a chromosome
     When I leave the choice list empty
     Then I see an inline validation error
+
+  @DEV-0148
+  @javascript
+  Scenario: The designer renders only the fields each allele type needs
+    Given I am designing a chromosome
+    When I walk the first allele card through every allele type
+    Then each allele card shows only its type's fields
 
   @DEV-0004
   Scenario: Another organization cannot access my chromosome
