@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Sentry cron check-in helper (AGENTS.md Sentry pillar; docs/ops/sentry.md).
+#
+# Usage (from the repo workdir):
+#   bin/sentry_checkin <monitor_slug> <start|ok|failed>
+#
+# Sends a check-in for the named Sentry cron monitor using the HTTP check-in
+# API (docs.sentry.io/product/monitors-and-alerts/monitors/crons). The DSN is
+# read from encrypted Rails credentials (config/credentials.yml.enc) via a
+# rails runner boot — never from env or the repo; host/key/project are derived
+# from the DSN itself, so no token or org slug is needed at runtime.
+#
+# No DSN configured => silent no-op (exit 0), so this script is safe on hosts
+# that never provisioned Sentry. `start`/`ok`/`failed` share one check-in ID
+# (stored in /tmp) so Sentry tracks the run's duration and status.
+#
+# Monitors are expected to pre-exist with the right schedule (provisioned via
+# the Sentry API — see docs/ops/sentry.md) so a silently-paused job fires the
+# missing-tick alert; an absent monitor falls back to auto-creation defaults.
+set -euo pipefail
+
+SLUG="${1:-}"
+STATUS="${2:-}"
+if [[ -z "$SLUG" || -z "$STATUS" ]]; then
+  echo "usage: bin/sentry_checkin <monitor_slug> <start|ok|failed>" >&2
+  exit 2
+fi
+
+DSN="$(bundle exec rails runner 'print Rails.application.credentials.dig(:sentry, :dsn).to_s' 2>/dev/null || true)"
+if [[ -z "$DSN" ]]; then
+  echo "sentry: no DSN configured — check-in skipped (${SLUG} ${STATUS})"
+  exit 0
+fi
+
+# DSN shape: https://<PUBLIC_KEY>@<INGEST_HOST>/<PROJECT_ID>
+if [[ "$DSN" =~ ^https://([^@]+)@([^/]+)/([0-9]+)$ ]]; then
+  PUBLIC_KEY="${BASH_REMATCH[1]}"
+  INGEST_HOST="${BASH_REMATCH[2]}"
+  PROJECT_ID="${BASH_REMATCH[3]}"
+else
+  echo "sentry: DSN parse failed (unexpected shape)" >&2
+  exit 1
+fi
+
+CRONS_URL="https://${INGEST_HOST}/api/${PROJECT_ID}/cron/${SLUG}/${PUBLIC_KEY}/"
+ID_FILE="/tmp/tgen-sentry-${SLUG}.id"
+
+case "$STATUS" in
+  start)
+    ID="$(cat /proc/sys/kernel/random/uuid 2>/dev/null || uuidgen)"
+    printf '%s' "$ID" > "$ID_FILE"
+    SENTRY_STATUS="in_progress"
+    ;;
+  ok | failed)
+    ID="$(cat "$ID_FILE" 2>/dev/null || cat /proc/sys/kernel/random/uuid 2>/dev/null || uuidgen)"
+    rm -f "$ID_FILE"
+    if [[ "$STATUS" == "ok" ]]; then
+      SENTRY_STATUS="ok"
+    else
+      SENTRY_STATUS="error"
+    fi
+    ;;
+  *)
+    echo "bin/sentry_checkin: bad status '${STATUS}' (start|ok|failed)" >&2
+    exit 2
+    ;;
+esac
+
+CODE="$(curl -s -o /dev/null -w '%{http_code}' -X GET \
+  "${CRONS_URL}?check_in_id=${ID}&status=${SENTRY_STATUS}" \
+  || true)"
+echo "sentry_checkin ${SLUG} ${STATUS} -> HTTP ${CODE}"

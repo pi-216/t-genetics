@@ -12,5 +12,9 @@ export RAILS_ENV=development
 export RAILS_SERVE_STATIC_FILES=1
 export PORT=3005
 
+# Sentry release tag (AGENTS.md Sentry pillar) — git SHA of the served tree,
+# so new issues land on the right release and resolve-on-release closes them.
+export SENTRY_RELEASE="$(git -C /home/tim/source/activity/t-genetics rev-parse --short HEAD 2>/dev/null || echo unknown)"
+
 cd /home/tim/source/activity/t-genetics
 exec "$(command -v bundle 2>/dev/null || echo /usr/share/rvm/gems/ruby-3.4.5/bin/bundle)" exec rails server -p 3005 -b 0.0.0.0
