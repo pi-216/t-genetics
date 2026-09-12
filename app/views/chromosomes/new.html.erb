@@ -24,7 +24,14 @@
   </div>
 <% end %>
 
-<%= form_with(model: @chromosome, local: true) do |form| %>
+<%# Finding #148 (T2) — the @javascript acceptance walk changes a card's type
+    via the Add-allele round trip in a real browser; that re-render (200, no
+    redirect) is discarded by Turbo's form interception (finding #147's
+    transport bug, live-walk observed: "the page never grows past Allele 1").
+    data-turbo="false" opts THIS form out so the round trip renders — the
+    minimum #148's own browser AC requires; the whole-class transport fix
+    (edit/experiments/loop forms, ButtonComponent) stays tracked by #147. %>
+<%= form_with(model: @chromosome, data: { turbo: false }) do |form| %>
   <div class="max-w-xl">
     <%= render FormFieldComponent.new(input_id: 'chromosome_name', label: 'Name', required: true) do %>
       <%= form.text_field :name, autocomplete: 'off', class: FormFieldComponent::INPUT_CLASSES %>
@@ -50,23 +57,30 @@
                    class="<%= FormFieldComponent::INPUT_CLASSES %>">
           <% end %>
 
-          <%= render FormFieldComponent.new(input_id: "allele-#{index}-minimum", label: 'Minimum') do %>
-            <input id="allele-<%= index %>-minimum" name="chromosome[alleles][][minimum]"
-                   type="number" step="any" value="<%= card[:minimum] %>" autocomplete="off"
-                   class="<%= FormFieldComponent::INPUT_CLASSES %>">
-          <% end %>
+          <%# Finding #148 (T2) — type-aware field set: Float/Integer cards
+              render minimum + maximum, Option cards render choices, Boolean
+              renders name only. The allele models are the single source of
+              truth (Alleles::Float/Integer/Boolean/Option); a card must not
+              advertise fields the type has no constraints for. %>
+          <% if %w[Float Integer].include?(card[:type]) %>
+            <%= render FormFieldComponent.new(input_id: "allele-#{index}-minimum", label: 'Minimum') do %>
+              <input id="allele-<%= index %>-minimum" name="chromosome[alleles][][minimum]"
+                     type="number" step="any" value="<%= card[:minimum] %>" autocomplete="off"
+                     class="<%= FormFieldComponent::INPUT_CLASSES %>">
+            <% end %>
 
-          <%= render FormFieldComponent.new(input_id: "allele-#{index}-maximum", label: 'Maximum') do %>
-            <input id="allele-<%= index %>-maximum" name="chromosome[alleles][][maximum]"
-                   type="number" step="any" value="<%= card[:maximum] %>" autocomplete="off"
-                   class="<%= FormFieldComponent::INPUT_CLASSES %>">
-          <% end %>
-
-          <%= render FormFieldComponent.new(input_id: "allele-#{index}-choices", label: 'Choices') do %>
-            <input id="allele-<%= index %>-choices" name="chromosome[alleles][][choices]"
-                   type="text" value="<%= Array(card[:choices]).join(', ') %>"
-                   placeholder="comma-separated" autocomplete="off"
-                   class="<%= FormFieldComponent::INPUT_CLASSES %>">
+            <%= render FormFieldComponent.new(input_id: "allele-#{index}-maximum", label: 'Maximum') do %>
+              <input id="allele-<%= index %>-maximum" name="chromosome[alleles][][maximum]"
+                     type="number" step="any" value="<%= card[:maximum] %>" autocomplete="off"
+                     class="<%= FormFieldComponent::INPUT_CLASSES %>">
+            <% end %>
+          <% elsif card[:type] == 'Option' %>
+            <%= render FormFieldComponent.new(input_id: "allele-#{index}-choices", label: 'Choices') do %>
+              <input id="allele-<%= index %>-choices" name="chromosome[alleles][][choices]"
+                     type="text" value="<%= Array(card[:choices]).join(', ') %>"
+                     placeholder="comma-separated" autocomplete="off"
+                     class="<%= FormFieldComponent::INPUT_CLASSES %>">
+            <% end %>
           <% end %>
 
           <%# PRD-0004 DEV-0002 (issue #78): inline per-card validation. The

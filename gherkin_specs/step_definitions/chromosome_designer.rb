@@ -93,3 +93,72 @@ end
 When(/^I leave the choice list empty$/) do
   click_button 'Create chromosome'
 end
+
+# Finding #148 (T2) — type-aware allele card fields. The field set is
+# server-rendered per card[:type]; the type-change mechanism is the existing
+# Add-allele round trip (it re-renders preserving the entered cards, so
+# changing the Type select then submitting re-renders the card with its new
+# field set, no JS). @javascript (real browser) because the finding was filed
+# from a live walk where the request layer rendered every field for every
+# type and stayed green.
+Given(/^I am designing a chromosome$/) do
+  # The Background sign-in submits through Turbo: in a real browser the
+  # session cookie lands asynchronously, so the first visit can race ahead of
+  # it and bounce to /login (the .allele-card scope comes back empty — the
+  # same async-Turbo race class as finding #147). has_css? waits for the
+  # designer to render; a bounded revisit settles the cookie race.
+  3.times do
+    break if page.has_css?('.allele-card', count: 1)
+
+    visit new_chromosome_path
+  end
+  expect(page).to have_css('.allele-card', count: 1)
+end
+
+When(/^I walk the first allele card through every allele type$/) do
+  %w[Option Boolean Integer].each do |type|
+    within(all('.allele-card')[0]) do
+      select type, from: 'Type'
+    end
+    cards_before = all('.allele-card').count
+    click_button 'Add allele'
+    # The Add-allele round trip appends one card: the count only grows when
+    # the server re-render lands in the browser. (Before finding #147's
+    # transport opt-out the Turbo-intercepted response was discarded and this
+    # step timed out — the exact live-walk symptom finding #148 was filed
+    # from.)
+    expect(page).to have_css('.allele-card', count: cards_before + 1)
+    # The changed card (0) must already show its new type's field set.
+    expect_field_set_for_card(0, type)
+  end
+end
+
+# The walk leaves card 0 as Integer plus one blank Float card per round trip:
+# every card on the page must show exactly its own type's fields, nothing
+# more.
+Then(/^each allele card shows only its type's fields$/) do
+  all('.allele-card').each_with_index do |_card, index|
+    type = within(all('.allele-card')[index]) { find('select').value }
+    expect_field_set_for_card(index, type)
+  end
+end
+
+def expect_field_set_for_card(index, type)
+  within(all('.allele-card')[index]) do
+    expect(page).to have_field('Allele name')
+    case type
+    when 'Float', 'Integer'
+      expect(page).to have_field('Minimum')
+      expect(page).to have_field('Maximum')
+      expect(page).not_to have_field('Choices')
+    when 'Boolean'
+      expect(page).not_to have_field('Minimum')
+      expect(page).not_to have_field('Maximum')
+      expect(page).not_to have_field('Choices')
+    when 'Option'
+      expect(page).to have_field('Choices')
+      expect(page).not_to have_field('Minimum')
+      expect(page).not_to have_field('Maximum')
+    end
+  end
+end
