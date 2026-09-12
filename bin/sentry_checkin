@@ -4,19 +4,24 @@
 # Usage (from the repo workdir):
 #   bin/sentry_checkin <monitor_slug> <start|ok|failed>
 #
-# Sends a check-in for the named Sentry cron monitor using the HTTP check-in
-# API (docs.sentry.io/product/monitors-and-alerts/monitors/crons). The DSN is
-# read from encrypted Rails credentials (config/credentials.yml.enc) via a
-# rails runner boot — never from env or the repo; host/key/project are derived
-# from the DSN itself, so no token or org slug is needed at runtime.
+# Sends a check-in for the named Sentry cron monitor via the Sentry envelope
+# endpoint (/api/<project>/envelope/) — the same transport sentry-cli and the
+# SDKs use; the plain "cron" HTTP endpoint accepts (202) but silently drops
+# check-ins for monitors in this org. The DSN is read from encrypted Rails
+# credentials (config/credentials.yml.enc) via a rails runner boot — never
+# from env or the repo; ingest host/project are derived from the DSN, so no
+# token or org slug is needed at runtime.
 #
 # No DSN configured => silent no-op (exit 0), so this script is safe on hosts
 # that never provisioned Sentry. `start`/`ok`/`failed` share one check-in ID
 # (stored in /tmp) so Sentry tracks the run's duration and status.
 #
-# Monitors are expected to pre-exist with the right schedule (provisioned via
-# the Sentry API — see docs/ops/sentry.md) so a silently-paused job fires the
-# missing-tick alert; an absent monitor falls back to auto-creation defaults.
+# First check-in for a slug includes monitor_config (upsert) so the monitor
+# is created if missing. NOTE (measured 2026-09-12): monitors auto-created via
+# the API/envelope land ObjectStatus=disabled on this org (platform behavior —
+# the same happened to crawlr's test monitors); they keep accepting check-ins
+# only after being enabled once in the Sentry UI (Crons → <monitor> → enable).
+# Provision + enable steps: docs/ops/sentry.md.
 set -euo pipefail
 
 SLUG="${1:-}"
@@ -32,19 +37,15 @@ if [[ -z "$DSN" ]]; then
   exit 0
 fi
 
-# DSN shape: https://<PUBLIC_KEY>@<INGEST_HOST>/<PROJECT_ID>
-if [[ "$DSN" =~ ^https://([^@]+)@([^/]+)/([0-9]+)$ ]]; then
-  PUBLIC_KEY="${BASH_REMATCH[1]}"
-  INGEST_HOST="${BASH_REMATCH[2]}"
-  PROJECT_ID="${BASH_REMATCH[3]}"
-else
-  echo "sentry: DSN parse failed (unexpected shape)" >&2
-  exit 1
-fi
+# Per-slug monitor schedule/margins (crontab schedule, checkin_margin, max_runtime).
+case "$SLUG" in
+  tgenetics-dev-worker)  SCHED="0 * * * *";  MARGIN=10; RUNTIME=50;;
+  gaas-product-manager)  SCHED="0 9 * * *";  MARGIN=30; RUNTIME=90;;
+  gaas-founder-digest)   SCHED="30 8 * * *"; MARGIN=30; RUNTIME=60;;
+  *)                     SCHED="";           MARGIN=$((RUNTIME=0));;
+esac
 
-CRONS_URL="https://${INGEST_HOST}/api/${PROJECT_ID}/cron/${SLUG}/${PUBLIC_KEY}/"
 ID_FILE="/tmp/tgen-sentry-${SLUG}.id"
-
 case "$STATUS" in
   start)
     ID="$(cat /proc/sys/kernel/random/uuid 2>/dev/null || uuidgen)"
@@ -66,7 +67,37 @@ case "$STATUS" in
     ;;
 esac
 
-CODE="$(curl -s -o /dev/null -w '%{http_code}' -X GET \
-  "${CRONS_URL}?check_in_id=${ID}&status=${SENTRY_STATUS}" \
-  || true)"
-echo "sentry_checkin ${SLUG} ${STATUS} -> HTTP ${CODE}"
+exec python3 -c '
+import sys, re, json, uuid, datetime, urllib.request
+dsn, slug, status, sched, margin, runtime, checkin_id = sys.argv[1:8]
+m = re.match(r"^https://([^@]+)@([^/]+)/([0-9]+)$", dsn)
+if not m:
+    print("sentry: DSN parse failed (unexpected shape)", file=sys.stderr)
+    sys.exit(1)
+host, project_id = m.group(2), m.group(3)
+payload = {"check_in_id": checkin_id, "monitor_slug": slug, "status": status}
+if sched:
+    payload["monitor_config"] = {
+        "schedule": {"type": "crontab", "value": sched},
+        "checkin_margin": int(margin), "max_runtime": int(runtime),
+        "timezone": "America/New_York",
+        "failure_issue_threshold": 1, "recovery_threshold": 1,
+    }
+item = json.dumps(payload)
+envelope = "\n".join([
+    json.dumps({"event_id": str(uuid.uuid4()),
+                "sent_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+                "dsn": dsn}),
+    json.dumps({"type": "check_in", "content_type": "application/json", "length": len(item)}),
+    item,
+]) + "\n"
+req = urllib.request.Request(f"https://{host}/api/{project_id}/envelope/",
+    data=envelope.encode(), method="POST",
+    headers={"Content-Type": "application/x-sentry-envelope"})
+try:
+    with urllib.request.urlopen(req, timeout=20) as r:
+        print(f"sentry_checkin {slug} {status} -> HTTP {r.status}")
+except Exception as e:
+    print(f"sentry_checkin {slug} {status} -> ERROR {e}", file=sys.stderr)
+    sys.exit(1)
+' "$DSN" "$SLUG" "$SENTRY_STATUS" "$SCHED" "$MARGIN" "$RUNTIME" "$ID"
