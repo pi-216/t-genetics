@@ -17,9 +17,27 @@ counters. Sentry is the observability substrate for the venture, not an add-on.
   before boot; issues land on the deploy's release, resolved-on-release closes
   them automatically.
 - `bin/sentry_checkin <slug> <start|ok|failed>` — cron check-in helper. Reads
-  the DSN from credentials, sends an HTTP check-in to the ingest cron endpoint
-  (host/key/project derived from the DSN — no token at runtime). No DSN on
-  the host → silent no-op (exit 0).
+  the DSN from credentials and sends the check-in as a Sentry **envelope**
+  (`POST /api/<project>/envelope/` — the transport sentry-cli/SDKs use; the
+  plain `cron` HTTP endpoint accepts with 202 but drops on this org). No DSN
+  on the host → silent no-op (exit 0).
+
+## ⚠️ Platform behavior: API-created monitors land `disabled` (measured 2026-09-12)
+
+Monitors created via the API **and** via envelope check-in upsert are born
+`ObjectStatus=disabled` on this org (crawlr's parallel test monitors showed
+the identical pattern). A disabled monitor **drops** check-ins until it is
+enabled once in the Sentry UI: **Crons → <monitor> → enable** (there is no
+working API path — `PATCH status` → 403 with this token; the token has
+`alerts:write`/`project:admin`). The one per-project monitor that is active
+today (`crawlr-identify-duplicates-hourly`) was created via the UI. After the
+one-time enable, envelope check-ins process normally (verified: check-ins
+registered against the active crawlr monitor with `lastCheckIn` updating).
+Re-verify after enabling:
+`curl -H "Authorization: Bearer $SENTRY_ACCESS_TOKEN" \
+  https://sentry.io/api/0/organizations/tim-lawrenz/monitors/tgenetics-dev-worker/`
+→ expect `"status": "active"` and `environments[0].lastCheckIn` populated
+after the next real check-in.
 
 ## Cron monitors (missing tick = alert)
 
@@ -36,7 +54,9 @@ interval so a silently-paused job fires the missing-tick alert
 The cron prompts call `bin/sentry_checkin <slug> start` at run start and
 `... ok|failed` on completion (workdir = repo). The **start** check-in is the
 absence signal; a job that never runs never sends one → Sentry opens a
-"Cron Monitor missed" issue → triage below.
+"Cron Monitor missed" issue → triage below. (Until a monitor has been enabled
+once in the UI — see above — its check-ins are dropped, so enable all three
+after provisioning; the first real cron tick then populates `lastCheckIn`.)
 
 ## Triage path (new issue → GitHub issue)
 
@@ -57,30 +77,36 @@ absence signal; a job that never runs never sends one → Sentry opens a
 
 ## Provisioning (one-time, needs founder OK — external write)
 
-Create the project and monitors via API (token: Sentry MCP env in
-`~/.hermes/config.yaml`):
+Create the project (API) and monitors **via a check-in envelope** (the only
+auto-creation path — created monitors land `disabled`; enable each once in the
+Sentry UI after creation):
 
 ```bash
-# project
+# 1. project
 curl -X POST https://sentry.io/api/0/teams/tim-lawrenz/tim-lawrenz/projects/ \
   -H "Authorization: Bearer $SENTRY_ACCESS_TOKEN" \
   -d '{"name":"t-genetics","slug":"t-genetics","platform":"ruby-rails"}'
 
-# DSN from the project response → write into credentials on the host:
-#   EDITOR="cp /tmp/creds.yml" bin/rails credentials:edit   (creds.yml has sentry.dsn)
+# 2. DSN from the project keys -> write into credentials on the host:
+#      EDITOR="cp /tmp/creds.yml" bin/rails credentials:edit
+#    (creds.yml: sentry: { dsn: https://<key>@o213028.ingest.us.sentry.io/<project> })
 
-# monitors (repeat per row above; update schedule to the crontab)
-curl -X POST https://sentry.io/api/0/organizations/tim-lawrenz/monitors/ \
-  -H "Authorization: Bearer $SENTRY_ACCESS_TOKEN" \
-  -d '{"project":"t-genetics","name":"tgenetics-dev-worker","slug":"tgenetics-dev-worker","type":"cron_job","config":{"schedule_type":"crontab","schedule":"0 * * * *","checkin_margin":10,"max_runtime":50,"failure_issue_threshold":1}}'
+# 3. create monitors via envelope check-in (upstream of any real cron tick)
+bin/sentry_checkin tgenetics-dev-worker start && bin/sentry_checkin tgenetics-dev-worker ok
+bin/sentry_checkin gaas-product-manager  start && bin/sentry_checkin gaas-product-manager  ok
+bin/sentry_checkin gaas-founder-digest   start && bin/sentry_checkin gaas-founder-digest   ok
 
-# verify
+# 4. ENABLE each in the Sentry UI: Crons -> <monitor> -> enable
+#    (API-created monitors are ObjectStatus=disabled and drop check-ins until
+#     enabled once; there is no working API activation — PATCH is 403)
+
+# 5. verify
 curl -H "Authorization: Bearer $SENTRY_ACCESS_TOKEN" \
   https://sentry.io/api/0/organizations/tim-lawrenz/monitors/?project=t-genetics
 ```
 
 Check-ins then flow automatically from `bin/sentry_checkin` (no token needed
-at runtime — DSN auth).
+at runtime — the DSN in the envelope authorizes it).
 
 ## Acceptance counters (pending item)
 
