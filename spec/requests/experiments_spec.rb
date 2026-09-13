@@ -80,6 +80,18 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
       expect(response.body).not_to include('Beta-chrom')
     end
 
+    # Issue #163 — experiment form column must keep the explicit [36rem]
+    # width (spacing tokens shadow the named max-w-* scale in Tailwind v4.1).
+    it 'renders the form column at the pinned [36rem] width' do
+      sign_in_as(organization: org)
+
+      get new_experiment_url
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('max-w-[36rem]')
+      expect(response.body).not_to match(/max-w-(?:md|xl)/)
+    end
+
     # Issue #142 — a chromosome is the prerequisite of an experiment. An org
     # with zero chromosomes must never land on the dead form (empty select,
     # unsubmittable): the new page leads into the designer instead, exactly

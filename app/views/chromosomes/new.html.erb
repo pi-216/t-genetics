@@ -32,7 +32,7 @@
     minimum #148's own browser AC requires; the whole-class transport fix
     (edit/experiments/loop forms, ButtonComponent) stays tracked by #147. %>
 <%= form_with(model: @chromosome, data: { turbo: false }) do |form| %>
-  <div class="max-w-xl">
+  <div class="max-w-[36rem]">
     <%= render FormFieldComponent.new(input_id: 'chromosome_name', label: 'Name', required: true) do %>
       <%= form.text_field :name, autocomplete: 'off', class: FormFieldComponent::INPUT_CLASSES %>
     <% end %>

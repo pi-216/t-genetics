@@ -7,7 +7,7 @@
                                  kicker: 'Identity',
                                  subtitle: 'Access your organization’s evolution workspace.')
 
-= form_with model: @user, url: login_path, class: "mt-6 max-w-md space-y-4" do |form|
+= form_with model: @user, url: login_path, class: "mt-6 max-w-[28rem] space-y-4" do |form|
   = render FormFieldComponent.new(input_id: 'identity_user_email', label: 'Email', required: true) do
     = form.email_field :email, required: true, autofocus: true, class: FormFieldComponent::INPUT_CLASSES
   = render FormFieldComponent.new(input_id: 'identity_user_password', label: 'Password', required: true) do

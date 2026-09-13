@@ -8,7 +8,7 @@
                                  back_path: login_path,
                                  back_label: 'Back to sign in')
 
-= form_with url: user_password_path, class: "mt-6 max-w-md space-y-4" do |form|
+= form_with url: user_password_path, class: "mt-6 max-w-[28rem] space-y-4" do |form|
   = render FormFieldComponent.new(input_id: 'user_email', label: 'Email', required: true) do
     = form.email_field :email, name: "user[email]", required: true, autofocus: true, class: FormFieldComponent::INPUT_CLASSES
   = render ButtonComponent.new(label: 'Send me password reset instructions', type: :submit, variant: :primary)

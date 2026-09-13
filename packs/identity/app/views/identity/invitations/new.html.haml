@@ -7,7 +7,7 @@
                                  kicker: 'Identity',
                                  subtitle: 'Use an invite code to join an existing organization.')
 
-= form_with model: @user, url: join_path, class: "mt-6 max-w-md space-y-4" do |form|
+= form_with model: @user, url: join_path, class: "mt-6 max-w-[28rem] space-y-4" do |form|
   = render FormFieldComponent.new(input_id: 'identity_user_invite_code', label: 'Invite code', required: true) do
     = form.text_field :invite_code, required: true, class: FormFieldComponent::INPUT_CLASSES
   = render FormFieldComponent.new(input_id: 'identity_user_email', label: 'Email', required: true) do

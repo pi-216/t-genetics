@@ -31,7 +31,7 @@
 
   <%# Finding #147 (T1) — Turbo transport fix: an invalid create re-renders
       :new with 422; data-turbo="false" makes the error re-render display. %>
-  <%= form_with(model: @experiment, url: experiments_path, class: 'max-w-xl space-y-4',
+  <%= form_with(model: @experiment, url: experiments_path, class: 'max-w-[36rem] space-y-4',
                 data: { turbo: false }) do |form| %>
     <%= render FormFieldComponent.new(input_id: 'experiment_name', label: 'Name', required: true,
                                       errors: @experiment.errors[:name]) do %>
