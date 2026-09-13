@@ -78,6 +78,7 @@ jobs:
         run: |
           if compgen -G "gherkin_specs/**/*.feature" > /dev/null; then
             bundle exec gherkin_lint $(ls gherkin_specs/**/*.feature)
+            bundle exec ruby bin/check_ui_javascript
           fi
 
       - name: Ops loop regression test (auto-unwedge)

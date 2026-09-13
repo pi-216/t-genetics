@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# bin/verify gate: fail any PRD scenario whose steps exercise the UI
+# (click, live preview, inline validation, Turbo mutation, viewport/layout
+# measurements, computed styles) without the @javascript tag. rack_test
+# proves nothing about the transport layer; @javascript forces the headless
+# Chrome driver (gherkin_specs/support/capybara_javascript.rb).
+require_relative '../lib/ui_javascript_lint'
+
+features = Dir['gherkin_specs/**/*.feature'].sort
+violations = UiJavascriptLint.check(features)
+violations.each { |v| warn v }
+exit(violations.empty? ? 0 : 1)
