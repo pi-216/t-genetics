@@ -46,21 +46,42 @@ And(/^the chromosome is saved under my organization$/) do
   expect(chromosome.alleles.map(&:type)).to match_array(%w[Float Integer Boolean])
 end
 
+# Issue #151 (DEV-0151) — saved-state-integrity guard (the T3 gap): the
+# chromosome must persist EXACTLY the allele set the designer built, never
+# fewer, never duplicated. Count first (a duplicate row fails it), then the
+# exact name set — the two together forbid both drop and dup persistence.
+Then(/^the chromosome is saved with exactly those 3 alleles$/) do
+  chromosome = Chromosome.find_by!(name: 'Mixed genome')
+  expect(chromosome.alleles.count).to eq(3)
+  expect(chromosome.alleles.map(&:name)).to match_array(%w[weight limbs wings])
+end
+
 # Fills one named allele card in the designer. The card index is stable
 # across "Add allele" round trips (server re-renders preserve the entered
-# cards in order). find(:xpath, ...) with a wait resolves the Nth card on
-# the CURRENT document — a plain all()[i] here races the full-page
+# cards in order). allele_card (below) resolves the Nth card on the CURRENT
+# document with a wait — a plain all()[i] here races the full-page
 # navigation the "Add allele" POST triggers (stale DOM node ids under
 # selenium), which is exactly the transport bug class @javascript exists to
 # catch.
 def fill_allele_card(index, type:, name:, minimum: nil, maximum: nil)
-  card = find(:xpath, "(//div[contains(concat(' ', normalize-space(@class), ' '), ' allele-card ')])[#{index + 1}]")
+  card = allele_card(index)
   within(card) do
     select type, from: 'Type'
     fill_in 'Allele name', with: name
     fill_in 'Minimum', with: minimum if minimum
     fill_in 'Maximum', with: maximum if maximum
   end
+end
+
+# Resolves the Nth allele card (0-based) against the CURRENT document.
+# find(:xpath, ...) polls until the node exists in the live document, so a
+# card referenced right after an Add-allele round trip never holds a node
+# from the pre-navigation page. All index-based card access must go through
+# this helper — the walk and field-set assertions below used to race the
+# re-render with all('.allele-card')[i] and intermittently died with
+# "Node with given id does not belong to the document".
+def allele_card(index)
+  find(:xpath, "(//div[contains(concat(' ', normalize-space(@class), ' '), ' allele-card ')])[#{index + 1}]")
 end
 
 # PRD-0004 DEV-0002 (issue #78): a float allele whose minimum exceeds its
@@ -73,7 +94,7 @@ Given(/^I am adding a float allele to a chromosome$/) do
 end
 
 When(/^I set a minimum greater than the maximum$/) do
-  within(all('.allele-card')[0]) do
+  within(allele_card(0)) do
     fill_in 'Minimum', with: '10'
     fill_in 'Maximum', with: '1'
   end
@@ -129,7 +150,7 @@ end
 
 When(/^I walk the first allele card through every allele type$/) do
   %w[Option Boolean Integer].each do |type|
-    within(all('.allele-card')[0]) do
+    within(allele_card(0)) do
       select type, from: 'Type'
     end
     cards_before = all('.allele-card').count
@@ -149,14 +170,15 @@ end
 # every card on the page must show exactly its own type's fields, nothing
 # more.
 Then(/^each allele card shows only its type's fields$/) do
-  all('.allele-card').each_with_index do |_card, index|
-    type = within(all('.allele-card')[index]) { find('select').value }
+  count = all('.allele-card').count
+  count.times do |index|
+    type = within(allele_card(index)) { find('select').value }
     expect_field_set_for_card(index, type)
   end
 end
 
 def expect_field_set_for_card(index, type)
-  within(all('.allele-card')[index]) do
+  within(allele_card(index)) do
     expect(page).to have_field('Allele name')
     case type
     when 'Float', 'Integer'
