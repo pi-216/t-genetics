@@ -56,6 +56,12 @@ Feature: Chromosome Designer
     And the allele is not saved
 
   @DEV-0003
+  # Inline validation re-renders on the designer form (Turbo round trip) —
+  # the same transport class as findings T1/T2: rack_test saw the error
+  # because it never renders the transport; only the browser proves it.
+  # @javascript mandated by the issue #150 UI-verb lint for "inline
+  # validation" scenarios.
+  @javascript
   Scenario: An option allele requires a non-empty choice list
     Given I am adding an option allele to a chromosome
     When I leave the choice list empty

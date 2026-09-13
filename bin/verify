@@ -49,6 +49,7 @@ run_gate "rswag:verify"       bundle exec rake rswag:verify
 
 if compgen -G "gherkin_specs/**/*.feature" >/dev/null; then
   run_gate "gherkin_lint"     bundle exec gherkin_lint $(ls gherkin_specs/**/*.feature)
+  run_gate "ui_javascript"    bundle exec ruby bin/check_ui_javascript
 else
   echo "==> gherkin_lint (skipped — no .feature files yet)"
 fi

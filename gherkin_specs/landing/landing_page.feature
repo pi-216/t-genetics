@@ -32,6 +32,10 @@ Feature: Landing Page
     And I see a "Start free" call to action
 
   @DEV-0002
+  # Generic click flow, but "click" is a UI verb: the mandate (issue #150)
+  # requires @javascript for any scenario that clicks, and rack_test cannot
+  # distinguish a link that works from one a real browser would fail on.
+  @javascript
   Scenario: The call to action leads to sign-up
     When I click the "Start free" call to action
     Then I land on the sign-up page
