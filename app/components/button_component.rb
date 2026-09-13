@@ -23,7 +23,7 @@ class ButtonComponent < ViewComponent::Base
   # rubocop:disable Metrics/ParameterLists
   def initialize(label: nil, href: nil, variant: :secondary, type: :button,
                  name: nil, value: nil, method: nil, form_action: nil,
-                 data: {}, disabled: false)
+                 data: {}, form_data: {}, disabled: false)
     @label = label
     @href = href
     @variant = variant
@@ -33,6 +33,7 @@ class ButtonComponent < ViewComponent::Base
     @method = method
     @form_action = form_action
     @data = data
+    @form_data = form_data
     @disabled = disabled
     super()
   end
