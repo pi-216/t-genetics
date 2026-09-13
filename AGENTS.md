@@ -93,6 +93,15 @@ Dev DB migrated by the agent; test DB routinely lags behind.
 - `gherkin_lint` takes individual files, NOT directories (`Errno::EISDIR`).
   Invoke as `bin/verify` does: `bundle exec gherkin_lint $(ls gherkin_specs/**/*.feature)`.
 - One action per scenario (gherkin_lint `AvoidScripting`).
+- UI-verb scenarios MUST carry @javascript (real-browser driver,
+  `gherkin_specs/support/capybara_javascript.rb`): any PRD scenario whose steps
+  click, show a live preview, assert inline validation, drive a Turbo mutation,
+  assert a visible field set, or measure layout/computed styles (viewport,
+  scrolling, brand colors/faces) runs under headless Chrome — rack_test renders
+  no layout and executes no JS, so a request-layer green proves nothing about
+  the transport layer (PRD-0004 findings T1/T2). API/auth/data scenarios stay
+  request-layer. Enforced mechanically by the `ui_javascript` gate in
+  `bin/verify`.
 
 ## Working here (git rules)
 
