@@ -74,6 +74,16 @@ Feature: Chromosome Designer
     When I walk the first allele card through every allele type
     Then each allele card shows only its type's fields
 
+  @DEV-0151
+  @javascript
+  # Issue #151: saved-state-integrity guard (the T3 gap). The set the
+  # designer built must persist EXACTLY — count and names — never fewer
+  # or duplicated. Real browser because the T3 class lived in the
+  # transport layer, invisible to rack_test.
+  Scenario: A designed chromosome is saved with exactly the alleles built
+    When I create a chromosome with a float, an integer, and a boolean allele
+    Then the chromosome is saved with exactly those 3 alleles
+
   @DEV-0004
   Scenario: Another organization cannot access my chromosome
     Given organization "Alpha" owns a chromosome named "Alpha-chrom"
