@@ -32,6 +32,16 @@ RSpec.describe 'Brand tokens on auth surfaces', type: :request do
       expect(response.body).to include('bg-signal')
       expect(response.body).to include('text-onSignal')
     end
+
+    # Issue #163 — DESIGN.md's --spacing-* scale shadows named max-w-*
+    # resolution in Tailwind v4.1 (max-w-md compiled to 16px, collapsing the
+    # form). The form must carry the PULL explicit container width.
+    it 'renders the form column at the pinned [28rem] width' do
+      get path
+
+      expect(response.body).to include('max-w-[28rem]')
+      expect(response.body).not_to match(/max-w-(?:md|xl)/)
+    end
   end
 
   context 'with the sign-in page' do

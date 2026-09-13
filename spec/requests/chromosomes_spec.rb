@@ -42,6 +42,14 @@ RSpec.describe '/chromosomes' do
       get new_chromosome_url
       expect(response).to be_successful
     end
+
+    # Issue #163 — designer form column must keep the explicit [36rem] width
+    # (spacing tokens shadow the named max-w-* scale in Tailwind v4.1).
+    it 'renders the form column at the pinned [36rem] width' do
+      get new_chromosome_url
+      expect(response.body).to include('max-w-[36rem]')
+      expect(response.body).not_to match(/max-w-(?:md|xl)/)
+    end
   end
 
   describe 'GET /edit' do

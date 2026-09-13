@@ -3,4 +3,11 @@
 
 @theme {
   --font-sans: Inter var, ui-sans-serif, system-ui, sans-serif;
+  /* DESIGN.md's --spacing-* scale shadows named max-w-* resolution in
+     Tailwind v4.1 (a named value compiles to var(--spacing-*) — 16px for md),
+     so forms pin explicit arbitrary widths (max-w-[28rem]/[36rem]) in views.
+     These container tokens document the intended scale and take effect the
+     day the resolver prefers the container namespace again. */
+  --container-md: 28rem;
+  --container-xl: 36rem;
 }

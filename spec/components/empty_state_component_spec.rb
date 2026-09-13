@@ -14,6 +14,16 @@ RSpec.describe EmptyStateComponent, type: :component do
     expect(rendered.text).to include('The current generation has no organisms to suggest.')
   end
 
+  # Issue #163 — the body line must keep the explicit [28rem] width pin
+  # (spacing tokens shadow the named max-w-* scale in Tailwind v4.1).
+  it 'renders the body line at the pinned [28rem] width' do
+    rendered = render_inline(described_class.new(title: 'No chromosomes yet', body: 'Start by designing one.'))
+
+    paragraph = rendered.css('p').first
+    expect(paragraph['class']).to include('max-w-[28rem]')
+    expect(paragraph['class']).not_to match(/max-w-(?:md|xl)/)
+  end
+
   it 'renders a dashed hairline panel' do
     rendered = render_inline(described_class.new(title: 'Empty'))
 
