@@ -31,12 +31,24 @@ Feature: Chromosome Designer
     Given I am signed in as an owner of "Loop Labs"
 
   @DEV-0001
+  # Finding #147 (T1) — see the DEV-0002 note: same Turbo transport. This
+  # scenario CLICKS "Add allele" twice in a real browser — precisely the
+  # founder's live-walk symptom ("the page never grows past Allele 1") — so
+  # it carries @javascript as the transport regression.
+  @javascript
   Scenario: A user designs a chromosome with mixed allele types and sees a live preview
     When I create a chromosome with a float, an integer, and a boolean allele
     Then I see a live preview of all three alleles
     And the chromosome is saved under my organization
 
   @DEV-0002
+  # Finding #147 (T1) — the designer form was Turbo-intercepted, so in a real
+  # browser the Add-allele round trip (a 200 re-render) was discarded and the
+  # page never grew past "Allele 1", while every request-layer gate stayed
+  # green (the founder's live walk found it). @javascript proves the transport
+  # layer in headless Chrome. Drift flag: the original scenario text is
+  # unchanged — only the driver requirement is added.
+  @javascript
   Scenario: Allele bounds are validated inline
     Given I am adding a float allele to a chromosome
     When I set a minimum greater than the maximum

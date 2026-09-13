@@ -66,4 +66,18 @@ RSpec.describe ButtonComponent, type: :component do
     button = rendered.css('button').first
     expect(button['class']).to include('bg-signal')
   end
+
+  # Finding #147 (T1) — loop actions re-render (200/422), never redirect, so a
+  # Turbo-intercepted form discards every response in a real browser. The
+  # form element (not the button) must carry data-turbo="false" so the POST
+  # round trip renders as classic HTML.
+  it 'renders form_data as attributes on the form element (Turbo opt-out)' do
+    rendered = render_inline(described_class.new(label: 'Request suggestion',
+                                                 form_action: '/experiments/1/suggestion',
+                                                 method: :post,
+                                                 form_data: { turbo: false }))
+
+    form = rendered.css('form').first
+    expect(form['data-turbo']).to eq('false')
+  end
 end

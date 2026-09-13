@@ -18,11 +18,18 @@ When(/^I create a chromosome with a float, an integer, and a boolean allele$/) d
 
   fill_allele_card(0, type: 'Float', name: 'weight', minimum: '0', maximum: '10')
   click_button 'Add allele'
+  expect(page).to have_css('.allele-card', count: 2)
   fill_allele_card(1, type: 'Integer', name: 'limbs', minimum: '2', maximum: '4')
   click_button 'Add allele'
+  expect(page).to have_css('.allele-card', count: 3)
   fill_allele_card(2, type: 'Boolean', name: 'wings')
 
   click_button 'Create chromosome'
+  # Classic (non-Turbo) POST -> redirect to the show page: wait for the
+  # navigation to settle before any element assertion, or Selenium resolves
+  # old-document nodes mid-teardown ("Node with given id does not belong to
+  # the document").
+  expect(page).to have_current_path(%r{/chromosomes/\d+})
 end
 
 Then(/^I see a live preview of all three alleles$/) do
@@ -41,9 +48,14 @@ end
 
 # Fills one named allele card in the designer. The card index is stable
 # across "Add allele" round trips (server re-renders preserve the entered
-# cards in order).
+# cards in order). find(:xpath, ...) with a wait resolves the Nth card on
+# the CURRENT document — a plain all()[i] here races the full-page
+# navigation the "Add allele" POST triggers (stale DOM node ids under
+# selenium), which is exactly the transport bug class @javascript exists to
+# catch.
 def fill_allele_card(index, type:, name:, minimum: nil, maximum: nil)
-  within(all('.allele-card')[index]) do
+  card = find(:xpath, "(//div[contains(concat(' ', normalize-space(@class), ' '), ' allele-card ')])[#{index + 1}]")
+  within(card) do
     select type, from: 'Type'
     fill_in 'Allele name', with: name
     fill_in 'Minimum', with: minimum if minimum

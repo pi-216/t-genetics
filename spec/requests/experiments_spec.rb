@@ -110,6 +110,19 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
       expect(response.body).to include('Create experiment')
       expect(response.body).not_to include('No chromosomes yet')
     end
+
+    # Finding #147 (T1) — same transport bug shape as the designer: an invalid
+    # experiment re-renders :new with a 422 that Turbo would discard, hiding
+    # the inline validation errors in a real browser. The form must opt out of
+    # Turbo so error re-renders display.
+    it 'renders the create form NOT turbo-enabled (data-turbo="false")' do
+      sign_in_as(organization: org)
+
+      get new_experiment_url
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('data-turbo="false"')
+    end
   end
 
   describe 'POST /experiments' do
@@ -179,6 +192,23 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
       expect(response.body).to match(/not yet ripe/i)
     end
 
+    # Finding #147 (T1) — same transport bug shape as the designer: the
+    # request-suggestion button and the report-fitness form POST and then
+    # RE-render the show page (200 on success, 422 with .command-errors on
+    # failure) — never a redirect. Turbo would discard every one of those
+    # non-redirect responses in a real browser, so the loop's interactive
+    # actions must also opt out of Turbo.
+    it 'renders the loop actions (suggestion + report) NOT turbo-enabled (data-turbo="false")' do
+      experiment = setup_experiment_with_live_suggestion
+
+      get experiment_url(experiment)
+
+      expect(response).to have_http_status(:ok)
+      # The request-suggestion button (button_to → form) and the report-fitness
+      # form each render a Turbo-opted-out form.
+      expect(response.body.scan('data-turbo="false"').length).to be >= 2
+    end
+
     it 'answers 404 for another organization\'s experiment and keeps it secret' do
       sign_in_as(organization: org)
       secret = FactoryBot.create(:experiment, name: 'Beta secret', chromosome: other_chromosome,
@@ -188,6 +218,21 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
 
       expect(response).to have_http_status(:not_found)
       expect(response.body).not_to include('Beta secret')
+    end
+
+    # Finding #147 (T1) — shared setup for the loop-actions transport guard:
+    # drives the real suggestion round trip (as the UI does) so the show page
+    # renders both interactive forms.
+    def setup_experiment_with_live_suggestion
+      sign_in_as(organization: org)
+      result = Experiments::Setup.call(chromosome:, external_entity: chromosome,
+                                       name: 'Donation amounts',
+                                       experiment_configuration: { population_size: 20 })
+      raise "Setup failed: #{result.errors.inspect}" unless result.success?
+
+      post suggestion_experiment_url(result.experiment)
+      expect(response).to have_http_status(:ok)
+      result.experiment
     end
   end
 

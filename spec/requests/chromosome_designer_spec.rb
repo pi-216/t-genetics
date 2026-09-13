@@ -27,6 +27,21 @@ RSpec.describe '/chromosomes — designer create (DEV-0001)' do
       expect(response.body).to include('allele-preview')
     end
 
+    # Finding #147 (T1) — Rail 8's `local:` form option is a no-op, so the
+    # designer form was Turbo-intercepted: the Add-allele round trip (200
+    # re-render) and every inline validation error (422 re-render) were
+    # discarded by the browser — the founder watched a live walk show nothing.
+    # Regression guard for the transport layer: the form MUST opt out of
+    # Turbo (`data-turbo="false"`), otherwise every browser POST dies silently
+    # while request-layer tests stay green.
+    it 'renders the designer form NOT turbo-enabled (data-turbo="false") so re-renders display' do
+      get new_chromosome_url
+      expect(response).to be_successful
+      expect(response.body).to include('<form', 'data-turbo="false"')
+      # The form must not be a turbo-stream target either.
+      expect(response.body).not_to include('data-turbo-stream')
+    end
+
     # Issue #141 — the allele cards render their fields through the kit
     # (FormFieldComponent + INPUT_CLASSES), not hand-rolled duplicates: the
     # same touch-reach treatment applies to the designer at 480px and the

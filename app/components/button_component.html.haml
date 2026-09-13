@@ -1,7 +1,8 @@
 - if link?
   = link_to @label, @href, class: button_class, data: @data
 - elsif form?
-  = button_to @label, @form_action, method: @method, class: button_class, data: @data
+  - form_options = @form_data.empty? ? {} : { data: @form_data }
+  = button_to @label, @form_action, method: @method, class: button_class, data: @data, form: form_options
 - else
   %button.button{ class: button_class, type: @type, name: @name, value: @value, disabled: @disabled, data: @data }
     = @label

@@ -1,6 +1,9 @@
 <%# Issue #133 — shared chromosome form: FormField + kit button, hairline
     inputs, cardinality handled by the caller's model. %>
-<%= form_with(model: chromosome, local: true) do |form| %>
+<%# Finding #147 (T1) — same Turbo transport fix as the designer form: the
+    PATCH failure re-render (422) must display inline errors in a real
+    browser. %>
+<%= form_with(model: chromosome, data: { turbo: false }) do |form| %>
   <div class="max-w-xl space-y-4">
     <%= render FormFieldComponent.new(input_id: 'chromosome_name', label: 'Name', required: true,
                                       errors: chromosome.errors[:name]) do %>

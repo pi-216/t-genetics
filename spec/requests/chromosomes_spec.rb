@@ -50,6 +50,16 @@ RSpec.describe '/chromosomes' do
       get edit_chromosome_url(chromosome)
       expect(response).to be_successful
     end
+
+    # Finding #147 (T1) — same transport bug shape as the designer: the edit
+    # form's PATCH failure re-renders :edit with a 422 that Turbo would
+    # discard. The form must opt out of Turbo so inline errors display.
+    it 'renders the edit form NOT turbo-enabled (data-turbo="false")' do
+      chromosome = Chromosome.create! valid_attributes
+      get edit_chromosome_url(chromosome)
+      expect(response).to be_successful
+      expect(response.body).to include('data-turbo="false"')
+    end
   end
 
   describe 'POST /create' do

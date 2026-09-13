@@ -28,6 +28,14 @@ Given(/^I am signed in as an owner of(?: organization)? "([^"]+)"$/) do |org_nam
   fill_in 'Email', with: email
   fill_in 'Password', with: password
   click_button 'Sign in'
+  # Real-browser (@javascript) runs: the login form is Turbo-driven, so
+  # click_button returns while Devise's async sign-in fetch is still in
+  # flight; a subsequent step that navigates would race it (the next page
+  # request carries no session yet and redirects back to /login — the same
+  # async-Turbo race class as finding #147). Wait for the post-auth
+  # destination so the browser session is settled before any step follows.
+  # No-op under rack_test, which is synchronous.
+  expect(page).to have_current_path(experiments_path)
 end
 
 When(/^I create the "([^"]+)" experiment on "([^"]+)" with population (\d+)$/) do |name, chromosome_name, population|
