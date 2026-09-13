@@ -84,6 +84,9 @@ jobs:
       - name: Ops loop regression test (auto-unwedge)
         run: bash .github/scripts/test-pr-unwedge.sh
 
+      - name: Ops loop regression test (PO-acceptance monitor)
+        run: bash .github/scripts/test-po-acceptance-state.sh
+
   test:
     runs-on: ubuntu-latest
 
