@@ -73,6 +73,34 @@ RSpec.describe '/chromosomes/:chromosome_id/alleles' do
       end
     end
 
+    # Finding #149: a second allele reusing an existing name on the SAME
+    # chromosome is a duplicate and must be rejected at the model layer (the
+    # append controller builds and saves through the model — the scoped
+    # uniqueness rule is the safeguard here, exactly as in the designer).
+    context 'with a name that already exists on the chromosome' do
+      before do
+        chromosome.alleles << Allele.new_with_integer(name: 'legs', minimum: 1, maximum: 50)
+      end
+
+      it 'does not create the duplicate Allele and returns 422' do
+        expect do
+          post chromosome_alleles_url(chromosome),
+               params: { allele: { name: 'legs', type: 'Integer', minimum: 1, maximum: 50 } }
+        end.not_to change(Allele, :count)
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+
+      it 'allows the same name on a different chromosome' do
+        other = FactoryBot.create(:chromosome, organization: organization)
+
+        expect do
+          post chromosome_alleles_url(other),
+               params: { allele: { name: 'legs', type: 'Integer', minimum: 1, maximum: 50 } }
+        end.to change(Allele, :count).by(1)
+        expect(response).to have_http_status(:created)
+      end
+    end
+
     # PRD-0004 DEV-0003 (issue #79): the option-allele choice-list rule is
     # server-side truth — a blank-only choices array slips past the field-
     # presence guard ([''] is not blank) and must be stopped by the model

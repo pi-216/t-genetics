@@ -1,7 +1,12 @@
 # frozen_string_literal: true
 
 class Allele < ApplicationRecord
-  validates :name, presence: true
+  # Finding #149: allele names are unique within a chromosome (scoped, never
+  # global — the same name on two different chromosomes is legal) and the
+  # DB carries a matching unique index. The designer surfaces this inline
+  # via the command; this model rule is the safeguard for every other write
+  # path (append controller, API, rename).
+  validates :name, presence: true, uniqueness: { scope: :chromosome_id }
 
   delegated_type :inheritable,
                  types: ['Alleles::Float',

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_06_031109) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_13_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -21,6 +21,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_06_031109) do
     t.string "inheritable_type", null: false
     t.string "name"
     t.datetime "updated_at", null: false
+    t.index ["chromosome_id", "name"], name: "index_alleles_on_chromosome_id_and_name", unique: true
     t.index ["chromosome_id"], name: "index_alleles_on_chromosome_id"
   end
 
