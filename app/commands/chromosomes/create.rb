@@ -39,6 +39,8 @@ module Chromosomes
     private
 
     def build_alleles!
+      validate_unique_names!
+
       Array(alleles).each do |attrs|
         next if attrs[:name].blank? # unused designer cards create nothing
 
@@ -80,6 +82,24 @@ module Chromosomes
       return if Array(attrs[:choices]).any?(&:present?)
 
       raise ArgumentError, "allele '#{attrs[:name]}': choice list must not be empty"
+    end
+
+    # Finding #149: duplicate allele names within one designer payload are
+    # rejected here — before any inheritable is built — with a per-allele
+    # message (the "allele '<name>':" prefix the designer renders as an
+    # inline per-card .allele-error, same channel as DEV-0002/DEV-0003).
+    # The model-level scoped uniqueness + unique DB index back this up for
+    # every other write path (append controller, API, rename).
+    def validate_unique_names!
+      seen = {}
+      Array(alleles).each do |attrs|
+        name = attrs[:name].to_s
+        next if name.blank? # unused designer cards create nothing
+
+        raise ArgumentError, "allele '#{name}': name is already used on this chromosome" if seen[name]
+
+        seen[name] = true
+      end
     end
 
     # Mirrors the JSON-API guard in Chromosomes::AllelesController#missing_fields_for

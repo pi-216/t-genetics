@@ -27,12 +27,15 @@ module Chromosomes
       # row is attached so a reversed bound is a 422, never a 500.
       return render json: { errors: allele.inheritable.errors }, status: :unprocessable_entity unless allele.inheritable.valid?
 
-      @chromosome.alleles << allele
+      # Explicit save — association `<<` silently swallows a validation
+      # failure (returns false), which would 201 a never-persisted row.
+      allele.chromosome = @chromosome
+      allele.save!
 
       render json: allele.to_hsh, status: :created
     rescue ArgumentError => e
       render json: { errors: { type: e.message } }, status: :unprocessable_entity
-    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved => e
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique => e
       errors = e.respond_to?(:record) && e.record ? e.record.errors : { base: [e.message] }
       render json: { errors: }, status: :unprocessable_entity
     end

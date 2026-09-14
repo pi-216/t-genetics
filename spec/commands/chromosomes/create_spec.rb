@@ -88,6 +88,56 @@ RSpec.describe Chromosomes::Create do
       end
     end
 
+    # Finding #149: duplicate allele names in one designer payload must fail
+    # atomically with a per-allele message (same inline channel as bounds and
+    # choices: "allele '<name>':" prefix -> .allele-error on the card). The
+    # chromosome must not exist afterwards — a half-built designer save would
+    # silently ship the exact duplication the finding observed.
+    context 'with two alleles sharing one name in the payload' do
+      let(:duplicate_alleles) do
+        [
+          { name: 'weight', type: 'Float', minimum: 0, maximum: 10 },
+          { name: 'weight', type: 'Float', minimum: 0, maximum: 10 }
+        ]
+      end
+
+      it 'fails and creates nothing (atomic)' do
+        expect do
+          described_class.call(organization:, name: 'Dup genome', alleles: duplicate_alleles)
+        end.not_to change(Chromosome, :count)
+      end
+
+      it 'does not leave a stray allele behind' do
+        expect do
+          described_class.call(organization:, name: 'Dup genome', alleles: duplicate_alleles)
+        end.not_to change(Allele, :count)
+      end
+
+      it 'surfaces an inline error naming the allele' do
+        result = described_class.call(organization:, name: 'Dup genome', alleles: duplicate_alleles)
+
+        expect(result.success?).to be false
+        expect(result.errors[:alleles]).to be_present
+        expect(result.errors[:alleles].join).to match(/allele 'weight':/)
+      end
+    end
+
+    # Finding #149: the scope is the chromosome, never the global namespace —
+    # two different chromosomes may both carry a "weight" allele.
+    context 'with the same allele name on two different chromosomes' do
+      it 'creates both chromosomes' do
+        first = described_class.call(organization:, name: 'Genome A',
+                                     alleles: [{ name: 'weight', type: 'Float', minimum: 0, maximum: 10 }])
+        second = described_class.call(organization:, name: 'Genome B',
+                                      alleles: [{ name: 'weight', type: 'Float', minimum: 0, maximum: 10 }])
+
+        expect(first.success?).to be true
+        expect(second.success?).to be true
+        expect(first.chromosome.alleles.map(&:name)).to eq(%w[weight])
+        expect(second.chromosome.alleles.map(&:name)).to eq(%w[weight])
+      end
+    end
+
     # PRD-0004 DEV-0002 (issue #78): allele bounds are validated inline.
     context 'with a Float allele whose minimum exceeds its maximum' do
       it 'fails and creates nothing (atomic)' do

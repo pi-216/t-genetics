@@ -127,6 +127,24 @@ When(/^I leave the choice list empty$/) do
   click_button 'Create chromosome'
 end
 
+# Finding #149 — a second allele card reusing the first card's name must be
+# an inline per-card validation error and must persist nothing (the designer
+# create fails atomically, so neither the chromosome nor any allele row
+# exists afterwards). Same .allele-error surface as bounds/choices.
+When(/^I add two alleles with the same name and create the chromosome$/) do
+  fill_in 'Name', with: 'Dup genome'
+  within(allele_card(0)) { fill_in 'Allele name', with: 'weight' }
+  click_button 'Add allele'
+  expect(page).to have_css('.allele-card', count: 2)
+  within(allele_card(1)) { fill_in 'Allele name', with: 'weight' }
+  click_button 'Create chromosome'
+end
+
+And(/^the duplicated chromosome is not saved$/) do
+  expect(Chromosome.find_by(name: 'Dup genome')).to be_nil
+  expect(Allele.where(name: 'weight')).to be_empty
+end
+
 # Finding #148 (T2) — type-aware allele card fields. The field set is
 # server-rendered per card[:type]; the type-change mechanism is the existing
 # Add-allele round trip (it re-renders preserving the entered cards, so

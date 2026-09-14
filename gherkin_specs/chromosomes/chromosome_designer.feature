@@ -84,6 +84,18 @@ Feature: Chromosome Designer
     When I create a chromosome with a float, an integer, and a boolean allele
     Then the chromosome is saved with exactly those 3 alleles
 
+  @DEV-0149
+  @javascript
+  # Finding #149: duplicate allele names must fail inline in the designer and
+  # persist nothing — the same per-card .allele-error channel as bounds and
+  # choices, live in a browser (the transport that previously rendered the
+  # duplication faithfully).
+  Scenario: Duplicate allele names are rejected inline
+    Given I am designing a chromosome
+    When I add two alleles with the same name and create the chromosome
+    Then I see an inline validation error
+    And the duplicated chromosome is not saved
+
   @DEV-0004
   Scenario: Another organization cannot access my chromosome
     Given organization "Alpha" owns a chromosome named "Alpha-chrom"
