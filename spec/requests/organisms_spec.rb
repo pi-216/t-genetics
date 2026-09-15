@@ -65,7 +65,39 @@ RSpec.describe "Organisms", type: :request do
 
     let(:organism_path) { chromosome_generation_organism_path(chromosome, generation, organism) }
 
+    # An experiment on this chromosome — the PerformanceLog the viewer reads
+    # belongs to it. Setup also births generation 0 of its own; the organism
+    # under test lives in the describe's own generation, which is enough for
+    # a display read of the customer-reported number.
+    let(:experiment) do
+      result = Experiments::Setup.call(chromosome:, external_entity: chromosome,
+                                       name: 'Organism fitness',
+                                       experiment_configuration: { population_size: 10 })
+      raise "Setup failed: #{result.errors.inspect}" unless result.success?
+
+      result.experiment
+    end
+
     before { user }
+
+    # Issue #170 (LOW-5 class) — the organism viewer shows the SAME recorded
+    # (customer-reported) fitness the history rows and suggestion card read:
+    # the PerformanceLog. organism.fitness is written only at evolution, so
+    # reading it here would show "No fitness recorded yet" right after a
+    # report — two truths for one customer number, one click from the
+    # history rows this ticket fixes.
+    it "shows the recorded fitness from the performance log before evolution writes organism.fitness" do
+      PerformanceLog.create!(experiment:, organism:, suggested_at: Time.current,
+                             fitness_input_value: 0.77)
+
+      get organism_path
+
+      expect(response).to have_http_status(:success)
+      # organism.fitness is untouched (no evolution ran) — the page must read
+      # the customer-reported number from the log, not the evolution cache.
+      expect(organism.reload.fitness).to be_nil
+      expect(response.body).to include('Recorded fitness: 0.77')
+    end
 
     it "renders each value by its allele type" do
       get organism_path

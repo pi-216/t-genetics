@@ -1,6 +1,9 @@
 <%# Issue #133 — generation history: one kit card per generation with its
     organisms as hairline-divided rows (mono ids + typed values + recorded
-    fitness). Empty experiment -> explicit empty state. %>
+    fitness). Empty experiment -> explicit empty state. The recorded fitness
+    is the customer-reported number from the PerformanceLog (issue #170),
+    preloaded as @recorded_fitness — the same source the suggestion card
+    reads, visible before evolution writes organism.fitness. %>
 <%= render PageHeaderComponent.new(title: 'Generation history',
                                    kicker: @experiment.name,
                                    back_path: experiment_path(@experiment),
@@ -20,8 +23,8 @@
                               chromosome_generation_organism_path(organism.chromosome, generation, organism),
                               class: 'hover:text-signal' %>
                 </h3>
-                <% if organism.fitness.present? %>
-                  <p class="recorded-fitness font-data text-sm tabular-nums text-good">Recorded fitness: <%= organism.fitness %></p>
+                <% if (fitness = @recorded_fitness[organism.id]).present? %>
+                  <p class="recorded-fitness font-data text-sm tabular-nums text-good">Recorded fitness: <%= fitness %></p>
                 <% else %>
                   <p class="text-sm text-inkMuted">No fitness recorded yet</p>
                 <% end %>

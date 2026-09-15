@@ -4,9 +4,10 @@
 #
 # Renders one point per generation of the experiment's chromosome that has
 # recorded fitness, joined by a self-hosted inline SVG polyline. The fitness
-# values are the recorded averages the engine writes on organisms at
-# evaluation time (customer-reported numbers averaged per organism — the same
-# values the generation history page shows), then averaged per generation.
+# values are the customer-reported numbers averaged per organism from the
+# PerformanceLog (issue #170 — the same record the suggestion card reads, so
+# a report shows on the trend before evolution writes organism.fitness),
+# then averaged per generation.
 #
 # Red lines honored: no charting gem, no external CDN (dependency + network
 # policy, drift flag A2) — the chart is pure inline SVG; and the trend never
@@ -45,6 +46,14 @@ class FitnessTrendComponent < ViewComponent::Base
 
   private
 
+  # Issue #170 — one grouped query of the recorded (customer-reported) fitness
+  # per organism for THIS experiment, keyed by organism id. Same aggregation
+  # EvaluateAndEvolve uses for organism.fitness, but readable immediately —
+  # a report shows on the trend before the next evolution.
+  def recorded_fitness
+    @recorded_fitness ||= PerformanceLog.recorded_fitness_by_organism(experiment: @experiment)
+  end
+
   def compute_points
     values = Generation.where(chromosome: @experiment.chromosome)
                        .order(:iteration)
@@ -73,9 +82,9 @@ class FitnessTrendComponent < ViewComponent::Base
   end
 
   # The generation's recorded fitness = average of its organisms' recorded
-  # fitness averages, or nil when nothing is recorded yet.
+  # (customer-reported) fitness averages, or nil when nothing is reported yet.
   def generation_point(generation)
-    recorded = generation.organisms.filter_map(&:fitness)
+    recorded = generation.organisms.filter_map { |organism| recorded_fitness[organism.id] }
     return nil if recorded.empty?
 
     { iteration: generation.iteration, fitness: (recorded.sum / recorded.size).round(3) }
