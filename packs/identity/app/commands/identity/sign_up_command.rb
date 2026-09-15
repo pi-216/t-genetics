@@ -5,7 +5,7 @@ module Identity
   # user in at the controller layer. Creates all three records atomically —
   # a failure (duplicate email, invalid org name...) leaves no partial state.
 
-  class SignUpCommand < GLCommand::Callable
+  class SignUpCommand < ApplicationCommand
     requires email: String, password: String, organization: String
     returns user: User, organization: Organization, membership: OrgMembership
 

@@ -7,7 +7,7 @@ module Chromosomes
   # chromosome with typed alleles atomically (a failed allele rolls the whole
   # chromosome back) and org-scoped — the organization is a required argument,
   # never derived from a controller-wide default.
-  class Create < GLCommand::Callable
+  class Create < ApplicationCommand
     requires :name, organization: Identity::Organization
     allows alleles: Array # [{ name:, type:, minimum:, maximum:, choices: }]
     returns chromosome: Chromosome

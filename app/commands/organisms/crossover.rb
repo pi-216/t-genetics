@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Organisms
-  class Crossover < GLCommand::Callable
+  class Crossover < ApplicationCommand
     requires :organisms
 
     def call

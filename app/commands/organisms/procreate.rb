@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Organisms
-  class Procreate < GLCommand::Callable
+  class Procreate < ApplicationCommand
     requires :parents,
              target_generation: Generation
     returns :children

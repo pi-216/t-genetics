@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Experiments
-  class RequestSuggestion < GLCommand::Callable
+  class RequestSuggestion < ApplicationCommand
     requires experiment: Experiment
     returns :organism, :performance_log
 

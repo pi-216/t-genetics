@@ -2,7 +2,7 @@
 
 module Organisms
   module Crossovers
-    class Average < GLCommand::Callable
+    class Average < ApplicationCommand
       requires :values
 
       def call

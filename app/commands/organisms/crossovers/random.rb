@@ -2,7 +2,7 @@
 
 module Organisms
   module Crossovers
-    class Random < GLCommand::Callable
+    class Random < ApplicationCommand
       requires :values
 
       def call

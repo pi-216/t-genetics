@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Experiments
-  class RecordOutcome < GLCommand::Callable
+  class RecordOutcome < ApplicationCommand
     requires performance_log: PerformanceLog, fitness_input_value: Float
     allows :outcome_metrics # Hash, will be stored as JSONB
 

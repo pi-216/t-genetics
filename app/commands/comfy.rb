@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Comfy < GLCommand::Callable
+class Comfy < ApplicationCommand
   requires :organisms
 
   def call
