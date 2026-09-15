@@ -6,7 +6,7 @@ module Identity
   # owner cannot be removed. The same guard applies to demotion whenever a
   # role-change command exists; today removal is the only surface.
 
-  class RemoveMembershipCommand < GLCommand::Callable
+  class RemoveMembershipCommand < ApplicationCommand
     requires membership: OrgMembership
     returns membership: OrgMembership
 

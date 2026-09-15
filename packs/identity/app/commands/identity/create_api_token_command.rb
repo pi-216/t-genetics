@@ -7,7 +7,7 @@ module Identity
   # enforcement lives at the controller layer; the command itself is org-scoped
   # and has no side effects beyond the token row.
 
-  class CreateApiTokenCommand < GLCommand::Callable
+  class CreateApiTokenCommand < ApplicationCommand
     requires organization: Organization, name: String
     returns api_token: ApiToken, plaintext_token: String
 

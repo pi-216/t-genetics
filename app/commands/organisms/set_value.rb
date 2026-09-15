@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Organisms
-  class SetValue < GLCommand::Callable
+  class SetValue < ApplicationCommand
     requires :organism,
              :name,
              :value

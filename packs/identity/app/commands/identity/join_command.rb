@@ -6,7 +6,7 @@ module Identity
   # never owner — of the organization the (globally unique) code belongs to.
   # Creates user + membership atomically; a failure leaves no partial state.
 
-  class JoinCommand < GLCommand::Callable
+  class JoinCommand < ApplicationCommand
     requires invite_code: String, email: String, password: String
     returns user: User, organization: Organization, membership: OrgMembership
 

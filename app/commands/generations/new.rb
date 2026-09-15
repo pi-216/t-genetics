@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Generations
-  class New < GLCommand::Callable
+  class New < ApplicationCommand
     requires :parent_generation,
              :offspring_generation
     allows :organism_count

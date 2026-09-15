@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Organisms
-  class Clone < GLCommand::Callable
+  class Clone < ApplicationCommand
     requires organism: Organism,
              target_generation: Generation
     returns dolly_clone: Organism

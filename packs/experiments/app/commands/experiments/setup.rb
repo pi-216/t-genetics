@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Experiments
-  class Setup < GLCommand::Callable
+  class Setup < ApplicationCommand
     requires :external_entity, chromosome: Chromosome # Polymorphic entity + persisted chromosome
     allows :experiment_configuration, :name # Hash, for Experiment.configuration. Defaults to {}.
                                               # Can include :population_size (defaults to 10).

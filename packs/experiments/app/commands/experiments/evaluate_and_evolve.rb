@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Experiments
-  class EvaluateAndEvolve < GLCommand::Callable
+  class EvaluateAndEvolve < ApplicationCommand
     requires experiment: Experiment
     returns :new_generation # The newly created and populated Generation
 

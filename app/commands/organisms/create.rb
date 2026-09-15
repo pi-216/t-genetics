@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Organisms
-  class Create < GLCommand::Callable
+  class Create < ApplicationCommand
     requires generation: Generation
     returns organism: Organism
 

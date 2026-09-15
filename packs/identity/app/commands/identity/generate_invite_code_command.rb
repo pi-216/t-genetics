@@ -8,7 +8,7 @@ module Identity
   # A concurrent generate racing the unique-org constraint falls back to the
   # winner's code instead of failing.
 
-  class GenerateInviteCodeCommand < GLCommand::Callable
+  class GenerateInviteCodeCommand < ApplicationCommand
     requires organization: Organization
     returns invite_code: InviteCode
 
