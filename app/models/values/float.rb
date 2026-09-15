@@ -6,10 +6,7 @@ module Values
     include Valuable
 
     def data
-      val = attributes['data']
-      return 0 if val.nil?
-
-      val
+      attributes['data']
     end
 
     def random

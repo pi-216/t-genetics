@@ -5,10 +5,11 @@
 # allele type. The Given builds the real domain state through the same Setup
 # command the UI create flow runs (experiment_named lives in
 # experiment_workspace.rb — shared step file, same load path): a chromosome
-# with mixed allele types (float/int/bool), an experiment whose birthed
-# generation contains organisms, and typed value data materialized through
-# the engine's own mutation path (Valuable#mutate!) — exactly what an
-# evolved generation's values look like.
+# with mixed allele types (float/int/bool/option) and an experiment whose
+# birthed generation contains organisms. Since issue #166 organisms are born
+# with real values (each valuable randomized within its allele bounds), so the
+# viewer renders exactly what a suggestion would carry — no mutation pass
+# needed to materialize data.
 #
 # NOTE: the chromosome must be reloaded after adding alleles — Chromosome's
 # after_initialize hook caches the (then empty) allele collection on the
@@ -41,7 +42,6 @@ Given(/^the generation browser shows an organism$/) do
   organisms = experiment.current_generation.organisms.to_a
   expect(organisms).not_to be_empty
   @open_organism = organisms.first
-  @open_organism.values.to_a.each(&:mutate!)
 
   visit history_experiment_path(experiment)
   expect(page).to have_content("Organism ##{@open_organism.id}")

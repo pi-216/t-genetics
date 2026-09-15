@@ -58,12 +58,9 @@ RSpec.describe "Organisms", type: :request do
 
     let(:generation) { FactoryBot.create(:generation, chromosome: chromosome) }
     let!(:organism) do
-      created = Organisms::Create.call(generation: generation).organism
-      # The engine births values with nil data — materialize typed data
-      # through its own mutation path (Valuable#mutate!), exactly like an
-      # evolved generation's values would look.
-      created.values.to_a.each(&:mutate!)
-      created.reload
+      # Issue #166: organisms are born with real (non-nil) values — the crew
+      # viewer renders exactly what a suggestion would carry.
+      Organisms::Create.call(generation: generation).organism
     end
 
     let(:organism_path) { chromosome_generation_organism_path(chromosome, generation, organism) }
