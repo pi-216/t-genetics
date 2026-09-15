@@ -65,6 +65,18 @@ class Experiment < ApplicationRecord
     return false if organisms_in_current_generation.empty?
 
     actual_population_size = organisms_in_current_generation.count
+
+    # QA-2026-09-14 MEDIUM-3 (issue #168): ripeness must mean "the customer
+    # has seen every organism", not "% of the generation reported". A
+    # PerformanceLog is created only by RequestSuggestion, so an organism
+    # with none was never put before the customer — evolving would silently
+    # drop it from the loop (verified: pop 4, feedback 0.75, min 2 tripped
+    # at 3/4 reported with the 4th organism never suggested).
+    suggested_organism_ids = PerformanceLog.where(experiment_id: id)
+                                           .where(organism_id: organisms_in_current_generation.select(:id))
+                                           .distinct.pluck(:organism_id)
+    return false unless suggested_organism_ids.size == actual_population_size
+
     # Use configured pop size for multiplier, or actual if not configured
     target_population_size_for_multiplier = configuration.fetch('population_size', actual_population_size).to_i
 

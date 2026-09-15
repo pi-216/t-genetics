@@ -58,17 +58,34 @@ RSpec.describe Experiments::EvaluateAndEvolve do
     end
   end
 
-  # QA-2026-09-14 CRITICAL-2 (issue #167) — an organism the customer never
-  # tested must not receive a fabricated fitness at evolution. The ripening
-  # threshold (feedback 0.75 of a 4-organism generation) trips after three
-  # reported outcomes, leaving exactly one organism without any reported
-  # fitness. Evolving must leave its fitness NULL — the with_fitness scope
-  # then excludes it from the evolution average AND from breeding selection —
-  # never a written 0.0.
+  # QA-2026-09-14 CRITICAL-2 (issue #167) + MEDIUM-3 (issue #168) — an
+  # organism without a reported fitness must not receive a fabricated fitness
+  # at evolution. Post-#168 ripeness requires EVERY organism of the current
+  # generation to have been SUGGESTED before evolution can fire, so the
+  # unreported state that survives to evolution is "suggested but not yet
+  # reported" (the payment-form case: the customer saw it, never sent the
+  # number). Evolving must leave its fitness NULL — the with_fitness scope
+  # excludes it from the evolution average AND from breeding selection —
+  # never a written 0.0, and the generation must not contain an organism
+  # that was never suggested at all.
   describe 'when a generation contains an organism with no reported fitness' do
-    before { make_ripe }
-
     let(:parent_generation) { Generation.where(chromosome: experiment.chromosome, iteration: 0).first! }
+
+    before do
+      experiment.start!
+      # The whole generation has been suggested (issue #168's gate): each
+      # organism carries a suggestion log, exactly as RequestSuggestion
+      # leaves one.
+      parent_generation.organisms.each do |org|
+        PerformanceLog.create!(experiment: experiment, organism: org, suggested_at: Time.current)
+      end
+      # Only three of four organisms have a reported outcome — the fourth is
+      # suggested-but-unreported (customer saw it, hasn't reported yet).
+      PerformanceLog.where(experiment_id: experiment.id).order(:id).first(3).each do |log|
+        outcome = Experiments::RecordOutcome.call(performance_log: log, fitness_input_value: 0.81)
+        raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
+      end
+    end
 
     def untested_organism
       parent_generation.organisms.find do |organism|
@@ -77,9 +94,14 @@ RSpec.describe Experiments::EvaluateAndEvolve do
       end
     end
 
-    it 'leaves exactly one organism unreported before evolution (scenario shape)' do
+    it 'leaves exactly one organism suggested-but-unreported before evolution (scenario shape)' do
       expect(parent_generation.organisms.count).to eq(4)
       expect(untested_organism).to be_present
+      # Every organism has a suggestion log — the never-suggested state that
+      # tripped MEDIUM-3 is impossible here.
+      expect(PerformanceLog.where(experiment_id: experiment.id)
+                           .distinct.pluck(:organism_id).size).to eq(4)
+      expect(experiment.ripe_for_evolution?).to be true
     end
 
     it 'does not write fitness 0.0 for an organism nobody reported' do
@@ -99,6 +121,34 @@ RSpec.describe Experiments::EvaluateAndEvolve do
       expect(average).to eq(0.81)
 
       expect(parent_generation.organisms.with_fitness.pluck(:id)).not_to include(untested_organism.id)
+    end
+  end
+
+  # QA-2026-09-14 MEDIUM-3 (issue #168) — the command boundary must fail
+  # closed when a caller invokes EvaluateAndEvolve directly on a generation
+  # that still contains an organism never suggested to the customer (the
+  # ripe_for_evolution? gate only protects the auto path through
+  # RequestSuggestion; this proves the rule holds for direct invocations).
+  describe 'when the current generation contains an organism that was never suggested' do
+    before do
+      experiment.start!
+      # Report three of four organisms but never SUGGEST the fourth — no log
+      # at all, never put before the customer.
+      parent_generation = Generation.where(chromosome: experiment.chromosome, iteration: 0).first!
+      parent_generation.organisms.first(3).each do |org|
+        PerformanceLog.create!(experiment: experiment, organism: org, suggested_at: Time.current)
+                      .update!(fitness_input_value: 0.81, outcome_recorded_at: Time.current)
+      end
+    end
+
+    it 'refuses to evolve and breeds nothing' do
+      generations_before = Generation.where(chromosome: experiment.chromosome).count
+
+      result = described_class.call(experiment:)
+
+      expect(result).not_to be_success
+      expect(result.errors.full_messages.join).to match(/never suggested/)
+      expect(Generation.where(chromosome: experiment.chromosome).count).to eq(generations_before)
     end
   end
 end

@@ -40,6 +40,17 @@ module Experiments
         organisms_to_evaluate = current_generation.organisms.to_a
         fail_command!(errors: { generation: ['current generation has no organisms to evaluate'] }) if organisms_to_evaluate.empty?
 
+        # QA-2026-09-14 MEDIUM-3 (issue #168): never evolve a generation the
+        # customer has not fully seen. A PerformanceLog exists only after
+        # RequestSuggestion draws an organism, so one without a log was never
+        # suggested — evolving would silently drop it. ripe_for_evolution?
+        # gates the auto path; this guard covers direct invocations so the
+        # rule holds at the command boundary too.
+        suggested_organism_ids = PerformanceLog.where(experiment_id: context.experiment.id)
+                                               .where(organism_id: organisms_to_evaluate.map(&:id))
+                                               .distinct.pluck(:organism_id)
+        fail_command!(errors: { generation: ['current generation contains organisms that were never suggested to the customer'] }) if suggested_organism_ids.size < organisms_to_evaluate.size
+
         breed_offspring!(current_generation, organisms_to_evaluate)
       end
     rescue ActiveRecord::Rollback
