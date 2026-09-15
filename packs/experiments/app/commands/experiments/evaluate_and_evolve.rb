@@ -86,18 +86,20 @@ module Experiments
       ActiveRecord::Base.transaction do
         # 1. Evaluate fitness
         organisms_to_evaluate.each do |organism|
-          original_organism_fitness_values_for_rollback[organism.id] = organism.fitness
-
           performance_logs = PerformanceLog.where(
             experiment_id: context.experiment.id,
             organism_id: organism.id
           ).where.not(fitness_input_value: nil) # Only consider logs with fitness input
 
-          new_fitness = if performance_logs.any?
-                          performance_logs.average(:fitness_input_value)
-                        else
-                          0.0 # Default fitness if no relevant performance logs
-                        end
+          # Never write a fitness for an organism the customer never reported
+          # (issue #167): a fabricated 0.0 pollutes the evolution average and
+          # enters breeding selection as a 'worst performer'. Untested
+          # organisms keep NULL fitness, which the with_fitness scope excludes
+          # from averages AND selection. AVG over an empty set is NULL.
+          new_fitness = performance_logs.average(:fitness_input_value)
+          next if new_fitness.nil?
+
+          original_organism_fitness_values_for_rollback[organism.id] = organism.fitness
 
           unless organism.update(fitness: new_fitness)
             errors.add(:base, "Failed to update fitness for organism #{organism.id}")
