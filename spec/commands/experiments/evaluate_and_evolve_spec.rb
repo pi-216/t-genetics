@@ -57,4 +57,48 @@ RSpec.describe Experiments::EvaluateAndEvolve do
       expect(experiment.reload.current_generation.iteration).to eq(1)
     end
   end
+
+  # QA-2026-09-14 CRITICAL-2 (issue #167) — an organism the customer never
+  # tested must not receive a fabricated fitness at evolution. The ripening
+  # threshold (feedback 0.75 of a 4-organism generation) trips after three
+  # reported outcomes, leaving exactly one organism without any reported
+  # fitness. Evolving must leave its fitness NULL — the with_fitness scope
+  # then excludes it from the evolution average AND from breeding selection —
+  # never a written 0.0.
+  describe 'when a generation contains an organism with no reported fitness' do
+    before { make_ripe }
+
+    let(:parent_generation) { Generation.where(chromosome: experiment.chromosome, iteration: 0).first! }
+
+    def untested_organism
+      parent_generation.organisms.find do |organism|
+        PerformanceLog.where(experiment_id: experiment.id, organism_id: organism.id)
+                      .where.not(fitness_input_value: nil).none?
+      end
+    end
+
+    it 'leaves exactly one organism unreported before evolution (scenario shape)' do
+      expect(parent_generation.organisms.count).to eq(4)
+      expect(untested_organism).to be_present
+    end
+
+    it 'does not write fitness 0.0 for an organism nobody reported' do
+      organism = untested_organism
+      expect(organism.fitness).to be_nil
+
+      expect(described_class.call(experiment:)).to be_success
+
+      expect(organism.reload.fitness).to be_nil
+      expect(Generation.where(chromosome: experiment.chromosome, iteration: 1).count).to eq(1)
+    end
+
+    it 'excludes the unreported organism from the evolution average and breeding pool' do
+      expect(described_class.call(experiment:)).to be_success
+
+      average = Generations::Fitness.call(generation: parent_generation).average_fitness
+      expect(average).to eq(0.81)
+
+      expect(parent_generation.organisms.with_fitness.pluck(:id)).not_to include(untested_organism.id)
+    end
+  end
 end
