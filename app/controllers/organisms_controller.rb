@@ -13,7 +13,13 @@ class OrganismsController < ApplicationController
   end
 
   def show
-    fresh_when(@organism)
+    # Issue #170 — the organism viewer reads the recorded (customer-reported)
+    # fitness from the PerformanceLog (across every experiment that suggested
+    # this organism), not the evolution-time organism.fitness cache: a report
+    # shows immediately. The ETag includes the value so a report invalidates
+    # the cached page (a PerformanceLog write does not touch the organism row).
+    @recorded_fitness = PerformanceLog.recorded_fitness_for(@organism)
+    fresh_when(etag: [@organism, @recorded_fitness.to_s])
     respond_to do |format|
       # PRD-0004 DEV-0005 (issue #81): HTML organism viewer — each value
       # rendered by its allele type (see views/organisms/show.html.erb).

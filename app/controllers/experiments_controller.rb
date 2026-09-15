@@ -27,12 +27,12 @@ class ExperimentsController < ApplicationController
   # the experiment's chromosome (iteration, organism count, and each organism
   # with its typed values and recorded fitness). Read-only; org-scoped by
   # set_experiment, so a cross-org/unknown experiment answers 404 before this
-  # action runs. Generations belong to the chromosome (not the experiment),
-  # so the history is scoped through the experiment's own chromosome.
+  # action runs. @recorded_fitness (issue #170) preloads the customer-reported
+  # numbers for the organism rows — same source the suggestion card reads.
   def history
-    @generations = Generation.where(chromosome: @experiment.chromosome)
-                             .order(:iteration)
+    @generations = Generation.where(chromosome: @experiment.chromosome).order(:iteration)
                              .includes(organisms: { values: :allele })
+    @recorded_fitness = PerformanceLog.recorded_fitness_by_organism(experiment: @experiment)
   end
 
   def new

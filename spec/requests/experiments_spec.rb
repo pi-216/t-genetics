@@ -399,6 +399,32 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
       expect(response.body).to include('0.81')
     end
 
+    # Issue #170 — the history page reads the same reported fitness the
+    # suggestion card does, so a report is visible immediately, not only
+    # after evolution writes organism.fitness.
+    def suggest_and_report(fitness:)
+      experiment.start!
+      suggestion = Experiments::RequestSuggestion.call(experiment:)
+      raise "RequestSuggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+
+      outcome = Experiments::RecordOutcome.call(performance_log: suggestion.performance_log,
+                                                fitness_input_value: fitness)
+      raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
+    end
+
+    it 'shows a just-reported fitness in the history immediately (no evolution needed)' do
+      sign_in_as(organization: org)
+      suggest_and_report(fitness: 0.77)
+
+      get history_experiment_url(experiment)
+
+      expect(response).to have_http_status(:ok)
+      expect(experiment.reload.ripe_for_evolution?).to be(false)
+      # The reported organism's row carries the recorded (customer-reported)
+      # fitness immediately — identical to the suggestion card's source.
+      expect(response.body).to include('Recorded fitness: 0.77')
+    end
+
     # Each generation row shows its iteration, organism count, and every
     # organism id — the browse surface of the generation history.
     def expect_history_lists_every_generation(body)
@@ -577,10 +603,20 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
                                                     fitness_input_value: 0.81)
           raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
         end
-
         next_suggestion = Experiments::RequestSuggestion.call(experiment:)
         raise "RequestSuggestion failed: #{next_suggestion.errors.inspect}" unless next_suggestion.success?
       end
+    end
+
+    # Issue #170 — one suggestion plus one reported fitness, no evolution.
+    def suggest_and_report(fitness:)
+      experiment.start!
+      suggestion = Experiments::RequestSuggestion.call(experiment:)
+      raise "RequestSuggestion failed: #{suggestion.errors.inspect}" unless suggestion.success?
+
+      outcome = Experiments::RecordOutcome.call(performance_log: suggestion.performance_log,
+                                                fitness_input_value: fitness)
+      raise "RecordOutcome failed: #{outcome.errors.inspect}" unless outcome.success?
     end
 
     it 'renders the per-generation fitness trend as a self-hosted SVG line' do
@@ -622,6 +658,25 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include('fitness-trend-empty')
       expect(response.body).not_to include('fitness-trend-point')
+    end
+
+    # Issue #170 — the reported fitness is reflected immediately (same source
+    # of truth: the PerformanceLog the suggestion card reads). AC: a report
+    # must be visible on history and trend without waiting for evolution.
+    it 'shows a just-reported fitness on the trend immediately (no evolution needed)' do
+      sign_in_as(organization: org)
+      suggest_and_report(fitness: 0.77)
+
+      get experiment_url(experiment)
+
+      expect(response).to have_http_status(:ok)
+      # The current generation now reports fitness but evolution has not run.
+      expect(experiment.reload.ripe_for_evolution?).to be(false)
+      # The trend renders the reported value as a generation point.
+      expect(response.body).to include('fitness-trend-point')
+      expect(response.body).to include('data-generation="0"')
+      expect(response.body).to include('0.77')
+      expect(response.body).not_to include('fitness-trend-empty')
     end
   end
 end

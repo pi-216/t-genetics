@@ -1,6 +1,9 @@
 <%# Issue #133 — organism show: the specimen detail. Page header (mono id),
     one values card with typed rows (value-row value-<type> + data attrs kept
-    for the machine-checkable contract), and the recorded-fitness readout. %>
+    for the machine-checkable contract), and the recorded-fitness readout.
+    The readout shows the recorded (customer-reported) fitness from the
+    PerformanceLog (preloaded as @recorded_fitness), not the evolution-time
+    organism.fitness cache — a report is visible immediately (issue #170). %>
 <%= render PageHeaderComponent.new(title: "Organism ##{@organism.id}",
                                    kicker: 'Organism',
                                    subtitle: "From generation #{@organism.generation.iteration} of #{@organism.chromosome.name}",
@@ -20,8 +23,8 @@
   </section>
 <% end %>
 
-<% if @organism.fitness.present? %>
-  <p class="recorded-fitness mt-4 font-data text-sm tabular-nums text-good">Recorded fitness: <%= @organism.fitness %></p>
+<% if @recorded_fitness.present? %>
+  <p class="recorded-fitness mt-4 font-data text-sm tabular-nums text-good">Recorded fitness: <%= @recorded_fitness %></p>
 <% else %>
   <p class="mt-4 text-sm text-inkMuted">No fitness recorded yet</p>
 <% end %>
