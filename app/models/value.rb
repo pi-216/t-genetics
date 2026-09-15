@@ -14,7 +14,15 @@ class Value < ApplicationRecord
 
   def self.new_from(allele, options = {})
     valuable_type = "Values::#{allele.type}".constantize
-    new(options.merge(allele:, valuable: valuable_type.new))
+    valuable = valuable_type.new
+    value = new(options.merge(allele:, valuable:))
+    # Pin the has_one inverse before generating a value: Valuable delegates
+    # `allele` through `value`, so an unborn Value cannot resolve its allele
+    # otherwise — and `random` needs it. Without this, every organism was born
+    # with NULL allele data (issue #166) because nothing ever called `random`.
+    valuable.value = value if valuable.respond_to?(:value=) && valuable.value.nil?
+    valuable.data = valuable.random
+    value
   end
 
   def self.create_from(allele, options = {})

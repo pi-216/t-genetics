@@ -151,6 +151,68 @@ RSpec.describe Organisms::Create do
     end
   end
 
+  # Issue #166 (QA-2026-09-14 CRITICAL-1) — the core product promise is "we
+  # suggest an organism to test": a fresh organism must carry a real value per
+  # allele, randomized within the allele's bounds, from the moment it is born.
+  # Before this fix `Value.new_from` never called `Values::*#random`, so every
+  # organism was born with NULL allele data and the customer would test nothing
+  # while we bred from phantom zeros.
+  describe 'value assignment at birth (issue #166)', :real_db do
+    # Mixed allele types (float/int/bool/option) so every valuable type gets a
+    # real value. The chromosome is reloaded after adding alleles: its
+    # after_initialize hook caches the (then empty) allele collection, and
+    # Organisms::Create would otherwise birth values from a stale empty
+    # collection.
+    let(:chromosome) do
+      built = FactoryBot.create(:chromosome)
+
+      Allele.new_with_float(name: 'size', minimum: 0.5, maximum: 1.5).tap do |a|
+        a.chromosome = built
+        a.save!
+      end
+      Allele.new_with_integer(name: 'count', minimum: 2, maximum: 8).tap do |a|
+        a.chromosome = built
+        a.save!
+      end
+      Allele.new_with_boolean(name: 'enabled').tap do |a|
+        a.chromosome = built
+        a.save!
+      end
+      Allele.new_with_option(name: 'color', choices: %w[red blue]).tap do |a|
+        a.chromosome = built
+        a.save!
+      end
+
+      built.reload
+    end
+
+    let(:generation) { FactoryBot.create(:generation, chromosome: chromosome) }
+
+    subject(:organism) { described_class.call(generation: generation).organism }
+
+    it 'assigns a non-nil value within bounds for every value the organism is born with' do
+      values = organism.values.includes(:allele)
+      expect(values.size).to eq(4)
+
+      by_name = values.index_by { |v| v.allele.name }
+      expect(by_name['size'].data).to be_between(0.5, 1.5)
+      expect(by_name['count'].data).to be_between(2, 8)
+      expect(by_name['enabled'].data).to be_in([true, false])
+      expect(by_name['color'].data).to be_in(%w[red blue])
+    end
+
+    it 'persists no NULL data rows for the born organism (float/integer/boolean/option)' do
+      organism
+
+      # Scoped to the born organism's own values (all four types ride on it) —
+      # a table-wide `where(data: nil).count` would be brittle against leftover
+      # rows in the shared test DB from aborted runs. (Not `be_present`: a
+      # boolean valuable's data can legitimately be `false`, and
+      # `false.present?` is false.)
+      expect(organism.values.map(&:data)).not_to include(nil)
+    end
+  end
+
   describe '#rollback' do
     # Pass the command class to GLCommand::Context as its first argument
     let(:command_context) { GLCommand::Context.new(described_class) }
