@@ -45,6 +45,10 @@ Rails.application.routes.draw do
   # lives on the settings page; the plaintext is shown once in the flash.
   post "organization/api_tokens" => "identity/api_tokens#create", as: :api_tokens
 
+  # Dedicated API-token management page (PRD-0007 DEV-0001 / issue #187) —
+  # owner-only list of every org token (active and revoked) with status.
+  get "organization/api_tokens" => "identity/api_tokens#index", as: :api_tokens_index
+
   # Machine API (PRD-0005) — every endpoint authenticates via a Bearer token
   # scoped to an organization; see Api::V1::BaseController.
   namespace :api do

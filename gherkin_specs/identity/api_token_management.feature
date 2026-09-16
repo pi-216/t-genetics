@@ -24,7 +24,6 @@ Feature: API token management
 
   @javascript
   @DEV-0001
-  @wip
   Scenario: The owner can open a dedicated token management page
     Given I am signed in as the owner of "Loop Labs"
     When I open the API token management page
