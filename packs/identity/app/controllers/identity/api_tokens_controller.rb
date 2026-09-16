@@ -4,8 +4,8 @@ module Identity
   # Org-scoped API-token creation (PRD-0005 DEV-0001 / issue #36). Owner-only
   # guard mirrors the invite-code controller; the command performs the write
   # and returns the plaintext once, which lands in the flash for a single
-  # render (never persisted, never re-displayed). The create form lives on the
-  # organization settings page.
+  # render (never persisted, never re-displayed). The create form + one-time
+  # reveal live on the dedicated management page (PRD-0007 / issue #189).
 
   class ApiTokensController < ApplicationController
     before_action :require_owner
@@ -28,7 +28,7 @@ module Identity
       else
         flash[:alert] = result.error
       end
-      redirect_to settings_path
+      redirect_to api_tokens_index_path
     end
 
     private

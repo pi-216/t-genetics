@@ -27,6 +27,7 @@ Feature: Token API
   Scenario: The owner creates an API token and sees it once
     When I create an API token named "ci-runner" for "Loop Labs"
     Then I see the plaintext token exactly once
+    And the plaintext token is not shown again
 
   @DEV-0002
   Scenario: A member cannot create or revoke tokens

@@ -30,7 +30,9 @@ When(/^I create an API token named "([^"]+)" for "([^"]+)"$/) do |token_name, or
   fill_in 'Password', with: user.password
   click_button 'Sign in'
 
-  visit settings_path
+  # The create surface lives on the dedicated management page since
+  # PRD-0007 (issue #189) — the settings-page form moved there.
+  visit api_tokens_index_path
   fill_in 'Token name', with: token_name
   click_button 'Create token'
 
@@ -43,11 +45,16 @@ Then(/^I see the plaintext token exactly once$/) do
   # Shown exactly once on the creation response.
   expect(page.body.scan(@plaintext_token).size).to eq(1)
 
-  # Digest-only storage — the plaintext never lands in the database.
+  # Digest-only storage — the raw plaintext never lands in the database.
   expect(Identity::ApiToken.pluck(:token_digest)).not_to include(@plaintext_token)
+end
 
-  # Not re-shown on a later visit.
-  visit settings_path
+# The flash that carried the plaintext is consumed by the redirect — a later
+# request never re-shows it. Split from the exactly-once step so consumers
+# that need the live reveal on the page (PRD-0007 copy step) run this check
+# after their own assertions (issue #189).
+Then(/^the plaintext token is not shown again$/) do
+  visit api_tokens_index_path
   expect(page.body).not_to include(@plaintext_token)
 end
 

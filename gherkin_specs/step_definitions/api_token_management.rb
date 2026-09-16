@@ -37,3 +37,36 @@ Then(/^I see "([^"]+)" marked active$/) do |token_name|
   row = find('tr', text: token_name)
   expect(row).to have_content('Active')
 end
+
+# PRD-0007 DEV-0003 / issue #189 — the owner creates a token on the
+# management page (the create surface moved off the settings page) and the
+# one-time plaintext reveal + copy affordance lands there. The sign-in is the
+# scenario's own Given; @plaintext_token is captured for the exactly-once and
+# clipboard assertions that follow.
+When(/^I create an API token named "([^"]+)"$/) do |token_name|
+  visit api_tokens_index_path
+  fill_in 'Token name', with: token_name
+  click_button 'Create token'
+  @plaintext_token = page.find('#token_plaintext_value').text.strip
+end
+
+Then(/^I can copy it from the page$/) do
+  expect(page).to have_button('Copy')
+  button = page.find('#copy_token_plaintext')
+  expect(button['data-action']).to include('clipboard-copy#copy')
+  expect(page.find('#token_plaintext')['data-clipboard-target']).to eq('#token_plaintext_value')
+
+  button.click
+
+  # Real browser, real click: the Stimulus controller resolves
+  # navigator.clipboard.writeText with the reveal element's exact text and
+  # only then flips the panel into the copied state — a rejected write never
+  # claims success. Chrome holds clipboard-read back from automation scripts,
+  # so the OS-clipboard round-trip itself is Chromium's own guarantee for a
+  # resolved write; everything testable at the browser boundary is pinned.
+  expect(page).to have_css('#token_plaintext[data-copied="true"]', wait: 5)
+end
+
+Then(/^"([^"]+)" appears in the token list$/) do |token_name|
+  expect(page).to have_css('tr', text: token_name)
+end
