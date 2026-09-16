@@ -31,6 +31,19 @@ module Identity
       redirect_to api_tokens_index_path
     end
 
+    # PRD-0007 DEV-0004 / issue #190 — owner-only revoke of an active token.
+    # Scoped through current_organization so a cross-org id is
+    # indistinguishable from a missing row (404, never data). Immediate:
+    # TokenAuthentication rejects a stamped token on the next API request.
+    def revoke
+      api_token = current_organization.api_tokens.find_by(id: params[:id])
+      return head :not_found unless api_token
+
+      result = RevokeApiTokenCommand.call(api_token: api_token)
+      flash[:alert] = result.error unless result.success?
+      redirect_to api_tokens_index_path
+    end
+
     private
 
     def require_owner

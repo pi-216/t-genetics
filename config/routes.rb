@@ -49,6 +49,11 @@ Rails.application.routes.draw do
   # owner-only list of every org token (active and revoked) with status.
   get "organization/api_tokens" => "identity/api_tokens#index", as: :api_tokens_index
 
+  # Owner-only token revocation (PRD-0007 DEV-0004 / issue #190). A POST
+  # against an active token stamps revoked_at; TokenAuthentication then
+  # rejects the credential on the next API request. Cross-org ids answer 404.
+  post "organization/api_tokens/:id/revoke" => "identity/api_tokens#revoke", as: :revoke_api_token
+
   # Machine API (PRD-0005) — every endpoint authenticates via a Bearer token
   # scoped to an organization; see Api::V1::BaseController.
   namespace :api do

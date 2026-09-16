@@ -70,3 +70,26 @@ end
 Then(/^"([^"]+)" appears in the token list$/) do |token_name|
   expect(page).to have_css('tr', text: token_name)
 end
+
+# PRD-0007 DEV-0004 / issue #190 — the owner revokes an active token from
+# the management page. The revoke control is a destructive POST (the revoke
+# button carries an onsubmit confirmation); the real-browser driver resolves
+# the confirm dialog via Capybara's modal handling, then asserts the row's
+# status flips to revoked and the one-time plaintext surface stays absent
+# (revocation renders digest-only rows, never plaintext).
+When(/^I revoke the token "([^"]+)"$/) do |token_name|
+  visit api_tokens_index_path
+  row = page.find('tr', text: token_name)
+  within(row) do
+    accept_confirm { click_button 'Revoke' }
+  end
+end
+
+Then(/^"([^"]+)" is shown as revoked in the list$/) do |token_name|
+  row = page.find('tr', text: token_name)
+  expect(row).to have_content('Revoked')
+end
+
+Then(/^the plaintext token is never shown again$/) do
+  expect(page).not_to have_css('#token_plaintext_value')
+end
