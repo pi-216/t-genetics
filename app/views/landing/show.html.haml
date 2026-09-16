@@ -5,66 +5,66 @@
 
 %section.landing-hero.bg-base
   %h1.font-display.text-display.font-bold.tracking-display TGenetics
-  %p.landing-tagline Genetic algorithms as a service — an evolution loop you run against your own fitness function.
+  %p.landing-tagline.mt-4 Genetic algorithms as a service — an evolution loop you run against your own fitness function.
 
-%section#how-it-works
-  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal The Loop
-  %h2 How it works
-  %ol.landing-steps
+%section#how-it-works.mt-16.md:mt-24
+  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal.mb-2 The Loop
+  %h2.font-headline.text-headline.font-semibold.tracking-headline.mb-4 How it works
+  %ol.landing-steps.mt-6.space-y-3
     %li We suggest an organism to test — drawn at random from the organisms you haven't scored yet.
     %li You test it on your infrastructure, against your fitness.
     %li You report one number: the fitness you measured.
     %li We breed offspring — crossover and mutation — from the outcomes.
     %li Repeat: every generation gets more informative.
 
-%section#trust
-  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal Your fitness
-  %h2 Your fitness function stays yours
+%section#trust.mt-16.md:mt-24
+  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal.mb-2 Your fitness
+  %h2.font-headline.text-headline.font-semibold.tracking-headline.mb-4 Your fitness function stays yours
   %p We never run or evaluate your fitness function. You test every suggestion on your own infrastructure, and the only number we see is the one you report.
 
-%section#pricing
-  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal Pricing posture
-  %h2 Pricing
+%section#pricing.mt-16.md:mt-24
+  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal.mb-2 Pricing posture
+  %h2.font-headline.text-headline.font-semibold.tracking-headline.mb-4 Pricing
   %p.landing-tier-label Free tier — the basic loop
-  %p.landing-tier-desc Suggestions, one fitness number per suggestion, and offspring breeding. Free while we learn who really needs this.
-  %p.landing-paid-note A paid tier is planned for later. Nothing about it is built or promised yet.
+  %p.landing-tier-desc.mt-3 Suggestions, one fitness number per suggestion, and offspring breeding. Free while we learn who really needs this.
+  %p.landing-paid-note.mt-4 A paid tier is planned for later. Nothing about it is built or promised yet.
 
-%section#what-is-a-ga
-  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal What is a genetic algorithm?
-  %h2 An evolution loop that searches your design space
+%section#what-is-a-ga.mt-16.md:mt-24
+  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal.mb-2 What is a genetic algorithm?
+  %h2.font-headline.text-headline.font-semibold.tracking-headline.mb-4 An evolution loop that searches your design space
   %p
     A genetic algorithm is an evolutionary loop: we vary candidate solutions, you test them,
     the best ones get selected, and we breed the next round. Variation → test → selection →
     repeat. Each cycle searches a design space for candidates that score well against a
     fitness function — the one number per candidate that measures what you actually care about.
-  %p
+  %p.mt-4
     The fitness function stays yours. We never run or evaluate it — you test every suggestion
     on your own infrastructure and report one number back.
 
-%section#use-cases
-  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal Use cases
-  %h2 Where one number per candidate is enough
+%section#use-cases.mt-16.md:mt-24
+  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal.mb-2 Use cases
+  %h2.font-headline.text-headline.font-semibold.tracking-headline.mb-4 Where one number per candidate is enough
   .use-case-cards.grid.grid-cols-1.gap-4.lg:grid-cols-3
     .use-case-card
-      %h3 Payment form tips
-      %p
+      %h3.font-headline.font-semibold.tracking-headline.mb-2 Payment form tips
+      %p.mt-3
         A tip amount is a genome: three amounts you tune. We suggest a configuration, your
         checkout measures the one number that matters, and we breed the next generation of tip
         suggestions.
     .use-case-card
-      %h3 Design parameter search
-      %p
+      %h3.font-headline.font-semibold.tracking-headline.mb-2 Design parameter search
+      %p.mt-3
         Any product with a recipe — layout, thresholds, component sizing — where each candidate
         can be scored. We propose, you measure on your box, we evolve toward better candidates.
     .use-case-card
-      %h3 Hyperparameter selection
-      %p
+      %h3.font-headline.font-semibold.tracking-headline.mb-2 Hyperparameter selection
+      %p.mt-3
         Pick a set of numeric knobs for a model or process, score each combination once, and let
         the loop find the region worth exploring next — one reported number per trial.
 
-%section#create-a-genome
-  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal Create a genome
-  %h2 From blank chromosome to first suggestion
+%section#create-a-genome.mt-16.md:mt-24
+  %p.landing-kicker.font-data.text-caption.font-medium.tracking-caption.uppercase.text-signal.mb-2 Create a genome
+  %h2.font-headline.text-headline.font-semibold.tracking-headline.mb-4 From blank chromosome to first suggestion
   %p
     A genome is a set of typed alleles that define the value space you want to search. The designer
     lets you build one with four allele types: Float, Integer, Boolean, and Option. Set a
@@ -82,6 +82,6 @@
         = image_tag 'experiment-mobile.png', alt: 'Experiment workspace — configuration, population and fitness trend', class: 'landing-shot w-full rounded-md border border-line'
       %figcaption Turn it into an experiment and request a suggestion.
 
-%section.landing-cta
+%section.landing-cta.mt-16.md:mt-24.flex.flex-wrap.gap-4
   = link_to 'Start free', register_path, class: 'landing-cta-link inline-block bg-signal text-onSignal font-data text-caption font-medium tracking-caption rounded-md py-3 px-5.5'
   = link_to 'Sign in', login_path, class: 'landing-cta-link inline-block border border-line text-ink hover:text-signal font-data text-caption font-medium tracking-caption rounded-md py-3 px-5.5'
