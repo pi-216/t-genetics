@@ -1,0 +1,76 @@
+<%# Issue #184 — PO ruling 2026-09-15: standard CRUD. The allele form is
+    type-aware: a type select (new) or read-only type label (edit), plus name
+    and the fields the selected type constrains (Float/Integer → min/max,
+    Option → choices, Boolean → name only). A small Stimulus controller
+    reveals the matching field group in a real browser; the server is the
+    source of truth regardless (only the selected type's fields validate).
+    Field ids match the machine contract param names (allele[name],
+    allele[minimum], ...) so one strong-params shape serves web + JSON. %>
+<%# Finding #147 (T1) — the 422 re-render must display in a real browser:
+    opt out of Turbo exactly like the other re-rendering forms. %>
+<%= form_with(model: allele, url: form_url, method: form_method, data: { turbo: false }) do |form| %>
+  <div class="max-w-[36rem] space-y-4">
+    <div data-controller="allele-type-fields">
+      <%= render FormFieldComponent.new(input_id: 'allele_type', label: 'Type', required: true,
+                                        errors: field_errors(allele, :type)) do %>
+        <% if editable_type %>
+          <select id="allele_type" name="allele[type]" data-allele-type-select
+                  class="<%= FormFieldComponent::INPUT_CLASSES %>">
+            <% %w[Float Integer Boolean Option].each do |type| %>
+              <option value="<%= type %>" <%= 'selected' if allele.type == type %>><%= type %></option>
+            <% end %>
+          </select>
+        <% else %>
+          <p id="allele_type" class="rounded border border-line bg-surface px-3 py-2.5 font-data text-sm text-inkMuted">
+            <%= allele.type %>
+          </p>
+        <% end %>
+      <% end %>
+
+      <%= render FormFieldComponent.new(input_id: 'allele_name', label: 'Name', required: true,
+                                        errors: field_errors(allele, :name)) do %>
+        <input id="allele_name" name="allele[name]" type="text" value="<%= allele.name %>"
+               autocomplete="off" class="<%= FormFieldComponent::INPUT_CLASSES %>">
+      <% end %>
+
+      <div data-allele-type-fields-target="numeric" <%= 'hidden' unless %w[Float Integer].include?(allele.type) %>>
+        <%= render FormFieldComponent.new(input_id: 'allele_minimum', label: 'Minimum',
+                                          errors: field_errors(allele, :minimum)) do %>
+          <input id="allele_minimum" name="allele[minimum]" type="number" step="any"
+                 value="<%= numeric_type?(allele) ? allele.inheritable.minimum : '' %>" autocomplete="off"
+                 class="<%= FormFieldComponent::INPUT_CLASSES %>">
+        <% end %>
+
+        <%= render FormFieldComponent.new(input_id: 'allele_maximum', label: 'Maximum',
+                                          errors: field_errors(allele, :maximum)) do %>
+          <input id="allele_maximum" name="allele[maximum]" type="number" step="any"
+                 value="<%= numeric_type?(allele) ? allele.inheritable.maximum : '' %>" autocomplete="off"
+                 class="<%= FormFieldComponent::INPUT_CLASSES %>">
+        <% end %>
+      </div>
+
+      <div data-allele-type-fields-target="option" <%= 'hidden' unless allele.type == 'Option' %>>
+        <%= render FormFieldComponent.new(input_id: 'allele_choices', label: 'Choices',
+                                          hint: 'comma-separated',
+                                          errors: field_errors(allele, :choices)) do %>
+          <input id="allele_choices" name="allele[choices]" type="text"
+                 value="<%= allele.type == 'Option' ? Array(allele.inheritable.choices).join(', ') : '' %>"
+                 autocomplete="off" class="<%= FormFieldComponent::INPUT_CLASSES %>">
+        <% end %>
+      </div>
+    </div>
+
+    <% if allele.errors[:base].any? || allele.inheritable&.errors&.any? %>
+      <div class="command-errors rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+        <% (allele.errors[:base] + Array(allele.inheritable&.errors&.full_messages)).uniq.each do |message| %>
+          <p><%= message %></p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <%= render ButtonComponent.new(label: submit_label, type: :submit, variant: :primary) %>
+      <%= render ButtonComponent.new(label: 'Cancel', href: chromosome_path(chromosome), variant: :ghost) %>
+    </div>
+  </div>
+<% end %>

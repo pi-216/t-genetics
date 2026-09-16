@@ -1,0 +1,16 @@
+<%# Issue #184 — standard CRUD: allele edit. Type is immutable (the server
+    rejects type changes — the machine contract and model rule); name and
+    constraints are editable. %>
+<%= render PageHeaderComponent.new(title: 'Edit allele',
+                                   kicker: @chromosome.name,
+                                   back_path: chromosome_path(@chromosome),
+                                   back_label: @chromosome.name) %>
+
+<%= render CardComponent.new(title: 'Allele',
+                             description: 'Update the name or constraints. The type cannot be changed.') do %>
+  <%= render 'form', allele: @allele, chromosome: @chromosome,
+                     form_url: chromosome_allele_path(@chromosome, @allele),
+                     form_method: :patch,
+                     editable_type: false,
+                     submit_label: 'Save allele' %>
+<% end %>

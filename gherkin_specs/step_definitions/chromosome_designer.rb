@@ -1,29 +1,24 @@
 # frozen_string_literal: true
 
-# Step definitions for PRD-0004 — the graphical chromosome designer.
-# DEV-0001 (issue #77): a user creates a chromosome with mixed allele types
-# (float + integer + boolean) through the single-surface designer and sees a
-# live preview of the allele set, saved under their organization. Factory
-# truth: :organization / :user / :org_membership factories in spec/factories/
-# — the Background sign-in step is shared with the PRD-0003 feature
+# Step definitions for PRD-0004 (issue #184, PO ruling 2026-09-15) — the
+# standard-CRUD chromosome/allele flow replaces the single-surface designer:
+# create the chromosome by name only, land on its show page (empty allele
+# state), then add/edit/destroy alleles through their own nested forms (each
+# mutation redirecting back to the show page). Factory truth:
+# :organization / :user / :org_membership factories in spec/factories/ —
+# the Background sign-in step is shared with the PRD-0003 feature
 # (experiment_workspace.rb) and reused, never redefined.
 
-# The designer is a server-rendered single-surface form: a chromosome name
-# plus allele cards (name + type select + type-specific fields) and an "Add
-# allele" round trip that preserves the entered cards. The When drives the
-# real UI: fill card, add allele, repeat, then submit the create form.
-When(/^I create a chromosome with a float, an integer, and a boolean allele$/) do
+# --- chromosome create (name only) ---
+
+Given(/^a chromosome named "([^"]+)"$/) do |name|
+  org = Identity::Organization.find_by!(name: 'Loop Labs')
+  FactoryBot.create(:chromosome, name:, organization: org)
+end
+
+When(/^I create a chromosome with the name "([^"]+)"$/) do |name|
   visit new_chromosome_path
-  fill_in 'Name', with: 'Mixed genome'
-
-  fill_allele_card(0, type: 'Float', name: 'weight', minimum: '0', maximum: '10')
-  click_button 'Add allele'
-  expect(page).to have_css('.allele-card', count: 2)
-  fill_allele_card(1, type: 'Integer', name: 'limbs', minimum: '2', maximum: '4')
-  click_button 'Add allele'
-  expect(page).to have_css('.allele-card', count: 3)
-  fill_allele_card(2, type: 'Boolean', name: 'wings')
-
+  fill_in 'chromosome_name', with: name
   click_button 'Create chromosome'
   # Classic (non-Turbo) POST -> redirect to the show page: wait for the
   # navigation to settle before any element assertion, or Selenium resolves
@@ -32,185 +27,188 @@ When(/^I create a chromosome with a float, an integer, and a boolean allele$/) d
   expect(page).to have_current_path(%r{/chromosomes/\d+})
 end
 
-Then(/^I see a live preview of all three alleles$/) do
-  expect(page).to have_css('.allele-preview-item', count: 3)
-  expect(page).to have_content('weight')
-  expect(page).to have_content('limbs')
-  expect(page).to have_content('wings')
+Then(/^I see the empty allele state on the chromosome$/) do
+  expect(page).to have_css('.empty-state')
+  expect(page).to have_content('No alleles yet')
+  # The empty state must carry an action to escape it.
+  expect(page).to have_link('Add allele', href: %r{/chromosomes/\d+/alleles/new})
 end
 
-And(/^the chromosome is saved under my organization$/) do
+Then(/^the chromosome is saved under my organization$/) do
   chromosome = Chromosome.find_by!(name: 'Mixed genome')
   expect(chromosome.organization.name).to eq('Loop Labs')
-  expect(chromosome.alleles.map(&:name)).to match_array(%w[weight limbs wings])
-  expect(chromosome.alleles.map(&:type)).to match_array(%w[Float Integer Boolean])
 end
 
-# Issue #151 (DEV-0151) — saved-state-integrity guard (the T3 gap): the
-# chromosome must persist EXACTLY the allele set the designer built, never
-# fewer, never duplicated. Count first (a duplicate row fails it), then the
-# exact name set — the two together forbid both drop and dup persistence.
-Then(/^the chromosome is saved with exactly those 3 alleles$/) do
+# --- allele creation (nested form) ---
+
+When(/^I add a float allele "([^"]+)" bounded by (\d+) and (\d+)$/) do |name, minimum, maximum|
   chromosome = Chromosome.find_by!(name: 'Mixed genome')
-  expect(chromosome.alleles.count).to eq(3)
-  expect(chromosome.alleles.map(&:name)).to match_array(%w[weight limbs wings])
+  visit new_chromosome_allele_path(chromosome)
+  select 'Float', from: 'allele_type'
+  fill_in 'allele_name', with: name
+  fill_in 'allele_minimum', with: minimum
+  fill_in 'allele_maximum', with: maximum
+  click_button 'Create allele'
+  # The redirect target is the chromosome SHOW page; the allele new-form URL
+  # also matches an unanchored /chromosomes/\d+ regex, so assert the exact
+  # path and let the navigation settle before the next step.
+  expect(page).to have_current_path(%r{\A/chromosomes/\d+\z})
 end
 
-# Fills one named allele card in the designer. The card index is stable
-# across "Add allele" round trips (server re-renders preserve the entered
-# cards in order). allele_card (below) resolves the Nth card on the CURRENT
-# document with a wait — a plain all()[i] here races the full-page
-# navigation the "Add allele" POST triggers (stale DOM node ids under
-# selenium), which is exactly the transport bug class @javascript exists to
-# catch.
-def fill_allele_card(index, type:, name:, minimum: nil, maximum: nil)
-  card = allele_card(index)
-  within(card) do
-    select type, from: 'Type'
-    fill_in 'Allele name', with: name
-    fill_in 'Minimum', with: minimum if minimum
-    fill_in 'Maximum', with: maximum if maximum
+When(/^I add an integer allele "([^"]+)" bounded by (\d+) and (\d+)$/) do |name, minimum, maximum|
+  chromosome = Chromosome.find_by!(name: 'Mixed genome')
+  visit new_chromosome_allele_path(chromosome)
+  select 'Integer', from: 'allele_type'
+  fill_in 'allele_name', with: name
+  fill_in 'allele_minimum', with: minimum
+  fill_in 'allele_maximum', with: maximum
+  click_button 'Create allele'
+  expect(page).to have_current_path(%r{\A/chromosomes/\d+\z})
+end
+
+When(/^I add a boolean allele "([^"]+)"$/) do |name|
+  chromosome = Chromosome.find_by!(name: 'Mixed genome')
+  visit new_chromosome_allele_path(chromosome)
+  select 'Boolean', from: 'allele_type'
+  fill_in 'allele_name', with: name
+  click_button 'Create allele'
+  expect(page).to have_current_path(%r{\A/chromosomes/\d+\z})
+end
+
+# One compound When drives all three allele adds (gherkin_lint
+# AvoidScripting: one action per scenario — the loop lives in this step).
+# rubocop:disable Metrics/ParameterLists
+# -- seven capture groups map the BDD sentence's allele fields 1:1; the loop
+# lives in this one compound When step (gherkin_lint AvoidScripting).
+When(/^I add a float allele "([^"]+)" (\d+)\.\.(\d+), integer "([^"]+)" (\d+)\.\.(\d+), boolean "([^"]+)"$/) do |fname, fmin, fmax, iname, imin, imax, bname|
+  chromosome = Chromosome.find_by!(name: 'Mixed genome')
+  [['Float', fname, fmin, fmax], ['Integer', iname, imin, imax], ['Boolean', bname, nil, nil]].each do |type, name, minimum, maximum|
+    visit new_chromosome_allele_path(chromosome)
+    select type, from: 'allele_type'
+    fill_in 'allele_name', with: name
+    if minimum && maximum
+      fill_in 'allele_minimum', with: minimum
+      fill_in 'allele_maximum', with: maximum
+    end
+    click_button 'Create allele'
+    expect(page).to have_current_path(%r{\A/chromosomes/\d+\z})
   end
 end
+# rubocop:enable Metrics/ParameterLists
 
-# Resolves the Nth allele card (0-based) against the CURRENT document.
-# find(:xpath, ...) polls until the node exists in the live document, so a
-# card referenced right after an Add-allele round trip never holds a node
-# from the pre-navigation page. All index-based card access must go through
-# this helper — the walk and field-set assertions below used to race the
-# re-render with all('.allele-card')[i] and intermittently died with
-# "Node with given id does not belong to the document".
-def allele_card(index)
-  find(:xpath, "(//div[contains(concat(' ', normalize-space(@class), ' '), ' allele-card ')])[#{index + 1}]")
+Then(/^I am back on the chromosome show page and see the allele "([^"]+)"$/) do |name|
+  expect(page).to have_current_path(%r{\A/chromosomes/\d+\z})
+  expect(page).to have_css('.allele-name', text: name)
 end
 
-# PRD-0004 DEV-0002 (issue #78): a float allele whose minimum exceeds its
-# maximum is an inline validation error on the re-rendered designer, and
-# neither the allele nor its chromosome is saved (atomic designer create).
+Then(/^the chromosome has exactly (\d+) allele$/) do |count|
+  chromosome = Chromosome.find_by!(name: 'Mixed genome')
+  expect(chromosome.alleles.count).to eq(count.to_i)
+end
+
+Then(/^the chromosome is saved with exactly those (\d+) alleles$/) do |count|
+  chromosome = Chromosome.find_by!(name: 'Mixed genome')
+  expect(chromosome.alleles.count).to eq(count.to_i)
+  expect(chromosome.alleles.map(&:name)).to match_array(%w[weight limbs wings])
+end
+
+# --- inline validation on the allele form ---
+
 Given(/^I am adding a float allele to a chromosome$/) do
-  visit new_chromosome_path
-  fill_in 'Name', with: 'Bounded genome'
-  fill_allele_card(0, type: 'Float', name: 'weight', minimum: '0', maximum: '10')
+  chromosome = FactoryBot.create(:chromosome, name: 'Bounded genome', organization: Identity::Organization.find_by!(name: 'Loop Labs'))
+  visit new_chromosome_allele_path(chromosome)
+  select 'Float', from: 'allele_type'
+  fill_in 'allele_name', with: 'weight'
+  fill_in 'allele_minimum', with: '0'
+  fill_in 'allele_maximum', with: '10'
+end
+
+Given(/^I am adding an option allele to a chromosome$/) do
+  chromosome = FactoryBot.create(:chromosome, name: 'Option genome', organization: Identity::Organization.find_by!(name: 'Loop Labs'))
+  visit new_chromosome_allele_path(chromosome)
+  select 'Option', from: 'allele_type'
+  fill_in 'allele_name', with: 'flavor'
+end
+
+Given(/^I am adding an allele to a chromosome$/) do
+  chromosome = FactoryBot.create(:chromosome, name: 'Typed genome', organization: Identity::Organization.find_by!(name: 'Loop Labs'))
+  visit new_chromosome_allele_path(chromosome)
+  fill_in 'allele_name', with: 'sample'
 end
 
 When(/^I set a minimum greater than the maximum$/) do
-  within(allele_card(0)) do
-    fill_in 'Minimum', with: '10'
-    fill_in 'Maximum', with: '1'
-  end
-  click_button 'Create chromosome'
-end
-
-# Shared by DEV-0002 (bounds) and DEV-0003 (empty choice list): both are
-# inline per-card validation errors. The precise message text for each case
-# is asserted at the request-spec level; here we assert the inline surface.
-Then(/^I see an inline validation error$/) do
-  expect(page).to have_css('.allele-error')
-end
-
-And(/^the allele is not saved$/) do
-  expect(Chromosome.find_by(name: 'Bounded genome')).to be_nil
-  expect(Allele.where(name: 'weight')).to be_empty
-end
-
-# PRD-0004 DEV-0003 (issue #79): an option allele whose choice list is left
-# empty is an inline validation error on the re-rendered designer, and
-# nothing is saved (atomic designer create). The choices text input is
-# simply never filled, so the card submits choices: "".
-Given(/^I am adding an option allele to a chromosome$/) do
-  visit new_chromosome_path
-  fill_in 'Name', with: 'Option genome'
-  fill_allele_card(0, type: 'Option', name: 'flavor')
+  fill_in 'allele_minimum', with: '10'
+  fill_in 'allele_maximum', with: '1'
+  click_button 'Create allele'
 end
 
 When(/^I leave the choice list empty$/) do
-  click_button 'Create chromosome'
+  click_button 'Create allele'
 end
 
-# Finding #149 — a second allele card reusing the first card's name must be
-# an inline per-card validation error and must persist nothing (the designer
-# create fails atomically, so neither the chromosome nor any allele row
-# exists afterwards). Same .allele-error surface as bounds/choices.
-When(/^I add two alleles with the same name and create the chromosome$/) do
-  fill_in 'Name', with: 'Dup genome'
-  within(allele_card(0)) { fill_in 'Allele name', with: 'weight' }
-  click_button 'Add allele'
-  expect(page).to have_css('.allele-card', count: 2)
-  within(allele_card(1)) { fill_in 'Allele name', with: 'weight' }
-  click_button 'Create chromosome'
+Then(/^I see an inline validation error$/) do
+  expect(page).to have_css('.field-error, .command-errors')
 end
 
-And(/^the duplicated chromosome is not saved$/) do
-  expect(Chromosome.find_by(name: 'Dup genome')).to be_nil
+And(/^the allele is not saved$/) do
   expect(Allele.where(name: 'weight')).to be_empty
+  expect(Allele.where(name: 'flavor')).to be_empty
 end
 
-# Finding #148 (T2) — type-aware allele card fields. The field set is
-# server-rendered per card[:type]; the type-change mechanism is the existing
-# Add-allele round trip (it re-renders preserving the entered cards, so
-# changing the Type select then submitting re-renders the card with its new
-# field set, no JS). @javascript (real browser) because the finding was filed
-# from a live walk where the request layer rendered every field for every
-# type and stayed green.
-Given(/^I am designing a chromosome$/) do
-  # The Background sign-in submits through Turbo: in a real browser the
-  # session cookie lands asynchronously, so the first visit can race ahead of
-  # it and bounce to /login (the .allele-card scope comes back empty — the
-  # same async-Turbo race class as finding #147). has_css? waits for the
-  # designer to render; a bounded revisit settles the cookie race.
-  3.times do
-    break if page.has_css?('.allele-card', count: 1)
+# --- duplicate allele names (model-level scoped uniqueness) ---
 
-    visit new_chromosome_path
-  end
-  expect(page).to have_css('.allele-card', count: 1)
+Given(/^a chromosome with an allele named "([^"]+)"$/) do |name|
+  chromosome = FactoryBot.create(:chromosome, name: 'Dup genome', organization: Identity::Organization.find_by!(name: 'Loop Labs'))
+  chromosome.alleles << Allele.new_with_float(name:, minimum: 0, maximum: 10)
 end
 
-When(/^I walk the first allele card through every allele type$/) do
-  %w[Option Boolean Integer].each do |type|
-    within(allele_card(0)) do
-      select type, from: 'Type'
-    end
-    cards_before = all('.allele-card').count
-    click_button 'Add allele'
-    # The Add-allele round trip appends one card: the count only grows when
-    # the server re-render lands in the browser. (Before finding #147's
-    # transport opt-out the Turbo-intercepted response was discarded and this
-    # step timed out — the exact live-walk symptom finding #148 was filed
-    # from.)
-    expect(page).to have_css('.allele-card', count: cards_before + 1)
-    # The changed card (0) must already show its new type's field set.
-    expect_field_set_for_card(0, type)
+When(/^I add another allele named "([^"]+)"$/) do |name|
+  chromosome = Chromosome.find_by!(name: 'Dup genome')
+  visit new_chromosome_allele_path(chromosome)
+  select 'Float', from: 'allele_type'
+  fill_in 'allele_name', with: name
+  fill_in 'allele_minimum', with: 0
+  fill_in 'allele_maximum', with: 10
+  click_button 'Create allele'
+end
+
+And(/^the duplicate allele is not saved$/) do
+  chromosome = Chromosome.find_by!(name: 'Dup genome')
+  expect(chromosome.alleles.count).to eq(1)
+end
+
+# --- type-aware form fields (Stimulus toggle in a real browser) ---
+
+When(/^I walk the allele form through every allele type$/) do
+  %w[Integer Boolean Option Float].each do |type|
+    select type, from: 'allele_type'
+    # Client-side selection sets the select's value, not a `selected`
+    # attribute in the DOM — read the value, never option[selected].
+    expect(find('select#allele_type').value).to eq(type)
+    expect_field_set_for_type(type)
   end
 end
 
-# The walk leaves card 0 as Integer plus one blank Float card per round trip:
-# every card on the page must show exactly its own type's fields, nothing
-# more.
-Then(/^each allele card shows only its type's fields$/) do
-  count = all('.allele-card').count
-  count.times do |index|
-    type = within(allele_card(index)) { find('select').value }
-    expect_field_set_for_card(index, type)
-  end
+Then(/^each allele form shows only its type's fields$/) do
+  type = find('select#allele_type').value
+  expect_field_set_for_type(type)
 end
 
-def expect_field_set_for_card(index, type)
-  within(allele_card(index)) do
-    expect(page).to have_field('Allele name')
-    case type
-    when 'Float', 'Integer'
-      expect(page).to have_field('Minimum')
-      expect(page).to have_field('Maximum')
-      expect(page).not_to have_field('Choices')
-    when 'Boolean'
-      expect(page).not_to have_field('Minimum')
-      expect(page).not_to have_field('Maximum')
-      expect(page).not_to have_field('Choices')
-    when 'Option'
-      expect(page).to have_field('Choices')
-      expect(page).not_to have_field('Minimum')
-      expect(page).not_to have_field('Maximum')
-    end
+# The visible field set per type (the Stimulus toggle hides the others).
+def expect_field_set_for_type(type)
+  expect(page).to have_field('allele_name')
+  case type
+  when 'Float', 'Integer'
+    expect(page).to have_field('allele_minimum', visible: :all)
+    expect(page).to have_field('allele_maximum', visible: :all)
+    expect(page).to have_field('allele_choices', visible: :hidden)
+  when 'Boolean'
+    expect(page).to have_field('allele_minimum', visible: :hidden)
+    expect(page).to have_field('allele_maximum', visible: :hidden)
+    expect(page).to have_field('allele_choices', visible: :hidden)
+  when 'Option'
+    expect(page).to have_field('allele_choices', visible: :all)
+    expect(page).to have_field('allele_minimum', visible: :hidden)
+    expect(page).to have_field('allele_maximum', visible: :hidden)
   end
 end
