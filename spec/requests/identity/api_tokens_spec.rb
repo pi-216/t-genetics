@@ -99,4 +99,56 @@ RSpec.describe 'API tokens', type: :request do
       end
     end
   end
+
+  # PRD-0007 DEV-0002 / issue #188 — the token management page is reachable
+  # from the signed-in navigation. The shared layout renders the nav entry
+  # only for the org owner (flat roles: a member cannot see token
+  # management, PRD-0007 edge-case ruling).
+  describe 'navigation entry' do
+    let(:organization) { FactoryBot.create(:organization, name: 'Loop Labs') }
+
+    context 'when signed in as the organization owner' do
+      it 'renders the token management link in the shared navigation' do
+        owner = FactoryBot.create(:user)
+        FactoryBot.create(:org_membership, user: owner, organization:,
+                                           role: Identity::OrgMembership::OWNER_ROLE)
+        post login_path, params: { identity_user: { email: owner.email, password: owner.password } }
+
+        get root_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include('API tokens')
+        expect(response.body).to include('/organization/api_tokens')
+      end
+    end
+
+    context 'when signed in as a member' do
+      it 'does not render the token management link' do
+        member = FactoryBot.create(:user)
+        FactoryBot.create(:org_membership, user: member, organization:,
+                                           role: Identity::OrgMembership::MEMBER_ROLE)
+        post login_path,
+             params: { identity_user: { email: member.email, password: member.password } }
+
+        get root_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include('API tokens')
+        expect(response.body).not_to include('/organization/api_tokens')
+      end
+    end
+
+    context 'when signed in as a user with no org membership' do
+      it 'renders the layout without the token management link' do
+        orphan = FactoryBot.create(:user)
+        post login_path, params: { identity_user: { email: orphan.email, password: orphan.password } }
+
+        get root_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include('API tokens')
+        expect(response.body).not_to include('/organization/api_tokens')
+      end
+    end
+  end
 end
