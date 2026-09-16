@@ -10,6 +10,13 @@ module Identity
   class ApiTokensController < ApplicationController
     before_action :require_owner
 
+    # PRD-0007 — the management surface: every org token (active and revoked)
+    # with status, owner-only like create (the require_owner before_action
+    # above guards both actions; flat owner/member roles).
+    def index
+      @api_tokens = current_organization.api_tokens.order(created_at: :desc)
+    end
+
     def create
       result = CreateApiTokenCommand.call(
         organization: current_user.organization,
