@@ -32,7 +32,6 @@ Feature: API token management
 
   @javascript
   @DEV-0002
-  @wip
   Scenario: The token management page is reachable from the navigation
     Given I am signed in as the owner of "Loop Labs"
     When I click the token management link in the navigation

@@ -19,6 +19,15 @@ When(/^I open the API token management page$/) do
   visit api_tokens_index_path
 end
 
+When(/^I click the token management link in the navigation$/) do
+  click_link 'API tokens'
+end
+
+Then(/^I land on the API token management page$/) do
+  expect(page).to have_current_path(api_tokens_index_path)
+  expect(page).to have_css('h1', text: 'API tokens')
+end
+
 Then(/^I see a list of API tokens for "([^"]+)"$/) do |org_name|
   expect(page).to have_css('h1', text: 'API tokens')
   expect(page).to have_content(org_name)
