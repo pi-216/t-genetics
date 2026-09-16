@@ -74,3 +74,15 @@ Feature: Brand Tokens
     Then every color token matches
     And every typeface token matches
     And every radius token matches
+
+  # DEV-0006 (issue #182): the landing section titles must actually render as
+  # headlines — DESIGN.md typography.headline (Inter 600, 1.5rem, -0.015em)
+  # is normative for page/section titles. Tailwind preflight strips browser
+  # heading sizing, so a classless h2 collapses to body text; this scenario
+  # measures the REAL computed size of every landing section title in
+  # headless Chrome (same pattern as DEV-0003's hero measurements).
+  @DEV-0006
+  @javascript
+  Scenario: Landing section titles render as headlines
+    When I view the landing page
+    Then every section title renders at the headline size

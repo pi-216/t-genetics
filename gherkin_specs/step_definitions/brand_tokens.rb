@@ -185,6 +185,35 @@ def expect_numeric_data!
   elements
 end
 
+# ---- DEV-0006: the landing section titles render as headlines ----
+
+# DESIGN.md typography.headline: Inter 600 1.5rem -0.015em computed at a
+# 16px root: family "Inter, system-ui, sans-serif", 24px, 600, -0.36px
+# spacing. Tailwind preflight strips browser heading sizing, so a classless
+# <h2> renders at body size — this step is the regression net that keeps
+# the landing section titles from collapsing back into body text (issue
+# #182). Non-vacuity guard: must measure at least one section title.
+Then(/^every section title renders at the headline size$/) do
+  section_titles = page.all('section h2')
+  expect(section_titles.length).to be >= 6
+  section_titles.each do |title|
+    style = title.evaluate_script(<<~JS)
+      (() => {
+        const s = getComputedStyle(this);
+        return { family: s.fontFamily, size: s.fontSize, weight: s.fontWeight, spacing: s.letterSpacing };
+      })()
+    JS
+    expect(style['family']).to match(/Inter|sans-serif/i),
+                               "#{title.text.inspect} does not render in the headline family: #{style['family']}"
+    expect(style['size']).to eq('24px'),
+                             "#{title.text.inspect} does not render at the headline size: #{style['size']}"
+    expect(style['weight']).to eq('600'),
+                               "#{title.text.inspect} does not render at the headline weight: #{style['weight']}"
+    expect(style['spacing']).to eq('-0.36px'),
+                                "#{title.text.inspect} does not render with headline tracking: #{style['spacing']}"
+  end
+end
+
 When(/^I view the page with numeric data$/) do
   visit experiment_path(experiment_named('Donation amounts'))
 end

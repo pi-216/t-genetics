@@ -86,4 +86,35 @@ RSpec.describe 'Brand dark theme (shared layout)', type: :request do
       expect(body_tag).to include(utility)
     end
   end
+
+  # Issue #182 (founder report 2026-09-15) — the landing section titles
+  # rendered at body size: Tailwind preflight strips browser heading sizing,
+  # and the <h2>s carried no typography classes. PRD-0006 DEV-0006 pins the
+  # headline token utilities on every section title and the vertical rhythm
+  # (kicker→title mb-2, title→body mb-4) so the page regains a heading
+  # hierarchy. The @javascript BDD scenario measures the computed 24px size
+  # in headless Chrome; this request spec is the non-JS regression net over
+  # the rendered class lists.
+  it 'renders every landing section title with the headline token utilities' do
+    get root_path
+
+    section_titles = response.body.scan(/<h2[^>]*class="([^"]*)"[^>]*>/)
+    expect(section_titles.length).to be >= 6
+    headline_utilities = %w[font-headline text-headline font-semibold tracking-headline mb-4]
+    section_titles.each do |(classes)|
+      headline_utilities.each do |utility|
+        expect(classes).to include(utility)
+      end
+    end
+  end
+
+  it 'gives every landing kicker its gap to the section title' do
+    get root_path
+
+    kicker_elements = response.body.scan(/class="([^"]*landing-kicker[^"]*)"/)
+    expect(kicker_elements.length).to be >= 3
+    kicker_elements.each do |(classes)|
+      expect(classes).to include('mb-2')
+    end
+  end
 end
