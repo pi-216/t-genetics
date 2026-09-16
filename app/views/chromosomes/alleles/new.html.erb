@@ -1,0 +1,15 @@
+<%# Issue #184 — standard CRUD: each allele gets its own create form; the
+    show page's empty state and header both reach it. %>
+<%= render PageHeaderComponent.new(title: 'New allele',
+                                   kicker: @chromosome.name,
+                                   back_path: chromosome_path(@chromosome),
+                                   back_label: @chromosome.name) %>
+
+<%= render CardComponent.new(title: 'Allele',
+                             description: 'A typed allele defines one axis of this chromosome’s value space.') do %>
+  <%= render 'form', allele: @allele, chromosome: @chromosome,
+                     form_url: chromosome_alleles_path(@chromosome),
+                     form_method: :post,
+                     editable_type: true,
+                     submit_label: 'Create allele' %>
+<% end %>

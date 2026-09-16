@@ -16,6 +16,15 @@ RSpec.describe Chromosomes::AllelesController do
       expect(get: '/chromosomes/1/alleles/2').to route_to('chromosomes/alleles#show', chromosome_id: '1', id: '2')
     end
 
+    # Issue #184 — standard CRUD: the web allele forms became routable.
+    it 'routes to #new' do
+      expect(get: '/chromosomes/1/alleles/new').to route_to('chromosomes/alleles#new', chromosome_id: '1')
+    end
+
+    it 'routes to #edit' do
+      expect(get: '/chromosomes/1/alleles/2/edit').to route_to('chromosomes/alleles#edit', chromosome_id: '1', id: '2')
+    end
+
     it 'routes to #create' do
       expect(post: '/chromosomes/1/alleles').to route_to('chromosomes/alleles#create', chromosome_id: '1')
     end

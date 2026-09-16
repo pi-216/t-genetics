@@ -1,16 +1,51 @@
-<%# Issue #133 — chromosome show: the saved allele set as the live preview.
-    The designer create flow lands here (redirect after Chromosomes::Create),
-    so the mixed-type allele set is visible immediately under the
-    chromosome's org — now on the shared page-header + card treatment. %>
+<%# Issue #184 — PO ruling 2026-09-15: standard CRUD. The show page is the
+    allele management surface: an explicit empty state with an add action, or
+    the allele list with per-allele edit/destroy. Each allele row keeps the
+    stable preview classes (.allele-preview-item/.allele-name/...) so the
+    BDD/request selectors keep matching. %>
 <%= render PageHeaderComponent.new(title: @chromosome.name,
                                    kicker: 'Chromosome',
                                    subtitle: "#{pluralize(@chromosome.alleles.count, 'allele')} · #{pluralize(@chromosome.generations.count, 'generation')}") do |header| %>
   <% header.with_actions do %>
+    <%= render ButtonComponent.new(label: 'Add allele', href: new_chromosome_allele_path(@chromosome), variant: :primary) %>
     <%= render ButtonComponent.new(label: 'Edit', href: edit_chromosome_path(@chromosome), variant: :secondary) %>
   <% end %>
 <% end %>
 
-<%= render CardComponent.new(title: 'Allele preview',
-                             description: 'The saved allele set — the value space of every organism on this chromosome.') do %>
-  <%= render 'allele_preview', alleles: @chromosome.alleles.map(&:to_hsh) %>
+<%= render CardComponent.new(title: 'Alleles',
+                             description: 'The value space of every organism on this chromosome.') do %>
+  <% if @chromosome.alleles.any? %>
+    <div class="allele-preview space-y-2">
+      <% @chromosome.alleles.each do |allele| %>
+        <div class="allele-preview-item flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-md border border-line bg-raised/40 px-3 py-2"
+             data-allele-type="<%= allele.type %>">
+          <div class="flex flex-wrap items-baseline gap-x-3">
+            <span class="allele-name font-medium text-ink"><%= allele.name %></span>
+            <span class="allele-type font-data text-xs text-inkMuted"><%= allele.type %></span>
+            <% if %w[Float Integer].include?(allele.type) %>
+              <span class="allele-bounds font-data text-xs tabular-nums text-inkMuted">
+                (<%= allele.inheritable.minimum %>…<%= allele.inheritable.maximum %>)
+              </span>
+            <% elsif allele.type == 'Option' %>
+              <span class="allele-choices font-data text-xs tabular-nums text-inkMuted">
+                [<%= Array(allele.inheritable.choices).join(', ') %>]
+              </span>
+            <% end %>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <%= render ButtonComponent.new(label: 'Edit', href: edit_chromosome_allele_path(@chromosome, allele), variant: :ghost) %>
+            <%= render ButtonComponent.new(label: 'Delete', form_action: chromosome_allele_path(@chromosome, allele),
+                                           method: :delete, variant: :danger) %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <%= render EmptyStateComponent.new(title: 'No alleles yet',
+                                       body: 'Add an allele to define this chromosome’s value space.') do |empty| %>
+      <% empty.with_action do %>
+        <%= render ButtonComponent.new(label: 'Add allele', href: new_chromosome_allele_path(@chromosome), variant: :primary) %>
+      <% end %>
+    <% end %>
+  <% end %>
 <% end %>

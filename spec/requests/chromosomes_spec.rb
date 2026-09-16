@@ -97,57 +97,9 @@ RSpec.describe '/chromosomes' do
       end
     end
 
-    # Finding #149: the designer must reject duplicate allele names per
-    # chromosome with the same inline error channel as bounds/choices. The
-    # fixture posts two cards sharing 'weight' — the command fails atomically
-    # and the re-render carries the per-allele message.
-    context 'with duplicate allele names in the designer payload' do
-      let(:duplicate_payload) do
-        {
-          name: 'Dup genome',
-          alleles: [
-            { name: 'weight', type: 'Float', minimum: 0, maximum: 10 },
-            { name: 'weight', type: 'Float', minimum: 0, maximum: 10 }
-          ]
-        }
-      end
-
-      it 'does not create a new Chromosome' do
-        expect do
-          post chromosomes_url, params: { chromosome: duplicate_payload }
-        end.not_to change(Chromosome, :count)
-      end
-
-      it 'returns 422 and surfaces the per-allele error' do
-        post chromosomes_url, params: { chromosome: duplicate_payload }
-
-        expect(response).to have_http_status(:unprocessable_content)
-        # The rendered message is HTML-escaped (&#39;) so the literal
-        # "allele 'weight':" prefix never appears — assert the inline
-        # .allele-error surface and the stripped per-allele message.
-        expect(response.body).to include('allele-error')
-        expect(response.body).to include('name is already used on this chromosome')
-      end
-    end
-
-    # Finding #149: the uniqueness scope is the chromosome — the same allele
-    # name posted against two different chromosomes must succeed both times.
-    context 'with the same allele name on two different chromosomes' do
-      let(:payload) do
-        { name: 'Genome', alleles: [{ name: 'weight', type: 'Float', minimum: 0, maximum: 10 }] }
-      end
-
-      it 'creates both chromosomes' do
-        post chromosomes_url, params: { chromosome: payload }
-        expect(response).to have_http_status(:found)
-
-        post chromosomes_url, params: { chromosome: payload }
-        expect(response).to have_http_status(:found)
-
-        expect(Chromosome.where(name: 'Genome').count).to eq(2)
-        expect(Chromosome.where(name: 'Genome').flat_map { |c| c.alleles.map(&:name) }).to eq(%w[weight weight])
-      end
-    end
+    # Issue #184 — PO ruling 2026-09-15: creation is name-only; the
+    # duplicate-allele-name rule moved with the alleles to the nested
+    # /chromosomes/:id/alleles endpoint (covered in alleles_spec.rb).
   end
 
   describe 'PATCH /update' do

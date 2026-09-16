@@ -36,11 +36,15 @@ RSpec.describe 'tgenetics:dedupe_duplicate_alleles' do # rubocop:disable RSpec/D
   # with the same name on one chromosome, each referenced by organism values.
   # The rows predate the uniqueness rule, so the fixture must bypass the new
   # validation (save(validate: false)) to simulate the pre-fix state the rake
-  # task exists to clean up.
+  # task exists to clean up. Both ids are forced explicitly — relying on the
+  # sequence for the second row collides nondeterministically when the
+  # sequence is at/below oldest_id (the whole alleles table may be empty in a
+  # truncated test DB).
   def create_duplicate_pair(chromosome, name, oldest_id:)
     old = Allele.new_with_float(name:, minimum: 0, maximum: 10)
     old.id = oldest_id
     new = Allele.new_with_float(name:, minimum: 0, maximum: 10)
+    new.id = oldest_id + 1
     old.chromosome = chromosome
     new.chromosome = chromosome
     old.save(validate: false)

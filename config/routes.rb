@@ -70,7 +70,7 @@ Rails.application.routes.draw do
   end
 
   resources :chromosomes do
-    resources :alleles, module: :chromosomes, except: %i[new edit]
+    resources :alleles, module: :chromosomes
 
     resources :generations do
       member do
