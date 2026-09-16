@@ -2,6 +2,29 @@
                                  kicker: 'Settings',
                                  subtitle: current_user.organization.name)
 
+- if flash[:api_token].present?
+  %div{ id: 'token_plaintext', class: 'rounded-md border border-signal bg-signal/10 p-4',
+        data: { controller: 'clipboard-copy', clipboard_target: '#token_plaintext_value' } }
+    %p.text-sm.font-semibold.text-signal Copy this token now — it is shown only once.
+    .flex.flex-wrap.items-center.gap-3.mt-2
+      %code#token_plaintext_value.font-data.text-sm.tabular-nums.break-all= flash[:api_token]
+      %button#copy_token_plaintext.button{ type: 'button',
+                                           class: "#{ButtonComponent::BASE_CLASSES} #{ButtonComponent::VARIANTS[:secondary]}",
+                                           data: { action: 'clipboard-copy#copy' } }
+        Copy
+
+- if flash[:alert].present?
+  %p.mt-4.text-sm.text-danger= flash[:alert]
+
+= render CardComponent.new(title: 'Create a token',
+                           description: 'An API token authenticates machines against the JSON API. The plaintext is shown only once.') do
+  = form_with url: api_tokens_path, scope: :api_token, class: 'mt-4' do |form|
+    .flex.flex-wrap.gap-3.items-end
+      .flex-1
+        = render FormFieldComponent.new(input_id: 'api_token_name', label: 'Token name', required: true) do
+          = form.text_field :name, required: true, class: FormFieldComponent::INPUT_CLASSES
+      = render ButtonComponent.new(label: 'Create token', type: :submit, variant: :primary)
+
 = render TableComponent.new(columns: ['Name', 'Created', 'Status'], empty: @api_tokens.empty?) do |table|
   - table.with_body do
     - @api_tokens.each do |api_token|

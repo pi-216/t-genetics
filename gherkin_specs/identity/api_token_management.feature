@@ -39,7 +39,6 @@ Feature: API token management
 
   @javascript
   @DEV-0003
-  @wip
   Scenario: The owner creates a token and copies the one-time plaintext
     Given I am signed in as the owner of "Loop Labs"
     When I create an API token named "staging-runner"
