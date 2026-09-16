@@ -25,7 +25,7 @@
           = form.text_field :name, required: true, class: FormFieldComponent::INPUT_CLASSES
       = render ButtonComponent.new(label: 'Create token', type: :submit, variant: :primary)
 
-= render TableComponent.new(columns: ['Name', 'Created', 'Status'], empty: @api_tokens.empty?) do |table|
+= render TableComponent.new(columns: ['Name', 'Created', 'Status', 'Revoke'], empty: @api_tokens.empty?) do |table|
   - table.with_body do
     - @api_tokens.each do |api_token|
       %tr
@@ -34,3 +34,8 @@
         %td{ class: table.cell_class }
           = render BadgeComponent.new(text: api_token.revoked? ? 'Revoked' : 'Active',
                                       intent: api_token.revoked? ? :muted : :good)
+        %td{ class: table.cell_class }
+          - unless api_token.revoked?
+            = button_to 'Revoke', revoke_api_token_path(api_token), method: :post,
+                          class: "#{ButtonComponent::BASE_CLASSES} #{ButtonComponent::VARIANTS[:danger]}",
+                          form: { onsubmit: "return confirm('Revoke this token? API access stops immediately.')" }

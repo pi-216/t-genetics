@@ -102,6 +102,15 @@ RSpec.describe 'API tokens', type: :request do
         expect(response.body).not_to include('other-runner')
       end
 
+      # Only active tokens carry a revoke control (issue #190); a revoked row
+      # renders no form — the revoke affordance is exactly one submit button
+      # (the "Revoke" column header is a <th>, not a button).
+      it 'renders the revoke control for active tokens only' do
+        get api_tokens_index_path
+
+        expect(response.body.scan('>Revoke</button>').size).to eq(1)
+      end
+
       it 'renders the create-token form on the management page' do
         get api_tokens_index_path
 
@@ -192,27 +201,95 @@ RSpec.describe 'API tokens', type: :request do
     end
   end
 
-  # PRD-0007 DEV-0003 — the create surface moves onto the management page;
-  # the settings-page token section is reduced to a link to it (one surface,
-  # PRD-0007 scope). The owner-only settings render must no longer carry the
-  # inline create form or the one-time flash.
-  describe 'settings page token section' do
+  # PRD-0007 DEV-0004 / issue #190 — the owner revokes an active token.
+  # Revocation is immediate: TokenAuthentication authenticates only
+  # non-revoked tokens (ApiToken.active), so a stamped revoked_at kills API
+  # access on the next request. The revoke POST is owner-only; a cross-org
+  # id answers 404 — a token outside the current organization is
+  # indistinguishable from one that does not exist (PRD-0002 red line).
+  describe 'revocation' do
     let(:organization) { FactoryBot.create(:organization, name: 'Loop Labs') }
 
-    before do
+    def sign_in_as_owner
       owner = FactoryBot.create(:user)
       FactoryBot.create(:org_membership, user: owner, organization:,
                                          role: Identity::OrgMembership::OWNER_ROLE)
       post login_path, params: { identity_user: { email: owner.email, password: owner.password } }
     end
 
-    it 'keeps a link to the management page and drops the inline create form' do
-      get settings_path
+    it 'revokes an active token and redirects to the management page' do
+      token = FactoryBot.create(:api_token, organization:, name: 'ci-runner')
+      sign_in_as_owner
+
+      post revoke_api_token_path(token)
+
+      expect(response).to redirect_to(api_tokens_index_path)
+      expect(token.reload).to be_revoked
+    end
+
+    it 're-revoking an already-revoked token stays revoked (no error)' do
+      token = FactoryBot.create(:api_token, organization:, name: 'ci-runner')
+      sign_in_as_owner
+
+      post revoke_api_token_path(token)
+      post revoke_api_token_path(token)
+
+      expect(response).to redirect_to(api_tokens_index_path)
+      expect(token.reload).to be_revoked
+    end
+
+    it 'never shows plaintext or the raw digest after revocation' do
+      token = FactoryBot.create(:api_token, organization:, name: 'ci-runner')
+      sign_in_as_owner
+
+      post revoke_api_token_path(token)
+      follow_redirect!
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include(api_tokens_index_path)
-      expect(response.body).not_to include('id="api_token_name"')
-      expect(response.body).not_to include('Create token')
+      expect(response.body).not_to include('Copy this token now')
+      expect(response.body).not_to include(token.token_digest)
+    end
+
+    it 'surfaces the alert when revocation fails to persist' do
+      token = FactoryBot.create(:api_token, organization:, name: 'ci-runner')
+      sign_in_as_owner
+      failing = Identity::RevokeApiTokenCommand.build_context(api_token: token, error: 'cannot revoke')
+      allow(Identity::RevokeApiTokenCommand).to receive(:call).and_return(failing)
+
+      post revoke_api_token_path(token)
+      follow_redirect!
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('cannot revoke')
+      expect(token.reload).not_to be_revoked
+    end
+
+    context 'when signed in as a member' do
+      it 'is forbidden and revokes nothing' do
+        token = FactoryBot.create(:api_token, organization:, name: 'ci-runner')
+        member = FactoryBot.create(:user)
+        FactoryBot.create(:org_membership, user: member, organization:)
+        post login_path,
+             params: { identity_user: { email: member.email, password: member.password } }
+
+        post revoke_api_token_path(token)
+
+        expect(response).to have_http_status(:forbidden)
+        expect(token.reload).not_to be_revoked
+      end
+    end
+
+    context 'with another organization’s token' do
+      it 'answers 404 and revokes nothing' do
+        other_org = FactoryBot.create(:organization, name: 'Other Labs')
+        other_token = FactoryBot.create(:api_token, organization: other_org, name: 'other-runner')
+        sign_in_as_owner
+
+        post revoke_api_token_path(other_token)
+
+        expect(response).to have_http_status(:not_found)
+        expect(other_token.reload).not_to be_revoked
+      end
     end
   end
 end

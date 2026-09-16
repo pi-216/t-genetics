@@ -48,7 +48,6 @@ Feature: API token management
 
   @javascript
   @DEV-0004
-  @wip
   Scenario: The owner revokes an active token
     Given I am signed in as the owner of "Loop Labs"
     When I revoke the token "ci-runner"
