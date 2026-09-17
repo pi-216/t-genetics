@@ -95,6 +95,39 @@ Then(/^the plaintext token is never shown again$/) do
   expect(page).not_to have_css('#token_plaintext_value')
 end
 
+# PRD-0007 DEV-0006 / issue #192 — a member cannot manage API tokens. The
+# owner-only before_action on every management action answers 403; the When
+# drives the honest page request at the request layer (no @javascript —
+# API/auth/data scenarios stay request-layer), the Then asserts the status,
+# and the And proves the member's crafted writes (create + revoke) are both
+# rejected with 403 AND leave the org's token set untouched — flat roles,
+# members never manage tokens (PRD-0005/0007 edge-case ruling). The revoke
+# target is the scenario's own Background row (newest id), and the count
+# assertion is relative: earlier @javascript scenarios leave rows behind
+# (truncation strategy), so absolute counts would be order-dependent.
+When(/^I request the API token management page$/) do
+  page.driver.get(api_tokens_index_path)
+end
+
+Then(/^I receive a forbidden response$/) do
+  expect(page.status_code).to eq(403)
+end
+
+And(/^no token is created or revoked$/) do
+  organization = @api_test_org or raise 'no feature-background organization in play'
+  token = organization.api_tokens.order(id: :desc).first or raise 'no token in play'
+  count_before = organization.api_tokens.count
+
+  page.driver.post(api_tokens_path, params: { api_token: { name: 'ci-runner' } })
+  expect(page.status_code).to eq(403)
+
+  page.driver.post(revoke_api_token_path(token))
+  expect(page.status_code).to eq(403)
+
+  expect(organization.api_tokens.count).to eq(count_before)
+  expect(token.reload.revoked_at).to be_nil
+end
+
 # PRD-0007 DEV-0005 / issue #191 — a revoked token stops authenticating the
 # machine API immediately. The Background mints its digest-only ci-runner
 # with the plaintext discarded, and later @javascript scenarios leave rows
