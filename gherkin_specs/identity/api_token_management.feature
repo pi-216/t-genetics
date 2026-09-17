@@ -61,7 +61,6 @@ Feature: API token management
     Then I receive a 401 response
 
   @DEV-0006
-  @wip
   Scenario: A member cannot manage API tokens
     Given I am signed in as a member of "Loop Labs"
     When I request the API token management page
