@@ -25,12 +25,13 @@
           = form.text_field :name, required: true, class: FormFieldComponent::INPUT_CLASSES
       = render ButtonComponent.new(label: 'Create token', type: :submit, variant: :primary)
 
-= render TableComponent.new(columns: ['Name', 'Created', 'Status', 'Revoke'], empty: @api_tokens.empty?) do |table|
+= render TableComponent.new(columns: ['Name', 'Created', 'Last used', 'Status', 'Revoke'], empty: @api_tokens.empty?) do |table|
   - table.with_body do
     - @api_tokens.each do |api_token|
       %tr
         %td{ class: table.cell_class }= api_token.name
         %td{ class: table.numeric_cell_class }= api_token.created_at.to_fs(:short)
+        %td{ class: table.numeric_cell_class }= api_token.last_used_at ? api_token.last_used_at.to_fs(:short) : 'Never used'
         %td{ class: table.cell_class }
           = render BadgeComponent.new(text: api_token.revoked? ? 'Revoked' : 'Active',
                                       intent: api_token.revoked? ? :muted : :good)

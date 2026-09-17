@@ -102,6 +102,26 @@ RSpec.describe 'API tokens', type: :request do
         expect(response.body).not_to include('other-runner')
       end
 
+      # PRD-0007 DEV-0007 / issue #193 — the token list shows when each token
+      # was last used. TokenAuthentication stamps last_used_at on every
+      # successful API authentication (PRD-0005); the list renders that
+      # timestamp, or "Never used" for a token that has never authenticated.
+      # Row-scoped assertions so a used token can never read as "Never used";
+      # the before-block's unused ci-runner row proves the opposite branch.
+      it 'shows the last-used timestamp and marks unused tokens as never used' do
+        FactoryBot.create(:api_token, organization:, name: 'last-used-runner',
+                                      last_used_at: Time.zone.parse('2026-09-15 08:30:00'))
+
+        get api_tokens_index_path
+
+        expect(response.body).to include('Last used')
+        rows = response.body.scan(/<tr>.*?<\/tr>/m)
+        used_row = rows.find { |row| row.include?('last-used-runner') }
+        expect(used_row).to include('15 Sep 08:30')
+        expect(used_row).not_to include('Never used')
+        expect(rows.find { |row| row.include?('ci-runner') }).to include('Never used')
+      end
+
       # Only active tokens carry a revoke control (issue #190); a revoked row
       # renders no form — the revoke affordance is exactly one submit button
       # (the "Revoke" column header is a <th>, not a button).
