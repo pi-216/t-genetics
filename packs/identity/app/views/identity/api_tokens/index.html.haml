@@ -26,6 +26,10 @@
       = render ButtonComponent.new(label: 'Create token', type: :submit, variant: :primary)
 
 = render TableComponent.new(columns: ['Name', 'Created', 'Last used', 'Status', 'Revoke'], empty: @api_tokens.empty?) do |table|
+  - if @api_tokens.empty?
+    - table.with_empty do
+      %p.font-medium.text-ink No API tokens yet
+      %p.text-sm.text-inkMuted.mt-1 Create your first token above to let machines call the API.
   - table.with_body do
     - @api_tokens.each do |api_token|
       %tr

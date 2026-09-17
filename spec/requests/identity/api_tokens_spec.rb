@@ -154,6 +154,28 @@ RSpec.describe 'API tokens', type: :request do
       end
     end
 
+    # PRD-0007 DEV-0008 / issue #194 — an organization with no tokens sees an
+    # empty state. The table's default "No records yet" would be a dead end;
+    # the token page must route the owner to the create surface instead, so
+    # the empty state carries explicit first-token guidance and the generic
+    # message never appears.
+    context 'when the organization has no tokens' do
+      it 'renders guidance to create the first API token' do
+        empty_org = FactoryBot.create(:organization, name: 'Empty Labs')
+        owner = FactoryBot.create(:user)
+        FactoryBot.create(:org_membership, user: owner, organization: empty_org,
+                                           role: Identity::OrgMembership::OWNER_ROLE)
+        post login_path, params: { identity_user: { email: owner.email, password: owner.password } }
+
+        get api_tokens_index_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include('No API tokens yet')
+        expect(response.body).to match(/create your first token/i)
+        expect(response.body).not_to include('No records yet')
+      end
+    end
+
     context 'when signed in as a member' do
       before do
         member = FactoryBot.create(:user)
