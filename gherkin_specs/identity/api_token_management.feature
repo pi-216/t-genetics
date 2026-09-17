@@ -79,7 +79,6 @@ Feature: API token management
 
   @javascript
   @DEV-0008
-  @wip
   Scenario: An organization with no tokens sees an empty state
     Given organization "Empty Labs" has no API tokens
     And I am signed in as the owner of "Empty Labs"

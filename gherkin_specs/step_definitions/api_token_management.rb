@@ -196,3 +196,18 @@ When(/^I GET \/api\/v1\/chromosomes with the revoked token$/) do
   page.driver.header('Authorization', "Bearer #{token}")
   page.driver.get('/api/v1/chromosomes')
 end
+
+# PRD-0007 DEV-0008 / issue #194 — an organization with no tokens sees an
+# empty state. The Given mints the org (find_or_create, adopting the unique
+# name across features) and proves no token rows ride along; the Then asserts
+# the guidance copy that routes owners to the create surface right above the
+# list.
+Given(/^organization "([^"]+)" has no API tokens$/) do |org_name|
+  organization = Identity::Organization.find_or_create_by!(name: org_name)
+  raise "organization #{org_name} unexpectedly owns API tokens" unless organization.api_tokens.none?
+end
+
+Then(/^I see guidance to create the first API token$/) do
+  expect(page).to have_content('No API tokens yet')
+  expect(page).to have_content(/create your first token/i)
+end
