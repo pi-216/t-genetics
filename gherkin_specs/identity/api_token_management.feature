@@ -69,10 +69,10 @@ Feature: API token management
 
   @javascript
   @DEV-0007
-  @wip
   Scenario: The token list shows when each token was last used
     Given "ci-runner" was last used on 2026-09-15
     And "Loop Labs" owns an unused API token named "idle-runner"
+    And I am signed in as the owner of "Loop Labs"
     When I open the API token management page
     Then I see the last-used date for "ci-runner"
     And I see "idle-runner" marked as never used

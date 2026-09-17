@@ -20,6 +20,48 @@ When(/^I open the API token management page$/) do
   visit api_tokens_index_path
 end
 
+# PRD-0007 DEV-0007 / issue #193 — the token list shows when each token was
+# last used. TokenAuthentication stamps last_used_at on every successful API
+# authentication, so the Given only has to write the timestamp the scenario
+# wants displayed. The minted row is the org's newest row with that name
+# (@javascript truncation wipes rows at each scenario's start, but run-order
+# and leftovers from other features must never decide a step's outcome, so
+# the pick is explicit: id: :desc). @last_used_label feeds the Then that
+# asserts the row's rendered date.
+Given(/^"([^"]+)" was last used on ([0-9]{4}-[0-9]{2}-[0-9]{2})$/) do |token_name, date|
+  organization = @api_test_org or raise 'no feature-background organization in play'
+  token = organization.api_tokens.order(id: :desc).find_by(name: token_name) or raise "no api token named #{token_name} in play"
+  token.update!(last_used_at: Time.zone.parse(date))
+  @last_used_label = token.last_used_at.to_fs(:short)
+end
+
+Given(/^"([^"]+)" owns an unused API token named "([^"]+)"$/) do |org_name, token_name|
+  organization = Identity::Organization.find_or_create_by!(name: org_name)
+  Identity::ApiToken.create!(
+    organization: organization,
+    name: token_name,
+    token_digest: Identity::ApiToken.digest(Identity::ApiToken.generate_plaintext)
+  )
+end
+
+# The token list renders one row per token with the name in the first cell.
+# Row lookup by exact name cell (never by substring across the whole row) so
+# a token whose name is a substring of another's can never be conflated, and
+# duplicate rows from earlier scenarios cannot make the find ambiguous.
+def token_row(token_name)
+  page.find('td:first-child', exact_text: token_name, match: :first).ancestor('tr')
+end
+
+Then(/^I see the last-used date for "([^"]+)"$/) do |token_name|
+  row = token_row(token_name)
+  expect(row).to have_content(@last_used_label)
+end
+
+Then(/^I see "([^"]+)" marked as never used$/) do |token_name|
+  row = token_row(token_name)
+  expect(row).to have_content('Never used')
+end
+
 When(/^I click the token management link in the navigation$/) do
   click_link 'API tokens'
 end
