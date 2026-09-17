@@ -8,6 +8,7 @@
 
 Given(/^organization "([^"]+)" owns a valid API token named "([^"]+)"$/) do |org_name, token_name|
   organization = Identity::Organization.find_or_create_by!(name: org_name)
+  @api_test_org = organization
   Identity::ApiToken.create!(
     organization: organization,
     name: token_name,
@@ -92,4 +93,31 @@ end
 
 Then(/^the plaintext token is never shown again$/) do
   expect(page).not_to have_css('#token_plaintext_value')
+end
+
+# PRD-0007 DEV-0005 / issue #191 — a revoked token stops authenticating the
+# machine API immediately. The Background mints its digest-only ci-runner
+# with the plaintext discarded, and later @javascript scenarios leave rows
+# behind (truncation strategy), so the Given mints a known-plaintext token
+# for the org under the scenario's own name and revokes it through the real
+# command (the same one the web revoke control drives); the When presents
+# THAT plaintext and the Then asserts 401 — proving the revoked row's own
+# digest can no longer authenticate (TokenAuthentication looks up only
+# ApiToken.active).
+Given(/^"([^"]+)" has been revoked by its owner$/) do |token_name|
+  organization = @api_test_org or raise 'no feature-background organization in play'
+  @plain_api_token = Identity::ApiToken.generate_plaintext
+  token = Identity::ApiToken.create!(
+    organization: organization,
+    name: token_name,
+    token_digest: Identity::ApiToken.digest(@plain_api_token)
+  )
+  result = Identity::RevokeApiTokenCommand.call(api_token: token)
+  raise "revocation failed: #{result.errors.inspect}" unless result.success?
+end
+
+When(/^I GET \/api\/v1\/chromosomes with the revoked token$/) do
+  token = @plain_api_token or raise 'no revoked token in play'
+  page.driver.header('Authorization', "Bearer #{token}")
+  page.driver.get('/api/v1/chromosomes')
 end

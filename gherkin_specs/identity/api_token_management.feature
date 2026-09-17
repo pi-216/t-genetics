@@ -55,7 +55,6 @@ Feature: API token management
     And the plaintext token is never shown again
 
   @DEV-0005
-  @wip
   Scenario: A revoked token stops authenticating the API immediately
     Given "ci-runner" has been revoked by its owner
     When I GET /api/v1/chromosomes with the revoked token
