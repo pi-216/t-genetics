@@ -1,0 +1,11 @@
+<%# Issue #206 — the Option constraint field: one comma-separated text input
+    (the machine contract sends an array; the web form posts this scalar). %>
+<div data-allele-type-fields-target="option" <%= 'hidden' unless active %>>
+  <%= render FormFieldComponent.new(input_id: 'allele_choices', label: 'Choices',
+                                    hint: 'comma-separated',
+                                    errors: field_errors(allele, :choices)) do %>
+    <input id="allele_choices" name="allele[choices]" type="text"
+           value="<%= active ? Array(allele.inheritable.choices).join(', ') : '' %>"
+           autocomplete="off" class="<%= FormFieldComponent::INPUT_CLASSES %>">
+  <% end %>
+</div>
