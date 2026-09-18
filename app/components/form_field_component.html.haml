@@ -1,4 +1,4 @@
-%section.field{ class: 'space-y-2' }
+%section.field{ class: ['space-y-2', spacing_class].compact.join(' ') }
   - if @label
     %label.block.text-sm.font-medium.text-ink{ for: @input_id }
       = @label

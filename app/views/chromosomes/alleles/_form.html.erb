@@ -9,7 +9,7 @@
 <%# Finding #147 (T1) — the 422 re-render must display in a real browser:
     opt out of Turbo exactly like the other re-rendering forms. %>
 <%= form_with(model: allele, url: form_url, method: form_method, data: { turbo: false }) do |form| %>
-  <div class="max-w-[36rem] space-y-4">
+  <div class="max-w-[36rem]">
     <div data-controller="allele-type-fields">
       <%= render FormFieldComponent.new(input_id: 'allele_type', label: 'Type', required: true,
                                         errors: field_errors(allele, :type)) do %>
@@ -61,7 +61,7 @@
     </div>
 
     <% if allele.errors[:base].any? || allele.inheritable&.errors&.any? %>
-      <div class="command-errors rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+      <div class="command-errors mb-4 rounded-md border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
         <% (allele.errors[:base] + Array(allele.inheritable&.errors&.full_messages)).uniq.each do |message| %>
           <p><%= message %></p>
         <% end %>

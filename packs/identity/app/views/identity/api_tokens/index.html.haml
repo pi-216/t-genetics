@@ -21,7 +21,8 @@
   = form_with url: api_tokens_path, scope: :api_token, class: 'mt-4' do |form|
     .flex.flex-wrap.gap-3.items-end
       .flex-1
-        = render FormFieldComponent.new(input_id: 'api_token_name', label: 'Token name', required: true) do
+        = render FormFieldComponent.new(input_id: 'api_token_name', label: 'Token name', required: true,
+                                        spacing: false) do
           = form.text_field :name, required: true, class: FormFieldComponent::INPUT_CLASSES
       = render ButtonComponent.new(label: 'Create token', type: :submit, variant: :primary)
 

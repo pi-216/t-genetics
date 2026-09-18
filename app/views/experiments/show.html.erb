@@ -83,6 +83,7 @@
         <%= form_with url: report_experiment_path(@experiment), method: :post, data: { turbo: false } do |f| %>
           <div class="flex flex-wrap items-end gap-3">
             <%= render FormFieldComponent.new(input_id: 'fitness_input_value', label: 'Fitness', required: true,
+                                              spacing: false,
                                               hint: 'The ONE number your infrastructure measured.') do %>
               <%= f.number_field :fitness_input_value, step: 'any', required: true, placeholder: 'e.g. 0.81',
                                  class: FormFieldComponent::INPUT_CLASSES %>

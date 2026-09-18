@@ -8,7 +8,7 @@
                                  back_path: login_path,
                                  back_label: 'Back to sign in')
 
-= form_with url: user_password_path, method: :patch, class: "mt-6 max-w-[28rem] space-y-4" do |form|
+= form_with url: user_password_path, method: :patch, class: "mt-6 max-w-[28rem]" do |form|
   = form.hidden_field :reset_password_token, name: "user[reset_password_token]", value: resource.reset_password_token
   = render FormFieldComponent.new(input_id: 'user_password', label: 'New password', required: true) do
     = form.password_field :password, name: "user[password]", required: true, autofocus: true, class: FormFieldComponent::INPUT_CLASSES
