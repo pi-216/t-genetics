@@ -9,38 +9,39 @@
                                    back_path: experiment_path(@experiment),
                                    back_label: 'Back to experiment') %>
 
+<%# Issue #205 — the cards own the stacked-box rhythm themselves (mb-6); the
+    wrapper that used to re-declare it (space-y-4) is gone, so the rhythm has
+    exactly one owner. %>
 <% if @generations.any? %>
-  <div class="space-y-4">
-    <% @generations.each do |generation| %>
-      <%= render CardComponent.new(title: "Generation #{generation.iteration}",
-                                   description: "#{generation.organisms.size} organisms") do %>
-        <div class="generation-history">
-          <% generation.organisms.sort_by(&:id).each do |organism| %>
-            <div class="history-organism border-t border-line py-3 first:border-t-0">
-              <div class="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 class="text-sm font-semibold text-ink">
-                  <%= link_to "Organism ##{organism.id}",
-                              chromosome_generation_organism_path(organism.chromosome, generation, organism),
-                              class: 'hover:text-signal' %>
-                </h3>
-                <% if (fitness = @recorded_fitness[organism.id]).present? %>
-                  <p class="recorded-fitness font-data text-sm tabular-nums text-good">Recorded fitness: <%= fitness %></p>
-                <% else %>
-                  <p class="text-sm text-inkMuted">No fitness recorded yet</p>
-                <% end %>
-              </div>
-              <ul class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-inkMuted">
-                <% organism.values.sort_by(&:name).each do |value| %>
-                  <li><strong class="font-medium text-ink"><%= value.allele.name %>:</strong>
-                    <span class="font-data tabular-nums"><%= value.data %></span></li>
-                <% end %>
-              </ul>
+  <% @generations.each do |generation| %>
+    <%= render CardComponent.new(title: "Generation #{generation.iteration}",
+                                 description: "#{generation.organisms.size} organisms") do %>
+      <div class="generation-history">
+        <% generation.organisms.sort_by(&:id).each do |organism| %>
+          <div class="history-organism border-t border-line py-3 first:border-t-0">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <h3 class="text-sm font-semibold text-ink">
+                <%= link_to "Organism ##{organism.id}",
+                            chromosome_generation_organism_path(organism.chromosome, generation, organism),
+                            class: 'hover:text-signal' %>
+              </h3>
+              <% if (fitness = @recorded_fitness[organism.id]).present? %>
+                <p class="recorded-fitness font-data text-sm tabular-nums text-good">Recorded fitness: <%= fitness %></p>
+              <% else %>
+                <p class="text-sm text-inkMuted">No fitness recorded yet</p>
+              <% end %>
             </div>
-          <% end %>
-        </div>
-      <% end %>
+            <ul class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-inkMuted">
+              <% organism.values.sort_by(&:name).each do |value| %>
+                <li><strong class="font-medium text-ink"><%= value.allele.name %>:</strong>
+                  <span class="font-data tabular-nums"><%= value.data %></span></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+      </div>
     <% end %>
-  </div>
+  <% end %>
 <% else %>
   <%= render EmptyStateComponent.new(title: 'No generations yet',
                                      body: 'Run the loop — suggestions and reported fitness birth generations.') %>

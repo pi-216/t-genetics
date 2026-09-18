@@ -3,10 +3,9 @@
                                  subtitle: current_user.organization.name)
 
 - if current_user.org_membership.role == Identity::OrgMembership::OWNER_ROLE
-  .space-y-4
-    = render CardComponent.new(title: 'Member management') do
-      %p.text-sm.text-inkMuted Manage who belongs to this organization.
+  = render CardComponent.new(title: 'Member management') do
+    %p.text-sm.text-inkMuted Manage who belongs to this organization.
 
-    = render CardComponent.new(title: 'Token management',
-                               description: 'Manage this organization’s API tokens on the dedicated page.') do
-      = render ButtonComponent.new(label: 'Manage API tokens', href: api_tokens_index_path)
+  = render CardComponent.new(title: 'Token management',
+                             description: 'Manage this organization’s API tokens on the dedicated page.') do
+    = render ButtonComponent.new(label: 'Manage API tokens', href: api_tokens_index_path)

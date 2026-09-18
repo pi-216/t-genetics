@@ -38,4 +38,25 @@ RSpec.describe CardComponent, type: :component do
     expect(rendered.text).to include('Footer')
     expect(rendered.css('div.card-footer').first['class']).to include('border-line')
   end
+
+  # Issue #205 — stacked boxes used to sit flush: the card rendered a
+  # block-level panel with no bottom rhythm, so the index views stacked it
+  # straight onto the table below (the token page's create card). The rhythm
+  # belongs to the box itself (mb-6 = the DESIGN.md lg step, 24px — the step
+  # PageHeaderComponent already carries), so it reaches through any wrapper.
+  it 'carries the stacked-box rhythm itself so boxes never sit flush' do
+    rendered = render_inline(described_class.new) { 'Body content' }
+
+    expect(rendered.css('section.card').first['class']).to include('mb-6')
+  end
+
+  # Issue #205 — a box inside a grid/flex row (the experiment page's
+  # two-column layout) is spaced by that container, so the box opts out: two
+  # owners of the same rhythm is a latent doubling the moment that container
+  # stops collapsing margins.
+  it 'lets a container-owned layout opt out of the box rhythm' do
+    rendered = render_inline(described_class.new(spacing: false)) { 'Body content' }
+
+    expect(rendered.css('section.card').first['class']).not_to include('mb-6')
+  end
 end

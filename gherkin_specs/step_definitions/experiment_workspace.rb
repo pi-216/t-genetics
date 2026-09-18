@@ -277,6 +277,22 @@ Then(/^I see an explicit message that no suggestion is available$/) do
   expect(page).to have_content(/no suggestion is available/i)
 end
 
+# Issue #205 — the experiment page's two-column grid owns the gap between its
+# own cards (gap-6, the cards themselves pass spacing: false) and must own the
+# rhythm BELOW itself too, or the fitness-trend panel sits flush against it.
+# Only real layout can measure the seam (rack_test renders no layout).
+Then(/^the fitness trend panel sits below the grid by the section rhythm$/) do
+  gap = page.evaluate_script(<<~JS)
+    (() => {
+      const panel = document.querySelector('.fitness-trend-panel');
+      const grid = panel.previousElementSibling;
+      return Math.round(panel.getBoundingClientRect().top - grid.getBoundingClientRect().bottom);
+    })()
+  JS
+
+  expect(gap).to be >= 24, "the fitness trend panel sits #{gap}px below the grid — under the 24px rhythm"
+end
+
 # The named experiment is an implicit prerequisite for several scenarios —
 # created through the same Experiments::Setup command the UI create flow runs
 # (never a factory where the real command exists). Shared by the suggestion
