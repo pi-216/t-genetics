@@ -87,6 +87,20 @@ RSpec.describe '/chromosomes — standard CRUD web flow', type: :request do
       expect(response.body).to include('allele[name]')
     end
 
+    # Issue #203 — the back link is a text affordance in the heading block and
+    # must left-align with the kicker/title; the button kit's px-4 default
+    # indented it 16px. The @javascript BDD scenario measures the real left
+    # edges in headless Chrome; this is the non-JS net over the rendered
+    # class list.
+    it 'renders the page-header back link flush-left' do
+      chromosome = FactoryBot.create(:chromosome, organization: organization)
+
+      get new_chromosome_allele_url(chromosome)
+      back_link = Nokogiri::HTML(response.body).at_css('.page-header a')
+      expect(back_link).not_to be_nil
+      expect(back_link['class']).to include('pl-0')
+    end
+
     it 'opts the form out of Turbo so 422 re-renders display' do
       chromosome = FactoryBot.create(:chromosome, organization: organization)
 

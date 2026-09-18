@@ -6,16 +6,22 @@
 #   secondary — transparent surface + hairline ring, ink text
 #   danger    — red signal fill, dark text (contrast-safe on #FF5D5D)
 #   ghost     — quiet muted text action
+#   back      — the ghost treatment with no left padding, for a link that
+#               sits inside a heading block and must align flush-left with
+#               the text below it (a text affordance, not an action)
 # It renders as a link (href:), a form-wrapping button (form_action: +
 # method:, for POST loop actions), or a bare/submit button (the default).
 class ButtonComponent < ViewComponent::Base
   BASE_CLASSES = 'inline-flex items-center justify-center gap-2 rounded-md font-data text-caption font-medium tracking-caption min-h-reach px-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal disabled:opacity-50 disabled:pointer-events-none'
 
+  # The base horizontal padding is the button hit target; a variant may
+  # override it (primary widens to px-5.5, back drops the left inset).
   VARIANTS = {
     primary: 'bg-signal px-5.5 py-3 text-onSignal hover:bg-[#F7C468]',
     secondary: 'border border-line text-ink hover:bg-raised',
     danger: 'bg-danger text-onSignal hover:bg-[#E04B4B]',
-    ghost: 'text-inkMuted hover:text-ink hover:bg-raised/40'
+    ghost: 'text-inkMuted hover:text-ink hover:bg-raised/40',
+    back: 'text-inkMuted hover:text-ink hover:bg-raised/40 pl-0'
   }.freeze
 
   # One action control rendering as link / button_to / bare button: the

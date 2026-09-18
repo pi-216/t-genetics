@@ -230,3 +230,35 @@ def expect_field_set_for_type(type)
     expect(page).to have_field('allele_maximum', visible: :hidden)
   end
 end
+
+# --- page-header back link alignment (issue #203) ---
+
+When(/^I open the new allele form for the chromosome$/) do
+  chromosome = Chromosome.find_by!(name: 'Mixed genome')
+  visit new_chromosome_allele_path(chromosome)
+  expect(page).to have_current_path(%r{/chromosomes/\d+/alleles/new\z})
+end
+
+Then(/^the back link and the heading share the same left edge$/) do
+  lefts = {
+    back: text_left_edge_of('.page-header a'),
+    kicker: text_left_edge_of('.page-header .kicker'),
+    title: text_left_edge_of('.page-header h1')
+  }
+  expect(lefts.values.uniq.size).to eq(1), "back link text is not flush-left with the heading: #{lefts.inspect}"
+end
+
+# The TEXT's left edge, not the element's border box: an inline-flex link
+# keeps its border box flush with the heading while its horizontal padding
+# pushes the glyphs right — exactly the indentation the issue reports, and
+# invisible to getBoundingClientRect() on the element itself. A Range over
+# the element's contents measures where the text actually starts.
+def text_left_edge_of(selector)
+  find(selector).evaluate_script(<<~JS).round(1)
+    (() => {
+      const range = document.createRange();
+      range.selectNodeContents(this);
+      return range.getBoundingClientRect().left;
+    })()
+  JS
+end

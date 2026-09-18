@@ -41,6 +41,23 @@ RSpec.describe PageHeaderComponent, type: :component do
     expect(link['class']).to include('text-inkMuted')
   end
 
+  # Issue #203 — the back link is a text affordance inside the heading block,
+  # not a padded action: it must left-align with the kicker and title directly
+  # below it, so it opts out of the button kit's horizontal hit-target padding.
+  # The @javascript BDD scenario measures the real left edges in headless
+  # Chrome; this is the non-JS net over the rendered class list.
+  it 'renders the back link flush-left so it aligns with the kicker and title' do
+    rendered = render_inline(described_class.new(title: 'New allele',
+                                                 kicker: 'Mixed genome',
+                                                 back_path: '/chromosomes/1',
+                                                 back_label: 'Mixed genome'))
+
+    link = rendered.css('a').find { |a| a.text.strip == 'Mixed genome' }
+    expect(link).not_to be_nil
+    expect(link['class']).to include('pl-0')
+    expect(link['class']).to include('text-inkMuted')
+  end
+
   it 'renders the actions slot' do
     rendered = render_inline(described_class.new(title: 'Experiments')) do |component|
       component.with_actions { 'New experiment' }

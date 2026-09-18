@@ -135,3 +135,15 @@ Feature: Chromosome Designer
     Given the experiment has no recorded fitness
     When I view the fitness trend
     Then I see an explicit empty state
+
+  @DEV-0203
+  # Issue #203 — the page-header back link must left-align with the kicker and
+  # title directly below it; the button kit's px-4 base padding indented the
+  # link 16px. Only real layout can prove the alignment, so this measures the
+  # actual left edges in headless Chrome (same class as the brand-token
+  # computed-style scenarios — rack_test renders no layout).
+  @javascript
+  Scenario: The page-header back link left-aligns with the heading
+    Given a chromosome named "Mixed genome"
+    When I open the new allele form for the chromosome
+    Then the back link and the heading share the same left edge
