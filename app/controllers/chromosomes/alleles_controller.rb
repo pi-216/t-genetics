@@ -103,8 +103,12 @@ module Chromosomes
       @allele = @chromosome.alleles.find(params[:id])
     end
 
+    # Issue #210 — the web form posts `allele[choices]` as one comma-separated
+    # string while the machine contract sends an array; permitting only
+    # `choices: []` silently drops the scalar ("Unpermitted parameter") and an
+    # Option allele can never be created through the browser.
     def allele_params
-      @allele_params ||= params.require(:allele).permit(:name, :type, :minimum, :maximum, choices: [])
+      @allele_params ||= params.require(:allele).permit(:name, :type, :minimum, :maximum, :choices, choices: [])
     end
 
     # Web forms post choices as one comma-separated string; the machine
