@@ -40,6 +40,26 @@ RSpec.describe ButtonComponent, type: :component do
     expect(button['class']).to include('text-inkMuted')
   end
 
+  # Issue #203 — the page-header back link is a quiet text affordance that
+  # must sit flush with the heading block, so the back variant drops the base
+  # horizontal hit-target padding. Real buttons (ghost included) keep it.
+  it 'renders the back variant flush-left with the quiet ghost treatment' do
+    rendered = render_inline(described_class.new(label: 'Mixed genome',
+                                                 href: '/chromosomes/1',
+                                                 variant: :back))
+
+    link = rendered.css('a').first
+    expect(link['class']).to include('pl-0')
+    expect(link['class']).to include('text-inkMuted')
+  end
+
+  it 'keeps the horizontal hit-target padding on real ghost buttons' do
+    rendered = render_inline(described_class.new(label: 'Cancel', variant: :ghost))
+
+    button = rendered.css('button').first
+    expect(button['class']).to include('px-4')
+  end
+
   it 'renders as a link when an href is given' do
     rendered = render_inline(described_class.new(label: 'History', href: '/experiments/1/history', variant: :secondary))
 
