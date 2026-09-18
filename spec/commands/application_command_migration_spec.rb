@@ -11,6 +11,7 @@ RSpec.describe ApplicationCommand do
     let(:mutation_commands) do
       [
         Chromosomes::Create,
+        Chromosomes::Update,
         Comfy,
         Generations::New,
         Organisms::Clone,

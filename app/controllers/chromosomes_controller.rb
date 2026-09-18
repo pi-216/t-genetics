@@ -50,14 +50,24 @@ class ChromosomesController < ApplicationController
     end
   end
 
+  # Issue #207 — the mutation goes through Chromosomes::Update (no raw model
+  # write in the controller); this action only maps the command result onto a
+  # format. The organization is passed explicitly — the command refuses a
+  # chromosome it does not own.
   def update
+    result = Chromosomes::Update.call(chromosome: @chromosome,
+                                      organization: current_organization,
+                                      name: chromosome_params[:name])
+
     respond_to do |format|
-      if @chromosome.update(chromosome_params)
+      if result.success?
+        @chromosome = result.chromosome
         format.html { redirect_to @chromosome, notice: "Updated chromosome #{@chromosome.name}." }
         format.json { render json: @chromosome.to_hsh, status: :ok }
       else
+        @chromosome = result.chromosome || @chromosome
         format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: { errors: @chromosome.errors }, status: :unprocessable_entity }
+        format.json { render json: { errors: result.errors }, status: :unprocessable_entity }
       end
     end
   end
