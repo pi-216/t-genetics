@@ -121,6 +121,24 @@ RSpec.describe '/chromosomes' do
         chromosome.reload
         expect(response).to redirect_to(chromosome_url(chromosome))
       end
+
+      # Issue #207 — the controller must route the mutation through the command
+      # layer (no raw `@chromosome.update` in the controller): the command owns
+      # the write, the controller only maps its result onto a format.
+      it 'routes the mutation through Chromosomes::Update' do
+        chromosome = Chromosome.create! valid_attributes
+
+        expect(Chromosomes::Update).to receive(:call).and_call_original
+        patch chromosome_url(chromosome), params: { chromosome: new_attributes }
+      end
+
+      it 'renders the updated chromosome as JSON' do
+        chromosome = Chromosome.create! valid_attributes
+        patch chromosome_url(chromosome), params: { chromosome: new_attributes }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body['name']).to eq('baz')
+      end
     end
 
     context 'with invalid parameters' do
@@ -128,6 +146,30 @@ RSpec.describe '/chromosomes' do
         chromosome = Chromosome.create! valid_attributes
         patch chromosome_url(chromosome), params: { chromosome: invalid_attributes }
         expect(response).to have_http_status(:unprocessable_content)
+      end
+
+      # Issue #207 — deliberate, verified deviation: the pre-command action ran
+      # `@chromosome.update(permitted)` and a PATCH carrying only unpermitted
+      # attributes was a no-op SUCCESS (302 + "Updated chromosome"). The command
+      # takes the name explicitly, so that shape now reports the missing name
+      # instead of confirming an update that never happened. (`chromosome: {}`
+      # is a 400 before and after — `require` rejects an empty value.)
+      it 'reports the missing name when the PATCH carries only unpermitted attributes' do
+        chromosome = Chromosome.create! valid_attributes
+        patch chromosome_url(chromosome), params: { chromosome: { bogus: 'ignored' } }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(chromosome.reload.name).to eq('foobaz')
+      end
+
+      # Issue #207 — the JSON error body is the same `{ errors: { name: [...] } }`
+      # shape the web form has always returned (the rswag path documents it).
+      it 'returns the unchanged JSON error body' do
+        chromosome = Chromosome.create! valid_attributes
+        patch chromosome_url(chromosome), params: { chromosome: invalid_attributes }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.parsed_body).to eq({ 'errors' => { 'name' => ["can't be blank"] } })
       end
     end
   end
