@@ -158,3 +158,16 @@ Feature: Chromosome Designer
     Given a chromosome named "Mixed genome"
     When I add an integer allele "legs" bounded by 2 and 4
     Then I see the success notice "Added allele legs."
+
+  @DEV-0204
+  # Issue #204 — stacked fields must group into label/input pairs: the gap
+  # BETWEEN two fields has to be at least the label→input gap INSIDE one. The
+  # inter-field rhythm used to come from the container's space-y-*, so the
+  # type-aware field wrappers left label 2 clinging to input 1. Only real
+  # layout can measure the boxes apart (rack_test renders no layout — same
+  # class as @DEV-0203/@DEV-0209 in this feature).
+  @javascript
+  Scenario: Stacked allele form fields keep their inter-field spacing
+    Given a chromosome named "Mixed genome"
+    When I open the new allele form for the chromosome
+    Then each field is separated from the next by at least its label-to-input gap

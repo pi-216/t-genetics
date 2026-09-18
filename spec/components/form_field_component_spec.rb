@@ -56,4 +56,24 @@ RSpec.describe FormFieldComponent, type: :component do
       expect(error['class']).to include('text-danger')
     end
   end
+
+  # Issue #204 — stacked fields used to sit flush: the inter-field gap came
+  # from a container's space-y-* rhythm, so any nesting wrapper (the
+  # type-aware allele field groups) left two fields with no gap at all. The
+  # component now carries the rhythm itself (mb-4 = the DESIGN.md md step,
+  # 16px), which reaches through wrappers and is the same on every form.
+  it 'carries the inter-field rhythm itself so stacked fields never sit flush' do
+    rendered = render_inline(described_class.new(label: 'Fitness')) { '<input>' }
+
+    expect(rendered.css('section.field').first['class']).to include('mb-4')
+  end
+
+  # Issue #204 — a HORIZONTAL field row (field beside its submit button)
+  # bottom-aligns the input with the button; a bottom margin would lift the
+  # input off that line, so those rows opt out explicitly.
+  it 'lets a horizontal field row opt out of the bottom rhythm' do
+    rendered = render_inline(described_class.new(label: 'Fitness', spacing: false)) { '<input>' }
+
+    expect(rendered.css('section.field').first['class']).not_to include('mb-4')
+  end
 end

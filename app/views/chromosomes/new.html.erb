@@ -11,7 +11,7 @@
                                    back_label: 'Chromosomes') %>
 
 <%= form_with(model: @chromosome, data: { turbo: false }) do |form| %>
-  <div class="max-w-[36rem] space-y-4">
+  <div class="max-w-[36rem]">
     <%= render FormFieldComponent.new(input_id: 'chromosome_name', label: 'Name', required: true,
                                       errors: @chromosome.errors[:name]) do %>
       <%= form.text_field :name, autocomplete: 'off', class: FormFieldComponent::INPUT_CLASSES %>

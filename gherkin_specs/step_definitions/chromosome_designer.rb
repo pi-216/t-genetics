@@ -270,3 +270,43 @@ def text_left_edge_of(selector)
     })()
   JS
 end
+
+# --- stacked field rhythm (issue #204) ---
+
+# Every VISIBLE field on the form, with the gap inside the pair (label bottom
+# → its control top) and the gap to the next field's label. Hidden type
+# groups are skipped: display:none boxes have no geometry, and the Stimulus
+# toggle decides which single group is live for the selected type.
+Then(/^each field is separated from the next by at least its label-to-input gap$/) do
+  gaps = page.evaluate_script(<<~JS)
+    (() => {
+      const fields = Array.from(document.querySelectorAll('form section.field'))
+        .filter((field) => field.offsetParent !== null && field.querySelector('label'));
+      const control = (field) => field.querySelector('input, select, textarea');
+      return fields.map((field, index) => {
+        const next = fields[index + 1];
+        return {
+          within: Math.round(control(field).getBoundingClientRect().top -
+                             field.querySelector('label').getBoundingClientRect().bottom),
+          between: next
+            ? Math.round(next.querySelector('label').getBoundingClientRect().top -
+                         control(field).getBoundingClientRect().bottom)
+            : null
+        };
+      });
+    })()
+  JS
+
+  # Non-vacuity: the form renders its type-aware fields, and the comparison
+  # below is only meaningful while the within-pair gap is a real gap.
+  expect(gaps.size).to be >= 3, "expected the form's stacked fields, got #{gaps.inspect}"
+  expect(gaps.pluck('within').min).to be_positive, "the label→input gap collapsed: #{gaps.inspect}"
+
+  gaps.each do |gap|
+    next if gap['between'].nil?
+
+    message = "a field sits closer to its neighbour (#{gap['between']}px) than its label " \
+              "sits to its own input (#{gap['within']}px): #{gaps.inspect}"
+    expect(gap['between']).to be >= gap['within'], message
+  end
+end
