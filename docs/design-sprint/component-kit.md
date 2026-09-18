@@ -11,17 +11,36 @@
 | Component | Variants / slots | Renders | Purpose |
 |---|---|---|---|
 | `PageHeaderComponent` | `kicker`, `title`, `subtitle`, `back_path`/`back_label`; `actions` slot | — | Shared page-headline treatment: signal kicker, ink title, quiet flush-left back link, actions rail. Renamed from `PageheaderComponent` (file moved to `page_header_component.rb`). |
-| `CardComponent` | `title`, `description`, `pad:`, `class_name:`; `footer` slot | `section.card` | Dark surface panel, 1px hairline border, optional header + hairline-separated footer. `class_name:` keeps BDD selectors (`.suggested-organism`) stable. |
+| `CardComponent` | `title`, `description`, `pad:`, `class_name:`, `spacing:`; `footer` slot | `section.card` | Dark surface panel, 1px hairline border, optional header + hairline-separated footer. `class_name:` keeps BDD selectors (`.suggested-organism`) stable. Owns the stacked-box rhythm itself (`spacing: true`, `mb-6` = the DESIGN.md lg step, 24px) so stacked boxes never sit flush; a container that owns the gap (a grid/flex row) passes `spacing: false`. |
 | `FormFieldComponent` | `label`, `input_id`, `hint`, `errors[]`, `required`, `spacing:`; content slot | wrapper + label + field + hint + `.field-error` | Label-above-input with hint + inline danger errors and a signal `*` required marker. Exposes `INPUT_CLASSES` (the shared hairline input treatment) and owns the inter-field rhythm itself (`spacing: true`, the DESIGN.md md step) so stacked fields group into pairs whatever wraps them; a row that places a field beside its submit button passes `spacing: false`. |
 | `ButtonComponent` | `primary` / `secondary` / `danger` / `ghost` / `back`; `href:` (link), `form_action:`+`method:` (button_to POST), `type:`/`name:`/`value:` (submit) | `a` / `form>button` / `button` | Single action control. Primary = locked button-primary tokens (signal fill, onSignal text, mono caption); secondary = hairline ring; danger = red fill with dark text (contrast-safe); ghost = quiet text action; back = ghost with no left padding, for the flush-left heading link. 44px reach targets. |
-| `TableComponent` | `columns[]`, `empty:` flag; `header`/`body`/`empty` slots | `div.table-wrap > table` | Dense-data surface: hairline rows, uppercase muted headers, `numeric_cell_class` for mono tabular numerals, explicit colspan empty state. |
+| `TableComponent` | `columns[]`, `empty:` flag, `spacing:`; `header`/`body`/`empty` slots | `div.table-wrap > table` | Dense-data surface: hairline rows, uppercase muted headers, `numeric_cell_class` for mono tabular numerals, explicit colspan empty state. Carries the same stacked-box rhythm as the card (`mb-6`, `spacing: false` when a container owns the gap). |
 | `BadgeComponent` | `default` / `signal` / `good` / `danger` / `muted`; content or `text:` | `span.badge` | Short-radius status chips (experiment status, ripeness). Never pill. |
-| `EmptyStateComponent` | `title`, `body`, `class_name:`, `aria_label:`; `action` slot | `div.empty-state` | Explicit no-data surface (PRD-0004 convention): dashed hairline panel + title + muted body + optional centered action. `class_name:`/`aria_label:` keep `.no-suggestion-available` + its aria-label stable. |
+| `EmptyStateComponent` | `title`, `body`, `class_name:`, `aria_label:`, `spacing:`; `action` slot | `div.empty-state` | Explicit no-data surface (PRD-0004 convention): dashed hairline panel + title + muted body + optional centered action. `class_name:`/`aria_label:` keep `.no-suggestion-available` + its aria-label stable. Carries the stacked-box rhythm (`mb-6`) like the card and table. |
 
 Existing components reused/extended, not duplicated: `ChromosomeComponent`
 (chromosome list card row), `FitnessTrendComponent` (self-hosted SVG trend,
 now surfaced inside a `CardComponent` panel). No new JS, no model/controller
 changes — the sweep is presentational only.
+
+### Stacked-box rhythm (issue #205)
+
+`PageHeaderComponent` already carried `mb-6` (the DESIGN.md `lg` step, 24px);
+the box panels carried nothing, so views that stacked them rendered flush
+(the token page's "Create a token" card touching the token table). The rhythm
+now belongs to the box: `CardComponent`, `TableComponent` and
+`EmptyStateComponent` each carry `mb-6` by default and reach through whatever
+wraps them, and a container that owns the gap itself — a grid/flex row, e.g.
+the experiment page's two-column layout — passes `spacing: false` and owns the
+rhythm *below* itself too (`mb-6` on the grid), or the box after it sits flush
+against the container. Wrappers
+that re-declared the rhythm (`space-y-4` around stacked cards) were removed:
+two owners of one rhythm is a latent doubling the moment that container stops
+collapsing margins. Guarded by `spec/requests/stacked_box_spacing_spec.rb`
+(every stacked surface, no container a second owner, the grid's own rhythm
+below itself) and the real-browser scenarios `@DEV-0205` (measured gaps: the
+token page's card against its table, and the experiment page's trend panel
+below the grid).
 
 ## Design reads per refactored surface
 

@@ -64,4 +64,23 @@ RSpec.describe TableComponent, type: :component do
     expect(empty_cell['colspan']).to eq('2')
     expect(rendered.text).to include('No experiments yet')
   end
+
+  # Issue #205 — the table is a box panel too: stacked under the token page's
+  # create card it used to sit flush against it. It carries the same section
+  # rhythm as the card (mb-6 = the DESIGN.md lg step, 24px).
+  it 'carries the stacked-box rhythm itself so boxes never sit flush' do
+    rendered = render_inline(described_class.new(columns: %w[Name])) do |component|
+      component.with_body { row_with('x') }
+    end
+
+    expect(rendered.css('.table-wrap').first['class']).to include('mb-6')
+  end
+
+  it 'lets a container-owned layout opt out of the box rhythm' do
+    rendered = render_inline(described_class.new(columns: %w[Name], spacing: false)) do |component|
+      component.with_body { row_with('x') }
+    end
+
+    expect(rendered.css('.table-wrap').first['class']).not_to include('mb-6')
+  end
 end

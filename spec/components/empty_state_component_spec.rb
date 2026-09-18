@@ -48,4 +48,19 @@ RSpec.describe EmptyStateComponent, type: :component do
     expect(panel).not_to be_nil
     expect(panel['aria-label']).to eq('No suggestion available')
   end
+
+  # Issue #205 — the empty state is a box panel in the same stack (the
+  # experiment page renders it directly above the configuration cards), so it
+  # owns the same section rhythm the card and table carry.
+  it 'carries the stacked-box rhythm itself so boxes never sit flush' do
+    rendered = render_inline(described_class.new(title: 'Empty'))
+
+    expect(rendered.css('.empty-state').first['class']).to include('mb-6')
+  end
+
+  it 'lets a container-owned layout opt out of the box rhythm' do
+    rendered = render_inline(described_class.new(title: 'Empty', spacing: false))
+
+    expect(rendered.css('.empty-state').first['class']).not_to include('mb-6')
+  end
 end

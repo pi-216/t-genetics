@@ -10,15 +10,26 @@ class TableComponent < ViewComponent::Base
   renders_one :body
   renders_one :empty
 
-  def initialize(columns: [], empty: false, class_name: nil)
+  # Issue #205 — the table is a box panel in the same stack as the cards, so it
+  # carries the same stacked-box rhythm (DESIGN.md lg step, 24px). A container
+  # that owns the gap itself passes spacing: false.
+  BOX_SPACING_CLASS = 'mb-6'
+
+  def initialize(columns: [], empty: false, class_name: nil, spacing: true)
     @columns = columns
     @empty = empty
     @class_name = class_name
+    @spacing = spacing
     super()
   end
 
   def root_class
-    ['overflow-x-auto rounded-lg border border-line bg-surface', @class_name].compact.join(' ')
+    ['overflow-x-auto rounded-lg border border-line bg-surface', spacing_class,
+     @class_name].compact.join(' ')
+  end
+
+  def spacing_class
+    BOX_SPACING_CLASS if @spacing
   end
 
   def header_cell_class

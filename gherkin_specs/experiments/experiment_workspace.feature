@@ -81,3 +81,15 @@ Feature: Experiment Workspace
   Scenario: The new experiment form fits a 480px viewport without horizontal scrolling
     When I view the new experiment form at a 480 pixel viewport
     Then there is no horizontal scrolling
+
+  # Issue #205 — stacked box panels must not sit flush. The two-column grid owns
+  # the gap between its own cards (gap-6, spacing: false), so it must own the
+  # rhythm BELOW itself too: the fitness-trend panel used to be spaced by a
+  # mt-4 wrapper, and with the cards' rhythm on the boxes that seam lost its
+  # owner. Only real layout can measure it (rack_test renders no layout).
+  @DEV-0205
+  @javascript
+  Scenario: The fitness trend panel is separated from the grid above it
+    Given a suggestion has been requested for the experiment
+    When I visit the experiment "Donation amounts"
+    Then the fitness trend panel sits below the grid by the section rhythm

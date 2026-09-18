@@ -211,3 +211,42 @@ Then(/^I see guidance to create the first API token$/) do
   expect(page).to have_content('No API tokens yet')
   expect(page).to have_content(/create your first token/i)
 end
+
+# --- stacked box rhythm (issue #205) ---
+
+# Every VISIBLE box panel on the page, with the rhythm it carries (its computed
+# bottom margin) and the real gap to the box below it. The page header already
+# owns mb-6 (the DESIGN.md lg step, 24px); box panels rendered with no bottom
+# rhythm at all, so the create card sat flush against the token table. Only
+# real layout can measure the boxes apart (rack_test renders no layout).
+Then(/^the stacked boxes on the page are separated by the section rhythm$/) do
+  boxes = page.evaluate_script(<<~JS)
+    (() => {
+      const boxes = Array.from(document.querySelectorAll('.card, .table-wrap, .empty-state'))
+        .filter((box) => box.offsetParent !== null);
+      return boxes.map((box, index) => {
+        const next = boxes[index + 1];
+        const bottom = box.getBoundingClientRect().bottom;
+        // Only vertically-ordered pairs are stacked seams: boxes side by side in
+        // a grid/flex row are spaced by that container, not by this rhythm.
+        const stacked = next && next.getBoundingClientRect().top >= bottom;
+        return {
+          margin: Math.round(parseFloat(getComputedStyle(box).marginBottom)),
+          gap: stacked ? Math.round(next.getBoundingClientRect().top - bottom) : null
+        };
+      });
+    })()
+  JS
+
+  # Non-vacuity: the page renders its stacked boxes, and a box that carries no
+  # rhythm at all reports a computed margin of 0.
+  expect(boxes.size).to be >= 2, "expected the page's stacked boxes, got #{boxes.inspect}"
+  expect(boxes.pluck('margin').min).to be >= 24, "a box carries no section rhythm: #{boxes.inspect}"
+
+  boxes.each do |box|
+    next if box['gap'].nil?
+
+    message = "two boxes sit #{box['gap']}px apart — under the 24px rhythm: #{boxes.inspect}"
+    expect(box['gap']).to be >= 24, message
+  end
+end

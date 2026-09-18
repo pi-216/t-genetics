@@ -84,3 +84,14 @@ Feature: API token management
     And I am signed in as the owner of "Empty Labs"
     When I open the API token management page
     Then I see guidance to create the first API token
+
+  @DEV-0205
+  # Issue #205 — stacked box components must not sit flush: the "Create a
+  # token" card used to touch the API-token table below it. Only real layout
+  # can measure the two boxes apart (rack_test renders no layout — same class
+  # as the other layout scenarios in this feature).
+  @javascript
+  Scenario: The token management page separates its stacked boxes
+    Given I am signed in as the owner of "Loop Labs"
+    When I open the API token management page
+    Then the stacked boxes on the page are separated by the section rhythm

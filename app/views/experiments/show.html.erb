@@ -18,17 +18,19 @@
   </div>
 <% end %>
 
+<%# Issue #205 — the box panels own the stacked-box rhythm themselves (mb-6); the
+    two-column grid owns the gap between the configuration and suggestion cards
+    (gap-6, so those pass spacing: false) and the rhythm below itself, or the
+    trend panel below sits flush against it. %>
 <% if @no_suggestion_available %>
-  <div class="mb-4">
-    <%= render EmptyStateComponent.new(title: 'No suggestion is available',
-                                       body: 'The current generation has no organisms to suggest.',
-                                       class_name: 'no-suggestion-available',
-                                       aria_label: 'No suggestion available') %>
-  </div>
+  <%= render EmptyStateComponent.new(title: 'No suggestion is available',
+                                     body: 'The current generation has no organisms to suggest.',
+                                     class_name: 'no-suggestion-available',
+                                     aria_label: 'No suggestion available') %>
 <% end %>
 
-<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-  <%= render CardComponent.new(title: 'Configuration') do %>
+<div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
+  <%= render CardComponent.new(title: 'Configuration', spacing: false) do %>
     <dl class="space-y-2">
       <div class="flex items-baseline justify-between gap-4">
         <dt class="text-sm text-inkMuted">Population size</dt>
@@ -55,7 +57,8 @@
   <% end %>
 
   <% if @suggestion_log %>
-    <%= render CardComponent.new(title: 'Suggested organism', class_name: 'suggested-organism') do %>
+    <%= render CardComponent.new(title: 'Suggested organism', class_name: 'suggested-organism',
+                                 spacing: false) do %>
       <p class="text-sm text-inkMuted">Organism #<span class="font-data tabular-nums text-ink"><%= @suggestion_log.organism.id %></span> from generation
         <span class="font-data tabular-nums text-ink"><%= @suggestion_log.organism.generation.iteration %></span></p>
 
@@ -96,8 +99,6 @@
   <% end %>
 </div>
 
-<div class="mt-4">
-  <%= render CardComponent.new(class_name: 'fitness-trend-panel') do %>
-    <%= render FitnessTrendComponent.new(experiment: @experiment) %>
-  <% end %>
-</div>
+<%= render CardComponent.new(class_name: 'fitness-trend-panel') do %>
+  <%= render FitnessTrendComponent.new(experiment: @experiment) %>
+<% end %>
