@@ -53,7 +53,7 @@ module Chromosomes
 
       @allele.chromosome = @chromosome
       @allele.save!
-      redirect_to chromosome_url(@chromosome)
+      redirect_to chromosome_url(@chromosome), notice: "Added allele #{@allele.name}."
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique
       handle_record_errors(:new)
     end
@@ -80,7 +80,7 @@ module Chromosomes
       # machine-path update_constraints_json!).
       @allele.inheritable.save! if @allele.type != 'Boolean' && @allele.inheritable.changed?
       @allele.save!
-      redirect_to chromosome_url(@chromosome)
+      redirect_to chromosome_url(@chromosome), notice: "Updated allele #{@allele.name}."
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotSaved, ActiveRecord::RecordNotUnique
       handle_record_errors(:edit)
     end
@@ -88,8 +88,9 @@ module Chromosomes
     def destroy
       return destroy_json unless html_request?
 
+      name = @allele.name
       @allele.destroy!
-      redirect_to chromosome_url(@chromosome)
+      redirect_to chromosome_url(@chromosome), notice: "Deleted allele #{name}."
     end
 
     private
