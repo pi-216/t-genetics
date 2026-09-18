@@ -2,7 +2,8 @@
     allele management surface: an explicit empty state with an add action, or
     the allele list with per-allele edit/destroy. Each allele row keeps the
     stable preview classes (.allele-preview-item/.allele-name/...) so the
-    BDD/request selectors keep matching. %>
+    BDD/request selectors keep matching. Issue #206 — the per-type constraint
+    detail comes from the allele type's own preview partial. %>
 <%= render PageHeaderComponent.new(title: @chromosome.name,
                                    kicker: 'Chromosome',
                                    subtitle: "#{pluralize(@chromosome.alleles.count, 'allele')} · #{pluralize(@chromosome.generations.count, 'generation')}") do |header| %>
@@ -22,14 +23,9 @@
           <div class="flex flex-wrap items-baseline gap-x-3">
             <span class="allele-name font-medium text-ink"><%= allele.name %></span>
             <span class="allele-type font-data text-xs text-inkMuted"><%= allele.type %></span>
-            <% if %w[Float Integer].include?(allele.type) %>
-              <span class="allele-bounds font-data text-xs tabular-nums text-inkMuted">
-                (<%= allele.inheritable.minimum %>…<%= allele.inheritable.maximum %>)
-              </span>
-            <% elsif allele.type == 'Option' %>
-              <span class="allele-choices font-data text-xs tabular-nums text-inkMuted">
-                [<%= Array(allele.inheritable.choices).join(', ') %>]
-              </span>
+            <% preview_partial = allele_preview_partial(allele) %>
+            <% if preview_partial %>
+              <%= render preview_partial, allele: allele %>
             <% end %>
           </div>
           <div class="flex flex-wrap items-center gap-2">

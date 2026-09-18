@@ -5,25 +5,12 @@ module Chromosomes
   # typed alleles in memory from form params, validating the selected type's
   # fields, and surfacing errors for the kit form. Extracted from the
   # controller so both halves (web + machine JSON) stay under the rubocop
-  # class-length limit.
+  # class-length limit. The form's view helpers (field errors, the type →
+  # partial maps) live in AllelesHelper.
   module AllelesWebForm
     extend ActiveSupport::Concern
 
-    included do
-      helper_method :numeric_type?, :field_errors
-    end
-
     private
-
-    def numeric_type?(allele)
-      %w[Float Integer].include?(allele.type)
-    end
-
-    # Field errors live on the allele (name, missing-fields) and on the
-    # typed inheritable (bounds, choices) — merge both for the form.
-    def field_errors(allele, field)
-      allele.errors[field] + Array(allele.inheritable&.errors&.[](field))
-    end
 
     # In-memory typed allele built from the form params (never persists the
     # inheritable early — unlike the machine-path new_with_* builders, which

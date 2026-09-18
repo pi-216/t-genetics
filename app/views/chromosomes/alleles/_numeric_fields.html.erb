@@ -1,0 +1,19 @@
+<%# Issue #206 — the numeric constraint fields (Float | Integer). The group
+    renders on every form so the Stimulus toggle can reveal it; its value
+    lookups only touch the inheritable when this group IS the allele's type
+    (an Option/Boolean inheritable has no minimum/maximum). %>
+<div data-allele-type-fields-target="numeric" <%= 'hidden' unless active %>>
+  <%= render FormFieldComponent.new(input_id: 'allele_minimum', label: 'Minimum',
+                                    errors: field_errors(allele, :minimum)) do %>
+    <input id="allele_minimum" name="allele[minimum]" type="number" step="any"
+           value="<%= active ? allele.inheritable.minimum : '' %>" autocomplete="off"
+           class="<%= FormFieldComponent::INPUT_CLASSES %>">
+  <% end %>
+
+  <%= render FormFieldComponent.new(input_id: 'allele_maximum', label: 'Maximum',
+                                    errors: field_errors(allele, :maximum)) do %>
+    <input id="allele_maximum" name="allele[maximum]" type="number" step="any"
+           value="<%= active ? allele.inheritable.maximum : '' %>" autocomplete="off"
+           class="<%= FormFieldComponent::INPUT_CLASSES %>">
+  <% end %>
+</div>
