@@ -113,6 +113,14 @@ Then(/^I am back on the chromosome show page and see the allele "([^"]+)"$/) do 
   expect(page).to have_css('.allele-name', text: name)
 end
 
+# Issue #209 — the mutation's success notice must be visible on the page the
+# redirect lands on (the layout renders the flash partial).
+Then(/^I see the success notice "([^"]+)"$/) do |text|
+  notice = find('#notice')
+  expect(notice['role']).to eq('alert')
+  expect(notice).to have_text(text)
+end
+
 Then(/^the allele "([^"]+)" shows the choices "([^"]+)"$/) do |name, choices|
   row = find('.allele-preview-item', text: name)
   expect(row.find('.allele-name')).to have_text(name)

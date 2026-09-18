@@ -147,3 +147,14 @@ Feature: Chromosome Designer
     Given a chromosome named "Mixed genome"
     When I open the new allele form for the chromosome
     Then the back link and the heading share the same left edge
+
+  @DEV-0209
+  # Issue #209 — a successful mutation must confirm itself on the page it
+  # redirects to. The shared layout renders the flash now; before, the notice
+  # had no surface at all, so a committed allele looked like a silent failure.
+  # Real browser: the step drives the form and the redirect it triggers.
+  @javascript
+  Scenario: Adding an allele confirms itself on the chromosome show page
+    Given a chromosome named "Mixed genome"
+    When I add an integer allele "legs" bounded by 2 and 4
+    Then I see the success notice "Added allele legs."

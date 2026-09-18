@@ -16,7 +16,12 @@ class Allele < ApplicationRecord
 
   scope :by_name, ->(name) { find_by(name:) }
 
-  belongs_to :chromosome
+  # Issue #209 — allele writes must invalidate the chromosome's cache key:
+  # `fresh_when(@chromosome)` derives its ETag from this row's
+  # `updated_at` (and the index page's from MAX(updated_at)), so without the
+  # touch a cached show/index page revalidates unchanged and the browser
+  # keeps the pre-mutation allele list.
+  belongs_to :chromosome, touch: true
   has_many :values, dependent: :destroy
 
   def self.new_with_float(name:, minimum:, maximum:)

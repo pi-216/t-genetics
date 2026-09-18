@@ -39,7 +39,7 @@ class ChromosomesController < ApplicationController
     respond_to do |format|
       if result.success?
         @chromosome = result.chromosome
-        format.html { redirect_to @chromosome }
+        format.html { redirect_to @chromosome, notice: "Created chromosome #{@chromosome.name}." }
         format.json { render json: @chromosome.to_hsh, status: :created }
       else
         @chromosome = Chromosome.new(name: chromosome_params[:name])
@@ -53,7 +53,7 @@ class ChromosomesController < ApplicationController
   def update
     respond_to do |format|
       if @chromosome.update(chromosome_params)
-        format.html { redirect_to @chromosome }
+        format.html { redirect_to @chromosome, notice: "Updated chromosome #{@chromosome.name}." }
         format.json { render json: @chromosome.to_hsh, status: :ok }
       else
         format.html { render :edit, status: :unprocessable_entity }
@@ -63,10 +63,11 @@ class ChromosomesController < ApplicationController
   end
 
   def destroy
+    name = @chromosome.name
     @chromosome.destroy!
 
     respond_to do |format|
-      format.html { redirect_to chromosomes_url }
+      format.html { redirect_to chromosomes_url, notice: "Deleted chromosome #{name}." }
       format.json { head :no_content }
     end
   end
