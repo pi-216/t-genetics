@@ -163,4 +163,39 @@ RSpec.describe '/chromosomes — standard CRUD web flow', type: :request do
       expect(chromosome.reload.alleles).to be_empty
     end
   end
+
+  # Issue #210 — the web form posts choices as ONE comma-separated string (a
+  # single text input), unlike the machine contract which sends an array.
+  # Strong params must permit the scalar or an Option allele can never be
+  # created through the browser ("choices is required" every time).
+  describe 'POST /chromosomes/:id/alleles (HTML create, Option type)' do
+    it 'creates the Option allele from the comma-separated choices field' do
+      chromosome = FactoryBot.create(:chromosome, organization: organization)
+
+      expect do
+        post chromosome_alleles_url(chromosome),
+             params: { allele: { name: 'color', type: 'Option', choices: 'red, blue' } },
+             as: :html
+      end.to change(Allele, :count).by(1)
+
+      expect(response).to redirect_to(chromosome_url(chromosome))
+      allele = chromosome.reload.alleles.sole
+      expect(allele.type).to eq('Option')
+      expect(allele.inheritable.choices).to eq(%w[red blue])
+    end
+  end
+
+  describe 'PATCH /chromosomes/:id/alleles/:id (HTML update, Option type)' do
+    it 'replaces the choices from the comma-separated choices field' do
+      chromosome = FactoryBot.create(:chromosome, organization: organization)
+      allele = (chromosome.alleles << Allele.new_with_option(name: 'color', choices: %w[red blue])).last
+
+      patch chromosome_allele_url(chromosome, allele),
+            params: { allele: { name: 'color', choices: 'green, yellow' } },
+            as: :html
+
+      expect(response).to redirect_to(chromosome_url(chromosome))
+      expect(allele.reload.inheritable.choices).to eq(%w[green yellow])
+    end
+  end
 end

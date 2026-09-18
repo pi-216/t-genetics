@@ -78,6 +78,17 @@ Feature: Chromosome Designer
     Then I see an inline validation error
     And the allele is not saved
 
+  @DEV-0210
+  # Issue #210 — the web form posts `allele[choices]` as ONE comma-separated
+  # string (a single text input), unlike the machine contract's array; the
+  # happy path must round-trip through a real browser, not just the JSON API.
+  @javascript
+  Scenario: An option allele is created from a comma-separated choice list
+    Given a chromosome named "Mixed genome"
+    When I add an option allele "color" with the choices "red, blue"
+    Then I am back on the chromosome show page and see the allele "color"
+    And the allele "color" shows the choices "red, blue"
+
   @DEV-0148
   # Finding #148 (T2) — type-aware allele fields: the allele form reveals
   # only the fields the selected type needs (Stimulus toggle in a real

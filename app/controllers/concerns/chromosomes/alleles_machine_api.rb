@@ -77,7 +77,10 @@ module Chromosomes
       when 'Option'
         return unless allele_params.key?(:choices)
 
-        @allele.inheritable.update!(choices: allele_params[:choices])
+        # Issue #210 — normalize the shape here too: the permit now accepts the
+        # web form's scalar string, and a raw String in the choices column makes
+        # Values::Option#random (`choices.sample`) raise.
+        @allele.inheritable.update!(choices: option_choices)
       end
     end
 

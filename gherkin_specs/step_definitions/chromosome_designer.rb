@@ -75,6 +75,18 @@ When(/^I add a boolean allele "([^"]+)"$/) do |name|
   expect(page).to have_current_path(%r{\A/chromosomes/\d+\z})
 end
 
+# Issue #210 — the browser can only send the choices field as one
+# comma-separated string; the array form belongs to the machine contract.
+When(/^I add an option allele "([^"]+)" with the choices "([^"]+)"$/) do |name, choices|
+  chromosome = Chromosome.find_by!(name: 'Mixed genome')
+  visit new_chromosome_allele_path(chromosome)
+  select 'Option', from: 'allele_type'
+  fill_in 'allele_name', with: name
+  fill_in 'allele_choices', with: choices
+  click_button 'Create allele'
+  expect(page).to have_current_path(%r{\A/chromosomes/\d+\z})
+end
+
 # One compound When drives all three allele adds (gherkin_lint
 # AvoidScripting: one action per scenario — the loop lives in this step).
 # rubocop:disable Metrics/ParameterLists
@@ -99,6 +111,12 @@ end
 Then(/^I am back on the chromosome show page and see the allele "([^"]+)"$/) do |name|
   expect(page).to have_current_path(%r{\A/chromosomes/\d+\z})
   expect(page).to have_css('.allele-name', text: name)
+end
+
+Then(/^the allele "([^"]+)" shows the choices "([^"]+)"$/) do |name, choices|
+  row = find('.allele-preview-item', text: name)
+  expect(row.find('.allele-name')).to have_text(name)
+  expect(row).to have_css('.allele-choices', text: "[#{choices}]")
 end
 
 Then(/^the chromosome has exactly (\d+) allele$/) do |count|

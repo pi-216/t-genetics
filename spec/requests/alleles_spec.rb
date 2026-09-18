@@ -177,6 +177,22 @@ RSpec.describe '/chromosomes/:chromosome_id/alleles' do
         expect(option_allele.reload.inheritable.choices).to eq(%w[red blue])
       end
     end
+
+    # Issue #210 — widening the permit to accept the web form's scalar choices
+    # string must never let a raw String reach the choices column (a String
+    # makes Values::Option#random's `choices.sample` raise). The machine path
+    # normalizes it exactly like the create path does.
+    context 'with an option allele and a comma-separated scalar choices value' do
+      let(:option_allele) do
+        (chromosome.alleles << Allele.new_with_option(name: 'flavor', choices: %w[chocolate vanilla])).last
+      end
+
+      it 'normalizes the scalar to an array of choices' do
+        patch chromosome_allele_url(chromosome, option_allele), params: { allele: { choices: 'green, yellow' } }
+        expect(response).to have_http_status(:ok)
+        expect(option_allele.reload.inheritable.choices).to eq(%w[green yellow])
+      end
+    end
   end
 
   describe 'DELETE /destroy' do
