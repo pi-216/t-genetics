@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+# Issue #215 — the organisms index and the organism viewer render the organisms'
+# `values`, but their validators come from the organism rows; a value write
+# reaches the organism through `Value belongs_to :organism, touch: true`
+# (app/models/value.rb). Both actions guard with `stale?` rather than
+# `fresh_when`: `fresh_when` renders the 304 itself when the request is fresh,
+# so the explicit render that followed raised DoubleRenderError on every fresh
+# conditional GET — a revalidating client got a 500 where a 304 was due.
 class OrganismsController < ApplicationController
   before_action :require_signed_in
   before_action :set_chromosome
@@ -8,7 +15,8 @@ class OrganismsController < ApplicationController
 
   def index
     organisms = @generation.organisms
-    fresh_when(organisms)
+    return unless stale?(organisms)
+
     render json: organisms.map(&:to_hsh)
   end
 
@@ -19,7 +27,8 @@ class OrganismsController < ApplicationController
     # shows immediately. The ETag includes the value so a report invalidates
     # the cached page (a PerformanceLog write does not touch the organism row).
     @recorded_fitness = PerformanceLog.recorded_fitness_for(@organism)
-    fresh_when(etag: [@organism, @recorded_fitness.to_s])
+    return unless stale?(etag: [@organism, @recorded_fitness.to_s])
+
     respond_to do |format|
       # PRD-0004 DEV-0005 (issue #81): HTML organism viewer — each value
       # rendered by its allele type (see views/organisms/show.html.erb).

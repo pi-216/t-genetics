@@ -53,7 +53,7 @@ class ExperimentsController < ApplicationController
     )
 
     if result.success?
-      redirect_to result.experiment
+      redirect_to result.experiment, notice: "Created experiment #{result.experiment.name}."
     else
       @experiment = Experiment.new(name: experiment_params[:name])
       @chromosomes = org_chromosomes

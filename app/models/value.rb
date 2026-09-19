@@ -1,7 +1,13 @@
 # frozen_string_literal: true
 
 class Value < ApplicationRecord
-  belongs_to :organism
+  # Issue #215 — a value write must invalidate the organism's cache key: the
+  # organisms index derives its ETag from MAX(organisms.updated_at) and the
+  # viewer's from the organism row, while both render `values`. The valuable's
+  # `has_one :value, touch: true` (Valuable) reaches this row; without the touch
+  # the write stops here and a revalidating client keeps the pre-write values
+  # behind a 304.
+  belongs_to :organism, touch: true
   belongs_to :allele
 
   delegated_type :valuable, types: ['Value::Float', 'Value::Boolean', 'Value::Integer']
