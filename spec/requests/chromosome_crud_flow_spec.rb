@@ -135,6 +135,24 @@ RSpec.describe '/chromosomes — standard CRUD web flow', type: :request do
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include('is required')
     end
+
+    # Issue #208 — an allele-level model failure (the record's own error, not the
+    # inheritable's) must reach the name field inline, now that the command
+    # rather than the controller decides it.
+    it 're-renders the name field with the uniqueness rule inline' do
+      chromosome = FactoryBot.create(:chromosome, organization: organization)
+      chromosome.alleles << Allele.new_with_integer(name: 'legs', minimum: 2, maximum: 4)
+
+      expect do
+        post chromosome_alleles_url(chromosome),
+             params: { allele: { name: 'legs', type: 'Integer', minimum: 2, maximum: 4 } },
+             as: :html
+      end.not_to change(Allele, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('field-error')
+      expect(response.body).to include('has already been taken')
+    end
   end
 
   describe 'GET /chromosomes/:id/alleles/:id/edit' do
@@ -210,6 +228,57 @@ RSpec.describe '/chromosomes — standard CRUD web flow', type: :request do
 
       expect(response).to redirect_to(chromosome_url(chromosome))
       expect(allele.reload.inheritable.choices).to eq(%w[green yellow])
+    end
+  end
+
+  # Issue #208 — the type is validated by the shared command now, so the form
+  # reports an unsupported type the way the machine contract does (a required
+  # field on :type) and creates nothing.
+  describe 'POST /chromosomes/:id/alleles (HTML create, unsupported type)' do
+    it 're-renders the form with 422 and creates nothing' do
+      chromosome = FactoryBot.create(:chromosome, organization: organization)
+
+      expect do
+        post chromosome_alleles_url(chromosome),
+             params: { allele: { name: 'legs', type: 'Widget' } },
+             as: :html
+      end.not_to change(Allele, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('is required')
+    end
+  end
+
+  # Issue #208 — the web form must still SHOW a model failure. The command now
+  # owns the rules, so the message reaches the form through the record (and its
+  # inheritable) rather than through controller-side error copying: this is the
+  # path a controller-only refactor silently breaks.
+  describe 'PATCH /chromosomes/:id/alleles/:id (HTML update, model failure)' do
+    it 're-renders the option field with the choice-list rule inline' do
+      chromosome = FactoryBot.create(:chromosome, organization: organization)
+      allele = (chromosome.alleles << Allele.new_with_option(name: 'color', choices: %w[red blue])).last
+
+      patch chromosome_allele_url(chromosome, allele),
+            params: { allele: { choices: '' } },
+            as: :html
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('field-error')
+      expect(response.body).to include('must not be empty')
+      expect(allele.reload.inheritable.choices).to eq(%w[red blue])
+    end
+
+    it 're-renders the bounds rule for a reversed numeric edit' do
+      chromosome = FactoryBot.create(:chromosome, organization: organization)
+      allele = (chromosome.alleles << Allele.new_with_integer(name: 'legs', minimum: 2, maximum: 4)).last
+
+      patch chromosome_allele_url(chromosome, allele),
+            params: { allele: { minimum: 5, maximum: 3 } },
+            as: :html
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include('less than or equal')
+      expect(allele.reload.inheritable.minimum).to eq(2)
     end
   end
 end
