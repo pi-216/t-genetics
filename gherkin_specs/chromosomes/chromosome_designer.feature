@@ -82,12 +82,92 @@ Feature: Chromosome Designer
   # Issue #210 — the web form posts `allele[choices]` as ONE comma-separated
   # string (a single text input), unlike the machine contract's array; the
   # happy path must round-trip through a real browser, not just the JSON API.
+  # Issue #211 added the persistence assertion: rendering the choices proves
+  # the page, not the record.
   @javascript
   Scenario: An option allele is created from a comma-separated choice list
     Given a chromosome named "Mixed genome"
     When I add an option allele "color" with the choices "red, blue"
     Then I am back on the chromosome show page and see the allele "color"
     And the allele "color" shows the choices "red, blue"
+    And the allele "color" is stored with the choices "red", "blue"
+
+  # Issue #211 — the exhaustive CRUD net for the allele web forms. The success
+  # paths are where the live-site bugs (#209 stale page, #210 dropped choices)
+  # slipped past the gate: every scenario below drives the real form, follows
+  # the redirect back to the show page, and then checks the stored record — a
+  # page that renders is not a record that saved.
+
+  @DEV-0211
+  # Integer/Float constraint round trip: the typed bounds must survive the
+  # form post AND render on the show page. The pre-#211 coverage asserted a
+  # float allele's name and count, never the constraints the user typed.
+  @javascript
+  Scenario: Numeric alleles round-trip their bounds
+    Given a chromosome named "Mixed genome"
+    When I add a float allele "weight" 0..10 and an integer allele "legs" 2..4
+    Then the allele "weight" renders the bounds "0.0" and "10.0"
+    And the allele "legs" renders the bounds "2" and "4"
+    And the allele "weight" is stored with the bounds "0.0" and "10.0"
+    And the allele "legs" is stored with the bounds "2" and "4"
+
+  @DEV-0211
+  # Boolean success round trip: a Boolean allele constrains nothing, so it
+  # renders as a bare typed row and must carry no constraint detail.
+  @javascript
+  Scenario: A boolean allele round-trips without constraint fields
+    Given a chromosome named "Mixed genome"
+    When I add a boolean allele "wings"
+    Then the allele "wings" renders as a boolean allele with no constraints
+    And the allele "wings" is stored as a boolean allele
+
+  @DEV-0211
+  # Revisit after mutation (#209): the show page is ETag-cached, so a revisit
+  # revalidates the copy the browser already holds — unchanged validators mean
+  # a 304 and the pre-mutation allele list stays on screen. Headless Chrome in
+  # this harness never revalidates (every show-page navigation in a run answers
+  # 200, zero 304s), so the scenario replays the revisit's conditional request
+  # from the page itself: same transport, deterministic evidence.
+  @javascript
+  Scenario: A mutation invalidates the cached chromosome show page
+    Given a chromosome named "Mixed genome"
+    And I hold the chromosome show page's validators
+    When I add an integer allele "legs" bounded by 2 and 4
+    Then the chromosome show page revalidates with the allele "legs"
+
+  @DEV-0211
+  # Edit round trip, numeric path: the typed inheritable is persisted
+  # explicitly on update (delegated-type autosave only fires on a new row), so
+  # the new bounds must survive the edit form and re-render.
+  @javascript
+  Scenario: Editing a numeric allele round-trips its new bounds
+    Given a chromosome named "Mixed genome"
+    And the chromosome has an integer allele "legs" bounded by 2 and 4
+    When I edit the allele "legs" to be bounded by 3 and 5
+    Then the allele "legs" renders the bounds "3" and "5"
+    And the allele "legs" is stored with the bounds "3" and "5"
+
+  @DEV-0211
+  # Edit round trip, Option path: shares #210's root cause — the web form
+  # posts the choices as one comma-separated string on update too.
+  @javascript
+  Scenario: Editing an option allele round-trips its new choices
+    Given a chromosome named "Mixed genome"
+    And the chromosome has an option allele "color" with the choices "red, blue"
+    When I edit the allele "color" to have the choices "green, amber"
+    Then the allele "color" shows the choices "green, amber"
+    And the allele "color" is stored with the choices "green", "amber"
+
+  @DEV-0211
+  # Destroy round trip: the row leaves the show page and the record leaves the
+  # database.
+  @javascript
+  Scenario: Destroying an allele removes it from the chromosome
+    Given a chromosome named "Mixed genome"
+    And the chromosome has an integer allele "legs" bounded by 2 and 4
+    When I delete the allele "legs"
+    Then no allele named "legs" is stored
+    And the chromosome show page lists no alleles
 
   @DEV-0148
   # Finding #148 (T2) — type-aware allele fields: the allele form reveals

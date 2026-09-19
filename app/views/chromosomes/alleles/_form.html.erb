@@ -11,7 +11,10 @@
     opt out of Turbo exactly like the other re-rendering forms. %>
 <%= form_with(model: allele, url: form_url, method: form_method, data: { turbo: false }) do |form| %>
   <div class="max-w-[36rem]">
-    <div data-controller="allele-type-fields">
+    <%# The type select only exists on the new form (the type is immutable on
+        edit), so the toggle reads the server-rendered type instead of the
+        absent select — otherwise every constraint group starts hidden. %>
+    <div data-controller="allele-type-fields" data-allele-type-fields-type-value="<%= allele.type %>">
       <%= render FormFieldComponent.new(input_id: 'allele_type', label: 'Type', required: true,
                                         errors: field_errors(allele, :type)) do %>
         <% if editable_type %>
