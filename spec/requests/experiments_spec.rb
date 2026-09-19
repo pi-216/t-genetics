@@ -153,6 +153,19 @@ RSpec.describe 'Experiments workspace (web)', type: :request do
       expect(response).to redirect_to(experiment_url(experiment))
     end
 
+    # Issue #215 (note) — the create redirect carried no success notice: the
+    # last of the "no feedback" omissions #209 fixed for chromosomes and
+    # alleles. The layout renders the shared flash partial.
+    it 'confirms the creation with a success notice' do
+      sign_in_as(organization: org)
+
+      post experiments_url,
+           params: { experiment: { name: 'Donation amounts', chromosome_id: chromosome.id, population_size: 20 } }
+      follow_redirect!
+
+      expect(response.body).to include('Created experiment Donation amounts.')
+    end
+
     it 'seeds the new experiment with a population of organisms, one per organism slot' do
       sign_in_as(organization: org)
 
