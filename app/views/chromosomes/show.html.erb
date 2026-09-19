@@ -30,8 +30,13 @@
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <%= render ButtonComponent.new(label: 'Edit', href: edit_chromosome_allele_path(@chromosome, allele), variant: :ghost) %>
+            <%# Issue #211 — opt out of Turbo like the allele form: a Turbo form
+                submission arrives as TURBO_STREAM, which the controller's
+                content-type branch answers with the machine contract's 204.
+                Turbo ignores a 204, so the deleted row stayed on screen with no
+                notice; a native submit takes the HTML branch and its redirect. %>
             <%= render ButtonComponent.new(label: 'Delete', form_action: chromosome_allele_path(@chromosome, allele),
-                                           method: :delete, variant: :danger) %>
+                                           method: :delete, variant: :danger, form_data: { turbo: false }) %>
           </div>
         </div>
       <% end %>

@@ -310,3 +310,150 @@ Then(/^each field is separated from the next by at least its label-to-input gap$
     expect(gap['between']).to be >= gap['within'], message
   end
 end
+
+# --- issue #211: exhaustive CRUD round trips for the allele web forms ---
+
+# The chromosome every scenario in this block acts on (the Background signs in
+# as an owner of "Loop Labs"; each Given below creates this chromosome). The
+# truncation strategy wrapping @javascript scenarios can leave same-named rows
+# from earlier scenarios behind, so resolve the NEWEST row: an unordered
+# find_by! can hand the scenario a leftover row and make it order-dependent.
+def mixed_genome
+  Chromosome.order(created_at: :desc, id: :desc).find_by(name: 'Mixed genome') ||
+    raise(ArgumentError, 'the scenario must create a "Mixed genome" chromosome first')
+end
+
+def stored_allele(name)
+  mixed_genome.alleles.find_by!(name:)
+end
+
+def allele_row_for(name)
+  find('.allele-preview-item', text: name)
+end
+
+def attach_allele(allele)
+  allele.chromosome = mixed_genome
+  allele.save!
+end
+
+# Compound When for the numeric round trip — gherkin_lint AvoidScripting
+# permits one action step per scenario, so the loop over both types lives here.
+# rubocop:disable Metrics/ParameterLists
+# -- six capture groups map the BDD sentence's two alleles 1:1.
+When(/^I add a float allele "([^"]+)" (\d+)\.\.(\d+) and an integer allele "([^"]+)" (\d+)\.\.(\d+)$/) do |float_name, float_min, float_max, integer_name, integer_min, integer_max|
+  [['Float', float_name, float_min, float_max], ['Integer', integer_name, integer_min, integer_max]].each do |type, name, minimum, maximum|
+    visit new_chromosome_allele_path(mixed_genome)
+    select type, from: 'allele_type'
+    fill_in 'allele_name', with: name
+    fill_in 'allele_minimum', with: minimum
+    fill_in 'allele_maximum', with: maximum
+    click_button 'Create allele'
+    expect(page).to have_current_path(%r{\A/chromosomes/\d+\z})
+  end
+end
+# rubocop:enable Metrics/ParameterLists
+
+Then(/^the allele "([^"]+)" renders the bounds "([^"]+)" and "([^"]+)"$/) do |name, minimum, maximum|
+  expect(allele_row_for(name).find('.allele-bounds')).to have_text("(#{minimum}…#{maximum})")
+end
+
+Then(/^the allele "([^"]+)" is stored with the bounds "([^"]+)" and "([^"]+)"$/) do |name, minimum, maximum|
+  bounds = stored_allele(name).inheritable
+  expect(bounds.minimum.to_s).to eq(minimum)
+  expect(bounds.maximum.to_s).to eq(maximum)
+end
+
+Then(/^the allele "([^"]+)" renders as a boolean allele with no constraints$/) do |name|
+  row = allele_row_for(name)
+  expect(row).to have_css('.allele-type', text: 'Boolean')
+  expect(row).to have_no_css('.allele-bounds')
+  expect(row).to have_no_css('.allele-choices')
+end
+
+Then(/^the allele "([^"]+)" is stored as a boolean allele$/) do |name|
+  allele = stored_allele(name)
+  expect(allele.type).to eq('Boolean')
+  expect(allele.inheritable).to be_a(Alleles::Boolean)
+end
+
+Then(/^the allele "([^"]+)" is stored with the choices "([^"]+)", "([^"]+)"$/) do |name, first, second|
+  expect(stored_allele(name).inheritable.choices).to eq([first, second])
+end
+
+# Issue #209 — the validators a revisit would revalidate with, captured from a
+# same-origin fetch (the response headers a navigation's revalidation echoes
+# back), after the sign-in flash is consumed so the ETag carries no flash.
+Given(/^I hold the chromosome show page's validators$/) do
+  visit chromosome_path(mixed_genome)
+  expect(page).to have_current_path(%r{\A/chromosomes/\d+\z})
+
+  @show_page_etag = page.evaluate_async_script(<<~JS)
+    const done = arguments[arguments.length - 1];
+    fetch(location.pathname, { cache: 'no-store' })
+      .then((response) => done(response.headers.get('etag')))
+      .catch((error) => done(`error: ${error}`));
+  JS
+  expect(@show_page_etag).to be_present, 'the show page sent no ETag to revalidate against'
+end
+
+# The revisit itself: the browser asks the show page whether the copy it holds
+# is still current. A 304 means the mutation did not move the cache key — the
+# allele → chromosome touch is what moves it.
+Then(/^the chromosome show page revalidates with the allele "([^"]+)"$/) do |name|
+  revalidation = page.evaluate_async_script(<<~JS)
+    const done = arguments[arguments.length - 1];
+    const etag = #{@show_page_etag.to_json};
+    fetch(location.pathname, { cache: 'no-store', headers: { 'If-None-Match': etag } })
+      .then(async (response) => done({ status: response.status, body: await response.text() }))
+      .catch((error) => done({ status: 0, body: `error: ${error}` }));
+  JS
+
+  aggregate_failures do
+    expect(revalidation['status']).to eq(200)
+    expect(revalidation['body']).to include(name)
+  end
+end
+
+# --- allele edit / destroy (issue #211) ---
+
+Given(/^the chromosome has an integer allele "([^"]+)" bounded by (\d+) and (\d+)$/) do |name, minimum, maximum|
+  attach_allele(Allele.new_with_integer(name:, minimum: minimum.to_i, maximum: maximum.to_i))
+end
+
+Given(/^the chromosome has an option allele "([^"]+)" with the choices "([^"]+)"$/) do |name, choices|
+  attach_allele(Allele.new_with_option(name:, choices: choices.split(',').map(&:strip)))
+end
+
+When(/^I edit the allele "([^"]+)" to be bounded by (\d+) and (\d+)$/) do |name, minimum, maximum|
+  allele = stored_allele(name)
+  visit edit_chromosome_allele_path(mixed_genome, allele)
+  fill_in 'allele_minimum', with: minimum
+  fill_in 'allele_maximum', with: maximum
+  click_button 'Save allele'
+  expect(page).to have_current_path(%r{\A/chromosomes/\d+\z})
+end
+
+When(/^I edit the allele "([^"]+)" to have the choices "([^"]+)"$/) do |name, choices|
+  allele = stored_allele(name)
+  visit edit_chromosome_allele_path(mixed_genome, allele)
+  fill_in 'allele_choices', with: choices
+  click_button 'Save allele'
+  expect(page).to have_current_path(%r{\A/chromosomes/\d+\z})
+end
+
+When(/^I delete the allele "([^"]+)"$/) do |name|
+  visit chromosome_path(mixed_genome)
+  within(allele_row_for(name)) { click_button 'Delete' }
+  # The redirect lands back on the page we are already on, so a path assertion
+  # cannot tell whether the mutation landed — wait on its confirmation instead.
+  expect(page).to have_css('#notice', text: "Deleted allele #{name}.")
+end
+
+Then(/^the chromosome show page lists no alleles$/) do
+  expect(page).to have_no_css('.allele-preview-item')
+  expect(page).to have_content('No alleles yet')
+end
+
+Then(/^no allele named "([^"]+)" is stored$/) do |name|
+  expect(mixed_genome.alleles.where(name:)).to be_empty
+end
