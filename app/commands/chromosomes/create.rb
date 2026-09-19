@@ -34,8 +34,6 @@ module Chromosomes
       @chromosome&.destroy if @chromosome&.persisted?
     end
 
-    TYPES = %w[Integer Float Boolean Option].freeze
-
     private
 
     def build_alleles!
@@ -44,15 +42,21 @@ module Chromosomes
       Array(alleles).each do |attrs|
         next if attrs[:name].blank? # unused designer cards create nothing
 
-        raise ArgumentError, "allele type must be one of Integer|Float|Boolean|Option, got: #{attrs[:type].inspect}" unless TYPES.include?(attrs[:type])
+        raise ArgumentError, "allele type must be one of #{Alleles::TypedAllele.types.join('|')}, got: #{attrs[:type].inspect}" unless Alleles::TypedAllele.types.include?(attrs[:type])
 
-        missing = missing_fields_for(attrs[:type], attrs)
-        raise ArgumentError, "allele '#{attrs[:name]}' requires: #{missing.join(', ')}" if missing.any?
+        # Built in memory first (issue #208: one builder shared with the allele
+        # commands) so the type's required fields are read off the record — the
+        # same rule the web form and the machine contract enforce.
+        allele = Alleles::TypedAllele.build(name: attrs[:name], type: attrs[:type],
+                                            minimum: attrs[:minimum], maximum: attrs[:maximum], choices: attrs[:choices])
+
+        missing = Alleles::TypedAllele.required_fields(allele)
+        raise ArgumentError, "allele '#{allele.name}' requires: #{missing.join(', ')}" if missing.any?
 
         validate_bounds!(attrs)
         validate_choices!(attrs)
 
-        @chromosome.alleles << build_typed_allele(attrs)
+        @chromosome.alleles << allele
       end
     end
 
@@ -99,39 +103,6 @@ module Chromosomes
         raise ArgumentError, "allele '#{name}': name is already used on this chromosome" if seen[name]
 
         seen[name] = true
-      end
-    end
-
-    # Mirrors the JSON-API guard in Chromosomes::AllelesController#missing_fields_for
-    # (PRD-0004 red line: designer validation matches the server-side rules
-    # exactly). Option choices are deliberately NOT in the missing-fields set:
-    # the choice-list rule for Option lives in validate_choices! above (same
-    # substance, inline-compatible message), mirroring the model rule on
-    # Alleles::Option that backs the machine-API path.
-    def missing_fields_for(type, attrs)
-      missing = []
-      case type
-      when 'Integer', 'Float'
-        missing << :minimum if attrs[:minimum].blank?
-        missing << :maximum if attrs[:maximum].blank?
-      when 'Boolean'
-        # no constraints
-      end
-      missing
-    end
-
-    def build_typed_allele(attrs)
-      case attrs[:type]
-      when 'Integer'
-        Allele.new_with_integer(name: attrs[:name],
-                                minimum: attrs[:minimum], maximum: attrs[:maximum])
-      when 'Float'
-        Allele.new_with_float(name: attrs[:name],
-                              minimum: attrs[:minimum], maximum: attrs[:maximum])
-      when 'Boolean'
-        Allele.new_with_boolean(name: attrs[:name])
-      when 'Option'
-        Allele.new_with_option(name: attrs[:name], choices: Array(attrs[:choices]))
       end
     end
   end

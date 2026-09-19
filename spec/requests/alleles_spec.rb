@@ -209,4 +209,117 @@ RSpec.describe '/chromosomes/:chromosome_id/alleles' do
       expect(response).to have_http_status(:no_content)
     end
   end
+
+  # Issue #208 — the mutation logic moved into Chromosomes::Alleles::Create /
+  # Update. The machine JSON contract must survive that untouched, including
+  # the value shapes: a pre-check failure reports one message per field, a model
+  # failure reports the ActiveModel::Errors array form. These examples pin every
+  # body the controller used to build inline.
+  describe 'the machine JSON error contract' do
+    def posted(**attributes)
+      post chromosome_alleles_url(chromosome), params: { allele: attributes }
+      response.parsed_body
+    end
+
+    def patched(allele, **attributes)
+      patch chromosome_allele_url(chromosome, allele), params: { allele: attributes }
+      response.parsed_body
+    end
+
+    it 'reports a blank name as a required field' do
+      expect(posted(name: '', type: 'Integer', minimum: 1, maximum: 50)).to eq('errors' => { 'name' => 'is required' })
+    end
+
+    it 'reports each missing bound as a required field' do
+      expect(posted(name: 'legs', type: 'Integer')).to eq('errors' => { 'minimum' => 'is required', 'maximum' => 'is required' })
+    end
+
+    it 'reports an unsupported type as a required field' do
+      expect(posted(name: 'legs', type: 'Widget')).to eq('errors' => { 'type' => 'is required' })
+    end
+
+    it 'reports missing option choices as a required field' do
+      expect(posted(name: 'flavor', type: 'Option')).to eq('errors' => { 'choices' => 'is required' })
+    end
+
+    it 'reports reversed bounds through the inheritable' do
+      expect(posted(name: 'legs', type: 'Integer', minimum: 50, maximum: 1))
+        .to eq('errors' => { 'base' => ['Minimum must be less than or equal to maximum'] })
+    end
+
+    it 'reports a blank-only option choice list through the inheritable' do
+      expect(posted(name: 'flavor', type: 'Option', choices: ['']))
+        .to eq('errors' => { 'choices' => ['must not be empty'] })
+    end
+
+    it 'reports a duplicate allele name through the record' do
+      chromosome.alleles << Allele.new_with_integer(name: 'legs', minimum: 1, maximum: 50)
+
+      expect(posted(name: 'legs', type: 'Integer', minimum: 1, maximum: 50))
+        .to eq('errors' => { 'name' => ['has already been taken'] })
+    end
+
+    it 'reports an attempt to change the type' do
+      allele = (chromosome.alleles << Allele.new_with_integer(name: 'legs', minimum: 1, maximum: 50)).last
+
+      expect(patched(allele, type: 'Float')).to eq('errors' => { 'type' => 'cannot be changed' })
+    end
+
+    it 'reports a blank name on update through the record' do
+      allele = (chromosome.alleles << Allele.new_with_integer(name: 'legs', minimum: 1, maximum: 50)).last
+
+      expect(patched(allele, name: '')).to eq('errors' => { 'name' => ["can't be blank"] })
+    end
+
+    it 'reports reversed bounds on update through the inheritable' do
+      allele = (chromosome.alleles << Allele.new_with_integer(name: 'legs', minimum: 1, maximum: 50)).last
+
+      expect(patched(allele, minimum: 60, maximum: 2))
+        .to eq('errors' => { 'base' => ['Minimum must be less than or equal to maximum'] })
+    end
+
+    it 'reports an emptied option choice list on update through the inheritable' do
+      allele = (chromosome.alleles << Allele.new_with_option(name: 'flavor', choices: %w[red blue])).last
+
+      expect(patched(allele, choices: [])).to eq('errors' => { 'choices' => ['must not be empty'] })
+    end
+
+    it 'still accepts an update that provides only one bound' do
+      allele = (chromosome.alleles << Allele.new_with_integer(name: 'legs', minimum: 1, maximum: 50)).last
+
+      patch chromosome_allele_url(chromosome, allele), params: { allele: { minimum: 2 } }
+
+      expect(response).to have_http_status(:ok)
+      expect(allele.reload.inheritable.maximum).to eq(50)
+    end
+
+    # Issue #208 — the update is one command in one transaction now: a rejected
+    # payload no longer persists the fields that were valid on their own (the
+    # pre-refactor machine path renamed the allele before failing on its bounds).
+    it 'writes nothing at all when an update is rejected' do
+      allele = (chromosome.alleles << Allele.new_with_integer(name: 'legs', minimum: 1, maximum: 50)).last
+
+      patch chromosome_allele_url(chromosome, allele), params: { allele: { name: 'limbs', minimum: 60, maximum: 2 } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(allele.reload.name).to eq('legs')
+      expect(allele.reload.inheritable.minimum).to eq(1)
+    end
+
+    # Issue #208 — a type key that is PRESENT but null is still an attempt to
+    # set the type, and the machine contract has always answered it with
+    # "cannot be changed". Absent means "leave the type alone"; the distinction
+    # is the transport's to make (strong params), so the controller reports it.
+    it 'rejects an explicitly null type as a change attempt' do
+      allele = (chromosome.alleles << Allele.new_with_integer(name: 'legs', minimum: 1, maximum: 50)).last
+
+      patch chromosome_allele_url(chromosome, allele),
+            params: { allele: { type: nil, name: 'limbs' } },
+            as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.parsed_body).to eq('errors' => { 'type' => 'cannot be changed' })
+      expect(allele.reload.name).to eq('legs')
+    end
+  end
 end
